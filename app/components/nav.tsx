@@ -29,8 +29,8 @@ export function Navbar() {
           ))}
         </div>
         <div className="flex items-center gap-4">
-          <SignIn />
           <ThemeSwitch />
+          <SignIn />
         </div>
       </div>
     </nav>

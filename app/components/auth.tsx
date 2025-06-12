@@ -53,18 +53,62 @@ export function SignIn() {
 
   if (isSignedIn) {
     return (
-      <div className="flex items-center gap-3">
-        <div className="text-xs text-neutral-600 dark:text-neutral-400">
-          <span className="font-mono">
-            {pubkey?.slice(0, 6)}...{pubkey?.slice(-6)}
-          </span>
-        </div>
-        <button
-          onClick={signOut}
-          className="text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors underline"
-        >
-          sign out
+      <div className="relative group">
+        <button className="flex items-center justify-center w-6 h-6 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
         </button>
+
+        <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 w-40 bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+          <div className="p-2 border-b border-neutral-200 dark:border-neutral-800">
+            <div className="text-xs font-mono text-neutral-500 dark:text-neutral-500">
+              {pubkey?.slice(0, 6)}...{pubkey?.slice(-4)}
+            </div>
+          </div>
+          <div className="p-1">
+            <button
+              onClick={signOut}
+              className="w-full text-left px-2 py-1.5 text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-900 rounded transition-colors"
+            >
+              Setting
+            </button>
+          </div>
+          <div className="p-1">
+            <button
+              onClick={signOut}
+              className="w-full text-left px-2 py-1.5 text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-900 rounded transition-colors"
+            >
+              My Profile
+            </button>
+          </div>
+          <div className="p-1">
+            <button
+              onClick={signOut}
+              className="w-full text-left px-2 py-1.5 text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-900 rounded transition-colors"
+            >
+              Export Key
+            </button>
+          </div>
+          <div className="p-1">
+            <button
+              onClick={signOut}
+              className="w-full text-left px-2 py-1.5 text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-900 rounded transition-colors"
+            >
+              Sign out
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
