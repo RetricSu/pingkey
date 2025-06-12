@@ -65,7 +65,7 @@ export class Nostr {
    */
   async setupProfile(profile: NostrProfile, password: string): Promise<Event | null> {
     if (!this.signEventCallback || !this.publicKey) {
-      throw new Error("Secret key not set. Generate or set a key first.");
+      throw new Error("signEventCallback not set.");
     }
 
     const profileEvent = {

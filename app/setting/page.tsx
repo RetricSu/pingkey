@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "../contexts/auth-context";
+import type { NostrProfile } from "../lib/nostr";
 
 interface Profile {
   name: string;
@@ -8,26 +10,103 @@ interface Profile {
   introduction: string;
 }
 
+const defaultProfile: Profile = {
+  name: "Anonymous",
+  avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Anonymous",
+  introduction:
+    "No profile set yet. Click 'Edit Profile' to set up your Nostr profile.",
+};
+
 export default function SettingPage() {
+  const { nostr, pubkey, signEvent } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [profile, setProfile] = useState<Profile>({
-    name: "John Doe",
-    avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
-    introduction:
-      "Hello! I'm a Nostr user who loves building decentralized applications. I'm passionate about creating tools that empower users and promote privacy. With a background in software development and a keen interest in blockchain technology, I'm always exploring new ways to contribute to the decentralized web ecosystem. I believe in the power of open protocols and user-centric design.",
-  });
-
+  const [profile, setProfile] = useState<Profile>(defaultProfile);
   const [editedProfile, setEditedProfile] = useState<Profile>(profile);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSave = () => {
-    setProfile(editedProfile);
-    setIsEditing(false);
+  useEffect(() => {
+    async function fetchProfile() {
+      if (!nostr || !pubkey) return;
+
+      try {
+        const nostrProfile = await nostr.fetchProfile(pubkey);
+        if (nostrProfile) {
+          setProfile({
+            name: nostrProfile.name || defaultProfile.name,
+            avatarUrl: nostrProfile.picture || defaultProfile.avatarUrl,
+            introduction: nostrProfile.about || defaultProfile.introduction,
+          });
+          setEditedProfile({
+            name: nostrProfile.name || defaultProfile.name,
+            avatarUrl: nostrProfile.picture || defaultProfile.avatarUrl,
+            introduction: nostrProfile.about || defaultProfile.introduction,
+          });
+        }
+      } catch (err) {
+        setError("Failed to fetch profile");
+        console.error("Error fetching profile:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchProfile();
+  }, [nostr, pubkey]);
+
+  const handleSave = async () => {
+    if (!nostr || !pubkey) return;
+
+    try {
+      const password = prompt("Please enter your password to update profile");
+      if (!password) return;
+
+      const nostrProfile: NostrProfile = {
+        name: editedProfile.name,
+        picture: editedProfile.avatarUrl,
+        about: editedProfile.introduction,
+      };
+
+      nostr.setSignEventCallback(signEvent);
+      const result = await nostr.setupProfile(nostrProfile, password);
+
+      if (result) {
+        setProfile(editedProfile);
+        setIsEditing(false);
+      } else {
+        setError("Failed to update profile");
+      }
+    } catch (err) {
+      setError("Failed to update profile");
+      console.error("Error updating profile:", err);
+    }
   };
 
   const handleCancel = () => {
     setEditedProfile(profile);
     setIsEditing(false);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-neutral-200 dark:border-neutral-800 border-t-neutral-900 dark:border-t-neutral-100 rounded-full animate-spin"></div>
+          <div className="text-sm text-neutral-600 dark:text-neutral-400">
+            Loading profile...
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="">

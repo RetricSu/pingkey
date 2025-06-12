@@ -86,7 +86,7 @@ export function SignIn() {
           </div>
           <div className="p-1">
             <a
-              href="/profile"
+              href={`/p/${pubkey}`}
               className="w-full text-left px-2 py-1.5 text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-900 rounded transition-colors"
             >
               My Profile

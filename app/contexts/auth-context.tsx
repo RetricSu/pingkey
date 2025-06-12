@@ -64,12 +64,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         password
       );
       localStorage.setItem("nostr_encrypted_private_key", encryptedPrivateKey);
-
-      // Store public key
       localStorage.setItem("nostr_pubkey", publicKey);
 
       // Update state
       setPubkey(publicKey);
+      nostrInstance.setSignEventCallback(signEvent);
+      nostrInstance.setPublicKey(publicKey);
       setIsSignedIn(true);
       setNostr(nostrInstance);
     } catch (error) {
@@ -92,28 +92,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       nostr.destroy();
     }
     setNostr(null);
-  };
-
-  const generateNewKey = async (
-    password: string
-  ): Promise<{ secretKey: string; publicKey: string }> => {
-    const nostrInstance = new Nostr();
-    const keyPair = nostrInstance.generateNewKey();
-
-    // Encrypt and store the new private key
-    const encryptedPrivateKey = await CryptoUtils.encrypt(
-      keyPair.secretKey,
-      password
-    );
-    localStorage.setItem("nostr_encrypted_private_key", encryptedPrivateKey);
-    localStorage.setItem("nostr_pubkey", keyPair.publicKey);
-
-    // Update state
-    setPubkey(keyPair.publicKey);
-    setIsSignedIn(true);
-    setNostr(nostrInstance);
-
-    return keyPair;
   };
 
   const signEvent = async (eventData: any, password: string): Promise<any> => {
@@ -146,6 +124,30 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const generateNewKey = async (
+    password: string
+  ): Promise<{ secretKey: string; publicKey: string }> => {
+    const nostrInstance = new Nostr();
+    const keyPair = nostrInstance.generateNewKey();
+
+    // Encrypt and store the new private key
+    const encryptedPrivateKey = await CryptoUtils.encrypt(
+      keyPair.secretKey,
+      password
+    );
+    localStorage.setItem("nostr_encrypted_private_key", encryptedPrivateKey);
+    localStorage.setItem("nostr_pubkey", keyPair.publicKey);
+
+    // Update state
+    setPubkey(keyPair.publicKey);
+    nostrInstance.setSignEventCallback(signEvent);
+    nostrInstance.setPublicKey(keyPair.publicKey);
+    setIsSignedIn(true);
+    setNostr(nostrInstance);
+
+    return keyPair;
+  };
+
   const value: AuthContextType = {
     isSignedIn,
     pubkey,
@@ -166,6 +168,3 @@ export function useAuth(): AuthContextType {
   }
   return context;
 }
-
-// Export the CryptoUtils for use in components that need to unlock private key
-export { CryptoUtils };
