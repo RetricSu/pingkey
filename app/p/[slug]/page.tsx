@@ -1,5 +1,9 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Image from "next/image";
-import { socialLinks } from "../../lib/config";
+import { useAuth } from "../../contexts/auth-context";
+import type { NostrProfile } from "../../lib/nostr";
 
 interface PageProps {
   params: {
@@ -7,38 +11,92 @@ interface PageProps {
   };
 }
 
-export default async function DynamicPage({ params }: PageProps) {
-  const { slug } = await params;
+const defaultProfile: NostrProfile = {
+  name: "Anonymous",
+  picture: "https://api.dicebear.com/7.x/avataaars/svg?seed=Anonymous",
+  about: "No profile information available.",
+};
+
+export default function DynamicPage({ params }: PageProps) {
+  const { nostr } = useAuth();
+  const { slug } = params;
+  const [profile, setProfile] = useState<NostrProfile>(defaultProfile);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchProfile() {
+      if (!nostr) return;
+
+      try {
+        const nostrProfile = await nostr.fetchProfile(slug);
+        if (nostrProfile) {
+          setProfile({
+            name: nostrProfile.name || defaultProfile.name,
+            picture: nostrProfile.picture || defaultProfile.picture,
+            about: nostrProfile.about || defaultProfile.about,
+          });
+        }
+      } catch (err) {
+        setError("Failed to fetch profile");
+        console.error("Error fetching profile:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchProfile();
+  }, [nostr, slug]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-neutral-200 dark:border-neutral-800 border-t-neutral-900 dark:border-t-neutral-100 rounded-full animate-spin"></div>
+          <div className="text-sm text-neutral-600 dark:text-neutral-400">
+            Loading profile...
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <section>
-        <a href={socialLinks.twitter} target="_blank">
-          <Image
-            src="/profile.png"
-            alt="Profile photo"
-            className="rounded-full bg-gray-100 block lg:mt-5 mt-0 lg:mb-5 mb-10 mx-auto sm:float-right sm:ml-5 sm:mb-5 grayscale hover:grayscale-0"
-            unoptimized
-            width={160}
-            height={160}
-            priority
-          />
-        </a>
-        <h1 className="mb-8 text-2xl font-medium capitalize">{slug}</h1>
+        <Image
+          src={profile.picture || defaultProfile.picture || ""}
+          alt={profile.name || "Profile photo"}
+          className="rounded-full bg-gray-100 block lg:mt-5 mt-0 lg:mb-5 mb-10 mx-auto sm:float-right sm:ml-5 sm:mb-5 grayscale hover:grayscale-0"
+          unoptimized
+          width={160}
+          height={160}
+          priority
+        />
+        <h1 className="mb-8 text-2xl font-medium capitalize">
+          {profile.name || slug}
+        </h1>
         <div className="prose prose-neutral dark:prose-invert">
-          <p>
-            Hello, this is Retric Su. I am a software engineer. I am open to
-            discuss with crypto, blockchain, AI, history and arts.
-          </p>
-          <p>
-            Feel free to reach me by writing an digital letter to my relays.
-            Minimal POW 6 is required.
-          </p>
+          <p>{profile.about}</p>
+        </div>
+
+        <div className="mt-8  pt-8 text-sm text-gray-500 dark:text-gray-400">
+          <p>Feel free to reach me by leaving a letter to my relays.</p>
+          <p>A minimal stamp forged from Proof of Work(POW) is required.</p>
         </div>
 
         <div className="mt-8 border-t border-gray-100 dark:border-gray-800 pt-8">
           <div className="mt-4 mb-6 pt-4">
             <h3 className="text-sm font-medium mb-3 text-gray-700 dark:text-gray-300">
-              RetricSu's Relays
+              {profile.name || slug}'s Relays
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs text-gray-500 dark:text-gray-400">
               <div className="flex items-center space-x-2">
