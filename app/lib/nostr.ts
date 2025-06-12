@@ -1,7 +1,6 @@
 import {
   generateSecretKey,
   getPublicKey,
-  finalizeEvent,
 } from "nostr-tools/pure";
 import { SimplePool } from "nostr-tools/pool";
 import { bytesToHex, hexToBytes } from "@noble/hashes/utils";
@@ -18,8 +17,8 @@ export interface NostrProfile {
 }
 
 export class Nostr {
-  private secretKey: Uint8Array | null = null;
-  private publicKey: string | null = null;
+  public publicKey: string | null = null;
+  private signEventCallback: ((eventData: any, password: string) => Promise<Event>) | null = null;
   private pool: SimplePool;
   private relays: string[];
 
@@ -40,35 +39,32 @@ export class Nostr {
    * Generate a new secret key and derive the public key
    */
   generateNewKey(): { secretKey: string; publicKey: string } {
-    this.secretKey = generateSecretKey();
-    this.publicKey = getPublicKey(this.secretKey);
+    const secretKey = generateSecretKey();
+    const publicKey = getPublicKey(secretKey);
 
     return {
-      secretKey: bytesToHex(this.secretKey),
-      publicKey: this.publicKey,
+      secretKey: bytesToHex(secretKey),
+      publicKey: publicKey,
     };
   }
 
-  /**
-   * Set secret key from hex string
-   */
-  setSecretKey(secretKeyHex: string): void {
-    this.secretKey = hexToBytes(secretKeyHex);
-    this.publicKey = getPublicKey(this.secretKey);
+  setSignEventCallback(signEventCallback: (eventData: any, password: string) => Promise<Event>): void {
+    this.signEventCallback = signEventCallback;
   }
 
-  /**
-   * Get the current public key
-   */
-  getPublicKey(): string | null {
-    return this.publicKey;
+  setPublicKey(publicKeyHex: string): void {
+    this.publicKey = publicKeyHex;
+  }
+
+  getPublicKeyFromPrivateKey(privateKeyHex: string): string {
+    return getPublicKey(hexToBytes(privateKeyHex));
   }
 
   /**
    * Set up profile metadata (kind 0 event)
    */
-  async setupProfile(profile: NostrProfile): Promise<Event | null> {
-    if (!this.secretKey || !this.publicKey) {
+  async setupProfile(profile: NostrProfile, password: string): Promise<Event | null> {
+    if (!this.signEventCallback || !this.publicKey) {
       throw new Error("Secret key not set. Generate or set a key first.");
     }
 
@@ -80,7 +76,7 @@ export class Nostr {
       pubkey: this.publicKey,
     };
 
-    const signedEvent = finalizeEvent(profileEvent, this.secretKey);
+    const signedEvent = await this.signEventCallback(profileEvent, password);
 
     try {
       await this.publishEvent(signedEvent);
@@ -181,9 +177,10 @@ export class Nostr {
    */
   async publishNote(
     content: string,
-    tags: string[][] = []
+    tags: string[][] = [],
+    password: string
   ): Promise<Event | null> {
-    if (!this.secretKey || !this.publicKey) {
+    if (!this.signEventCallback || !this.publicKey) {
       throw new Error("Secret key not set. Generate or set a key first.");
     }
 
@@ -195,7 +192,7 @@ export class Nostr {
       pubkey: this.publicKey,
     };
 
-    const signedEvent = finalizeEvent(noteEvent, this.secretKey);
+	const signedEvent = await this.signEventCallback(noteEvent, password);
 
     try {
       await this.publishEvent(signedEvent);
