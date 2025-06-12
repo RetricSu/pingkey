@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ThemeSwitch } from "./theme-switch";
+import { SignIn } from "./auth";
 
 const navItems = {
   "/blog": { name: "Blog" },
@@ -27,7 +28,10 @@ export function Navbar() {
             </Link>
           ))}
         </div>
-        <ThemeSwitch />
+        <div className="flex items-center gap-4">
+          <SignIn />
+          <ThemeSwitch />
+        </div>
       </div>
     </nav>
   );

@@ -1,0 +1,244 @@
+'use client';
+
+import { useState } from 'react';
+import { useAuth, CryptoUtils } from '../contexts/auth-context';
+
+export function SignIn() {
+  const { isSignedIn, pubkey, signIn, signOut, generateNewKey } = useAuth();
+  const [showSignIn, setShowSignIn] = useState(false);
+  const [privateKey, setPrivateKey] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      await signIn(privateKey, password);
+      setShowSignIn(false);
+      setPrivateKey('');
+      setPassword('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Sign in failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGenerateNewKey = async () => {
+    if (!password) {
+      setError('Please enter a password to encrypt your new key');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const keyPair = await generateNewKey(password);
+      alert(`New key generated!\n\nPublic Key: ${keyPair.publicKey}\nPrivate Key: ${keyPair.secretKey}\n\nPlease save your private key in a secure location!`);
+      setShowSignIn(false);
+      setPassword('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Key generation failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (isSignedIn) {
+    return (
+      <div className="flex items-center gap-3">
+        <div className="text-xs text-neutral-600 dark:text-neutral-400">
+          <span className="font-mono">{pubkey?.slice(0, 6)}...{pubkey?.slice(-6)}</span>
+        </div>
+        <button
+          onClick={signOut}
+          className="text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors underline"
+        >
+          sign out
+        </button>
+      </div>
+    );
+  }
+
+  if (!showSignIn) {
+    return (
+      <button
+        onClick={() => setShowSignIn(true)}
+        className="text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors underline"
+      >
+        sign in
+      </button>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-lg p-6 w-full max-w-sm shadow-lg">
+        <h2 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-4">
+          Sign in with Nostr
+        </h2>
+        
+        {error && (
+          <div className="mb-4 p-3 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded text-xs text-neutral-600 dark:text-neutral-400">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSignIn} className="space-y-4">
+          <div>
+            <label htmlFor="privateKey" className="block text-xs text-neutral-600 dark:text-neutral-400 mb-1">
+              Private Key
+            </label>
+            <input
+              id="privateKey"
+              type="password"
+              value={privateKey}
+              onChange={(e) => setPrivateKey(e.target.value)}
+              placeholder="Enter your Nostr private key"
+              className="w-full px-3 py-2 text-xs bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded focus:outline-none focus:ring-1 focus:ring-neutral-300 dark:focus:ring-neutral-700 text-neutral-900 dark:text-neutral-100"
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="password" className="block text-xs text-neutral-600 dark:text-neutral-400 mb-1">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password to encrypt your key"
+              className="w-full px-3 py-2 text-xs bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded focus:outline-none focus:ring-1 focus:ring-neutral-300 dark:focus:ring-neutral-700 text-neutral-900 dark:text-neutral-100"
+              required
+            />
+          </div>
+
+          <div className="flex gap-2 pt-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 px-3 py-2 text-xs bg-neutral-900 dark:bg-neutral-100 text-white dark:text-black rounded hover:bg-neutral-700 dark:hover:bg-neutral-300 disabled:opacity-50 transition-colors"
+            >
+              {loading ? 'Signing in...' : 'Sign in'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowSignIn(false)}
+              disabled={loading}
+              className="px-3 py-2 text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 disabled:opacity-50 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+
+        <div className="mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-800">
+          <p className="text-xs text-neutral-600 dark:text-neutral-400 mb-2">
+            Don't have a key?
+          </p>
+          <button
+            type="button"
+            onClick={handleGenerateNewKey}
+            disabled={loading}
+            className="w-full px-3 py-2 text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 border border-neutral-200 dark:border-neutral-800 rounded disabled:opacity-50 transition-colors"
+          >
+            {loading ? 'Generating...' : 'Generate new key'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface UnlockPrivateKeyProps {
+  onUnlock: (nostr: any) => void;
+  onCancel: () => void;
+}
+
+export function UnlockPrivateKey({ onUnlock, onCancel }: UnlockPrivateKeyProps) {
+  const { nostr } = useAuth();
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleUnlock = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!nostr) return;
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const encryptedPrivateKey = localStorage.getItem('nostr_encrypted_private_key');
+      if (!encryptedPrivateKey) {
+        throw new Error('No encrypted private key found');
+      }
+
+      const privateKey = await CryptoUtils.decrypt(encryptedPrivateKey, password);
+      nostr.setSecretKey(privateKey);
+      onUnlock(nostr);
+    } catch (err) {
+      setError('Invalid password');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-lg p-6 w-full max-w-sm shadow-lg">
+        <h2 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-4">
+          Unlock private key
+        </h2>
+        
+        {error && (
+          <div className="mb-4 p-3 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded text-xs text-neutral-600 dark:text-neutral-400">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleUnlock} className="space-y-4">
+          <div>
+            <label htmlFor="unlockPassword" className="block text-xs text-neutral-600 dark:text-neutral-400 mb-1">
+              Password
+            </label>
+            <input
+              id="unlockPassword"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              className="w-full px-3 py-2 text-xs bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded focus:outline-none focus:ring-1 focus:ring-neutral-300 dark:focus:ring-neutral-700 text-neutral-900 dark:text-neutral-100"
+              required
+            />
+          </div>
+
+          <div className="flex gap-2 pt-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 px-3 py-2 text-xs bg-neutral-900 dark:bg-neutral-100 text-white dark:text-black rounded hover:bg-neutral-700 dark:hover:bg-neutral-300 disabled:opacity-50 transition-colors"
+            >
+              {loading ? 'Unlocking...' : 'Unlock'}
+            </button>
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={loading}
+              className="px-3 py-2 text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 disabled:opacity-50 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+} 
