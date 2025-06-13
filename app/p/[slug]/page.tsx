@@ -154,7 +154,7 @@ export default function DynamicPage({ params }: PageProps) {
           <p>A minimal stamp forged from Proof of Work(POW) is required.</p>
         </div>
 
-        <div className="mt-8 border-t border-gray-100 dark:border-gray-800 pt-8">
+        <div className="mt-1 border-t border-gray-100 dark:border-gray-800">
           <div className="mt-4 mb-6 pt-4">
             <h3 className="text-sm font-medium mb-3 text-gray-700 dark:text-gray-300">
               {profile.name || slug}'s Relays
