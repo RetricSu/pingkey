@@ -55,10 +55,10 @@ function Dashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">
-            Your Letters
+          <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
+            Mailbox
           </h1>
-          <p className="text-neutral-600 dark:text-neutral-400">
+          <p className="text-neutral-600 dark:text-neutral-400 text-sm">
             {totalCount === 0
               ? "No letters yet"
               : `${totalCount} total letters`}
@@ -72,9 +72,6 @@ function Dashboard() {
 
         {/* Actions */}
         <div className="flex items-center gap-3">
-          <button className="px-4 py-2 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
-            Mark all read
-          </button>
           <button className="px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-sm font-medium rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors">
             Compose
           </button>
