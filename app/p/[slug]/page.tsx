@@ -186,7 +186,7 @@ export default function DynamicPage({ params }: PageProps) {
               <button
                 onClick={handleSendMessage}
                 disabled={isSending || !message.trim()}
-                className="px-6 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-2 bg-gray-900 dark:bg-gray-100 text-sm text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSending ? "Sending..." : "Send Letter"}
               </button>
