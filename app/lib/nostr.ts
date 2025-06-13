@@ -220,7 +220,7 @@ export class Nostr {
   private async createNip59POWWrapEvent(
     seal: NostrEvent,
     recipientPublicKey: string,
-    difficulty: number = 4
+    difficulty: number = 8
   ): Promise<NostrEvent> {
     const randomKey = generateSecretKey();
 
@@ -287,7 +287,7 @@ export class Nostr {
       relay?: string;
     },
     message: string,
-    difficulty: number = 4
+    difficulty: number = 8
   ): Promise<Event> {
     const event = this.createNip17BaseEvent(recipient, message);
     const rumor = createRumor(event, senderPrivkey);

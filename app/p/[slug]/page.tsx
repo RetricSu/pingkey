@@ -9,6 +9,8 @@ import { generateSecretKey } from "nostr-tools/pure";
 import { hexToBytes } from "@noble/hashes/utils";
 import { defaultProfile } from "app/lib/config";
 import { Profile, RelayListItem } from "app/lib/type";
+import { custom, CustomDialogProps } from "../../components/simple-dialog";
+import { Stamp } from "../../components/stamp";
 
 interface PageProps {
   params: {
@@ -98,6 +100,50 @@ export default function DynamicPage({ params }: PageProps) {
         recipient,
         message
       );
+
+      // Show stamp dialog with the event ID
+      const StampDialog = ({
+        onResolve,
+        onReject,
+      }: CustomDialogProps<boolean>) => {
+        return (
+          <div className="p-6">
+            <div className="text-center mb-6">
+              <h2 className="text-lg font-semibold mb-2">Your POW Stamp</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Your message has been forged with Proof of Work
+              </p>
+            </div>
+
+            <div className="flex justify-center mb-6">
+              <Stamp hash={signedEvent.id} showArt={true} />
+            </div>
+
+            <div className="text-center space-y-2 mb-6">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Event ID: <span className="font-mono">{signedEvent.id}</span>
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Leading zeros: {signedEvent.id.match(/^0*/)?.[0]?.length || 0}
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => onResolve(true)}
+                className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                Send Message
+              </button>
+            </div>
+          </div>
+        );
+      };
+
+      const shouldSend = await custom(StampDialog, { maxWidth: "md" });
+      if (!shouldSend) {
+        return; // User cancelled
+      }
 
       await nostr.publishEventToRelays(
         signedEvent,
