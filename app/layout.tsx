@@ -8,6 +8,8 @@ import Footer from "./components/footer";
 import { ThemeProvider } from "./components/theme-switch";
 import { AuthProvider } from "./contexts/auth";
 import { NostrProvider } from "./contexts/nostr";
+import { NotificationProvider } from "./contexts/notification";
+import { NotificationContainer } from "./components/notification";
 import { metaData } from "./lib/config";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -82,17 +84,20 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <NostrProvider>
-            <AuthProvider>
-              <main className="flex-auto min-w-0 mt-2 md:mt-6 flex flex-col px-6 sm:px-4 md:px-0 max-w-[624px] w-full">
-                <Navbar />
-                {children}
-                <Footer />
-                <Analytics />
-                <SpeedInsights />
-              </main>
-            </AuthProvider>
-          </NostrProvider>
+          <NotificationProvider>
+            <NostrProvider>
+              <AuthProvider>
+                <main className="flex-auto min-w-0 mt-2 md:mt-6 flex flex-col px-6 sm:px-4 md:px-0 max-w-[624px] w-full">
+                  <Navbar />
+                  {children}
+                  <Footer />
+                  <Analytics />
+                  <SpeedInsights />
+                </main>
+                <NotificationContainer />
+              </AuthProvider>
+            </NostrProvider>
+          </NotificationProvider>
         </ThemeProvider>
       </body>
     </html>
