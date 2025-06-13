@@ -68,6 +68,7 @@ export function useUserRelayList(
 
       // Update cache only if this is for the current user
       if (pubkeyToFetch === currentUserPubkey && userInfoCache) {
+        console.debug("useUserRelayList: use cache.");
         setUserInfoCache({
           ...userInfoCache,
           relayList: relays,

@@ -118,6 +118,7 @@ export function useUserProfile(targetPubkey?: string): UseUserProfileReturn {
 
     // Check if we should use cache (only for current user)
     if (pubkeyToFetch === currentUserPubkey && isCacheValid(userInfoCache)) {
+      console.debug("useUserProfile: use cache");
       setProfile(userInfoCache!.profile!);
       setIsLoading(false);
       return;
