@@ -1,4 +1,24 @@
-export function Stamp() {
+import { PowHashArt } from "./pow-hash-art";
+
+interface StampProps {
+  hash?: string;
+  showArt?: boolean;
+}
+
+export function Stamp({ hash, showArt = false }: StampProps) {
+  const countLeadingZeros = (hash: string) => {
+    let count = 0;
+    for (let i = 0; i < hash.length; i++) {
+      if (hash[i] === "0") {
+        count++;
+      } else {
+        break;
+      }
+    }
+    return count;
+  };
+
+  const leadingZeros = hash ? countLeadingZeros(hash) : 0;
   return (
     <div className="relative transform rotate-1 hover:rotate-0 transition-transform duration-300">
       <div className="relative w-12 h-16 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 border-2 border-blue-300 dark:border-blue-700 rounded-sm shadow-sm">
@@ -51,18 +71,27 @@ export function Stamp() {
           {/* Image container */}
           <div className="p-1 h-full flex items-center justify-center">
             <div className="w-8 h-10 bg-neutral-100 dark:bg-neutral-700 rounded-sm flex items-center justify-center overflow-hidden">
-              {/* Placeholder for image or icon */}
-              <svg
-                className="w-4 h-4 text-neutral-400 dark:text-neutral-500"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
-                  clipRule="evenodd"
+              {showArt ? (
+                <PowHashArt
+                  hash={hash}
+                  leadingZeros={leadingZeros}
+                  width={32}
+                  height={40}
+                  className="rounded-sm"
                 />
-              </svg>
+              ) : (
+                <svg
+                  className="w-4 h-4 text-neutral-400 dark:text-neutral-500"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              )}
             </div>
           </div>
         </div>

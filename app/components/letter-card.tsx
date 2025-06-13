@@ -76,7 +76,7 @@ export function LetterCard({
       >
         {/* Floating Stamp in top-left corner */}
         <div className="absolute -top-2 -left-2 z-10">
-          <Stamp />
+          <Stamp hash={letter.fullNote.id} showArt={true} />
         </div>
 
         {/* Header with unread indicator and timestamp */}
