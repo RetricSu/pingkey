@@ -13,16 +13,16 @@ import { custom, CustomDialogProps } from "../../components/simple-dialog";
 import { Stamp } from "../../components/stamp";
 
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export default function DynamicPage({ params }: PageProps) {
   const { isSignedIn, pubkey, exportPrivateKey } = useAuth();
   const { nostr } = useNostr();
   const { success, error } = useNotification();
-  const { slug } = params;
+  const [slug, setSlug] = useState<string>("");
   const [profile, setProfile] = useState<Profile>(defaultProfile);
   const [isLoading, setIsLoading] = useState(true);
   const [profileError, setProfileError] = useState<string | null>(null);
@@ -31,7 +31,18 @@ export default function DynamicPage({ params }: PageProps) {
   const [sendError, setSendError] = useState<string | null>(null);
   const [relayList, setRelayList] = useState<RelayListItem[]>([]);
 
+  // Resolve async params
   useEffect(() => {
+    async function resolveParams() {
+      const resolvedParams = await params;
+      setSlug(resolvedParams.slug);
+    }
+    resolveParams();
+  }, [params]);
+
+  useEffect(() => {
+    if (!slug) return; // Don't run until slug is resolved
+    
     async function fetchProfile() {
       if (!nostr) return;
 
