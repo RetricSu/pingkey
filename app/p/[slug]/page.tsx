@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useAuth } from "../../contexts/auth-context";
 import type { NostrProfile } from "../../lib/nostr";
+import { generateSecretKey } from "nostr-tools/pure";
+import { hexToBytes } from "@noble/hashes/utils";
+import { wrapEvent } from "nostr-tools/nip17";
 
 interface PageProps {
   params: {
@@ -18,11 +21,14 @@ const defaultProfile: NostrProfile = {
 };
 
 export default function DynamicPage({ params }: PageProps) {
-  const { nostr } = useAuth();
+  const { nostr, isSignedIn, pubkey, exportPrivateKey } = useAuth();
   const { slug } = params;
   const [profile, setProfile] = useState<NostrProfile>(defaultProfile);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -47,6 +53,63 @@ export default function DynamicPage({ params }: PageProps) {
 
     fetchProfile();
   }, [nostr, slug]);
+
+  const handleSendMessage = async () => {
+    if (!message.trim()) return;
+    setIsSending(true);
+    setSendError(null);
+
+    try {
+      let senderPrivkey: Uint8Array | null = null;
+
+      // If not signed in, generate a temporary key pair
+      if (!isSignedIn) {
+        senderPrivkey = generateSecretKey();
+      } else {
+        const password = prompt(
+          "Please enter your password to send the message"
+        );
+        if (!password) {
+          throw new Error("Password required to send message");
+        }
+        senderPrivkey = hexToBytes(await exportPrivateKey(password));
+      }
+
+      const recipient = {
+        publicKey: slug,
+      };
+      const signedEvent = wrapEvent(senderPrivkey, recipient, message);
+
+      if (isSignedIn && nostr) {
+        await nostr.publishEvent(signedEvent);
+      } else {
+        // Publish to relays
+        const { SimplePool } = await import("nostr-tools/pool");
+        const pool = new SimplePool();
+        const relays = [
+          "wss://relay.damus.io",
+          "wss://nos.lol",
+          "wss://relay.nostr.band",
+          "wss://nostr.wine",
+        ];
+
+        await Promise.allSettled(
+          relays.map((relay) => pool.publish([relay], signedEvent))
+        );
+        pool.close(relays);
+      }
+
+      setMessage("");
+      alert("Message sent successfully!");
+    } catch (err) {
+      console.error("Failed to send message:", err);
+      setSendError(
+        err instanceof Error ? err.message : "Failed to send message"
+      );
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -126,19 +189,35 @@ export default function DynamicPage({ params }: PageProps) {
             </div>
           </div>
           <div className="space-y-4">
+            {sendError && (
+              <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-sm text-red-600 dark:text-red-400">
+                {sendError}
+              </div>
+            )}
             <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
               placeholder="Write your message here..."
               className="w-full h-32 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               rows={6}
             />
 
             <div className="flex justify-between items-center">
-              <button className="px-6 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors font-medium">
-                Send Letter
+              <button
+                onClick={handleSendMessage}
+                disabled={isSending || !message.trim()}
+                className="px-6 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSending ? "Sending..." : "Send Letter"}
               </button>
 
               <div className="text-sm text-gray-500 dark:text-gray-400">
-                Minimal POW 6 required
+                {isSignedIn
+                  ? "Signed in as " +
+                    pubkey?.slice(0, 6) +
+                    "..." +
+                    pubkey?.slice(-4)
+                  : "Sending as anonymous"}
               </div>
             </div>
           </div>

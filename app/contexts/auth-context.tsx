@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import { Nostr } from "../lib/nostr";
 import { CryptoUtils } from "app/lib/crypto";
+import { finalizeEvent } from "nostr-tools/pure";
 
 interface AuthContextType {
   isSignedIn: boolean;
@@ -20,6 +21,7 @@ interface AuthContextType {
     password: string
   ) => Promise<{ secretKey: string; publicKey: string }>;
   signEvent: (eventData: any, password: string) => Promise<any>;
+  exportPrivateKey: (password: string) => Promise<string>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -94,7 +96,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setNostr(null);
   };
 
-  const signEvent = async (eventData: any, password: string): Promise<any> => {
+  const exportPrivateKey = async (password: string): Promise<string> => {
     if (!isSignedIn || !nostr) {
       throw new Error("Not signed in");
     }
@@ -112,8 +114,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
         password
       );
 
-      // Use finalizeEvent from nostr-tools to sign the event
-      const { finalizeEvent } = await import("nostr-tools/pure");
+      return privateKey;
+    } catch (error) {
+      console.error("Failed to export private key:", error);
+      throw error;
+    }
+  };
+
+  const signEvent = async (eventData: any, password: string): Promise<any> => {
+    try {
+      const privateKey = await exportPrivateKey(password);
       return finalizeEvent(
         eventData,
         new Uint8Array(Buffer.from(privateKey, "hex"))
@@ -154,6 +164,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     nostr,
     signIn,
     signOut,
+    exportPrivateKey,
     generateNewKey,
     signEvent,
   };

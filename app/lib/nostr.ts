@@ -1,11 +1,8 @@
-import {
-  generateSecretKey,
-  getPublicKey,
-} from "nostr-tools/pure";
+import { generateSecretKey, getPublicKey } from "nostr-tools/pure";
 import { SimplePool } from "nostr-tools/pool";
 import { bytesToHex, hexToBytes } from "@noble/hashes/utils";
 import type { Event } from "nostr-tools/core";
-import { Filter } from "nostr-tools";
+import { Filter, nip44 } from "nostr-tools";
 
 export interface NostrProfile {
   name?: string;
@@ -18,7 +15,9 @@ export interface NostrProfile {
 
 export class Nostr {
   public publicKey: string | null = null;
-  private signEventCallback: ((eventData: any, password: string) => Promise<Event>) | null = null;
+  private signEventCallback:
+    | ((eventData: any, password: string) => Promise<Event>)
+    | null = null;
   private pool: SimplePool;
   private relays: string[];
 
@@ -48,7 +47,9 @@ export class Nostr {
     };
   }
 
-  setSignEventCallback(signEventCallback: (eventData: any, password: string) => Promise<Event>): void {
+  setSignEventCallback(
+    signEventCallback: (eventData: any, password: string) => Promise<Event>
+  ): void {
     this.signEventCallback = signEventCallback;
   }
 
@@ -63,7 +64,10 @@ export class Nostr {
   /**
    * Set up profile metadata (kind 0 event)
    */
-  async setupProfile(profile: NostrProfile, password: string): Promise<Event | null> {
+  async setupProfile(
+    profile: NostrProfile,
+    password: string
+  ): Promise<Event | null> {
     if (!this.signEventCallback || !this.publicKey) {
       throw new Error("signEventCallback not set.");
     }
@@ -85,6 +89,32 @@ export class Nostr {
       console.error("Failed to publish profile:", error);
       return null;
     }
+  }
+
+  async nip44Encrypt(
+    privateKey: string,
+    publicKey: string,
+    message: string
+  ): Promise<string> {
+    const privateKeyBytes = hexToBytes(privateKey);
+    const conversationKey = nip44.getConversationKey(
+      privateKeyBytes,
+      publicKey
+    );
+    return nip44.encrypt(message, conversationKey);
+  }
+
+  async nip44Decrypt(
+    privateKey: string,
+    publicKey: string,
+    payload: string
+  ): Promise<string> {
+    const privateKeyBytes = hexToBytes(privateKey);
+    const conversationKey = nip44.getConversationKey(
+      privateKeyBytes,
+      publicKey
+    );
+    return nip44.decrypt(payload, conversationKey);
   }
 
   /**
@@ -157,25 +187,22 @@ export class Nostr {
     }
   }
 
-  /**
-   * Fetch text notes (kind 1 events) from followed users or specific authors
-   */
-  async fetchNotes(authors?: string[], limit: number = 50): Promise<Event[]> {
+  async fetchGiftWrappedNotes(
+    receiptPubkey: string,
+    limit: number = 50
+  ): Promise<Event[]> {
     const filters: Filter[] = [
       {
-        kinds: [1],
-        authors: authors,
+        "#p": [receiptPubkey],
+        kinds: [1059],
         limit: limit,
       },
     ];
-
-    return this.fetchEvents(filters);
+    return await this.fetchEvents(filters);
   }
 
-  /**
-   * Publish a text note (kind 1 event)
-   */
   async publishNote(
+    kind: number,
     content: string,
     tags: string[][] = [],
     password: string
@@ -185,14 +212,14 @@ export class Nostr {
     }
 
     const noteEvent = {
-      kind: 1,
+      kind,
       created_at: Math.floor(Date.now() / 1000),
       tags: tags,
       content: content,
       pubkey: this.publicKey,
     };
 
-	const signedEvent = await this.signEventCallback(noteEvent, password);
+    const signedEvent = await this.signEventCallback(noteEvent, password);
 
     try {
       await this.publishEvent(signedEvent);
