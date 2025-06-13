@@ -3,11 +3,12 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useAuth } from "../../contexts/auth";
-import type { NostrProfile } from "../../lib/nostr";
+import { useNostr } from "../../contexts/nostr";
 import { generateSecretKey } from "nostr-tools/pure";
 import { hexToBytes } from "@noble/hashes/utils";
 import { wrapEvent } from "nostr-tools/nip17";
 import { defaultProfile } from "app/lib/config";
+import { Profile } from "app/lib/type";
 
 interface PageProps {
   params: {
@@ -16,9 +17,10 @@ interface PageProps {
 }
 
 export default function DynamicPage({ params }: PageProps) {
-  const { nostr, isSignedIn, pubkey, exportPrivateKey } = useAuth();
+  const { isSignedIn, pubkey, exportPrivateKey } = useAuth();
+  const { nostr } = useNostr();
   const { slug } = params;
-  const [profile, setProfile] = useState<NostrProfile>(defaultProfile);
+  const [profile, setProfile] = useState<Profile>(defaultProfile);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState("");

@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/auth";
-import type { NostrProfile } from "../lib/nostr";
+import { useNostr } from "../contexts/nostr";
 import { Profile } from "app/lib/type";
 import { defaultProfile } from "app/lib/config";
 
 export default function SettingPage() {
-  const { nostr, pubkey, signEvent } = useAuth();
+  const { pubkey } = useAuth();
+  const { nostr } = useNostr();
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState<Profile>(defaultProfile);
   const [editedProfile, setEditedProfile] = useState<Profile>(profile);
@@ -47,17 +48,13 @@ export default function SettingPage() {
     if (!nostr || !pubkey) return;
 
     try {
-      const password = prompt("Please enter your password to update profile");
-      if (!password) return;
-
-      const nostrProfile: NostrProfile = {
+      const nostrProfile: Profile = {
         name: editedProfile.name,
         picture: editedProfile.picture,
         about: editedProfile.about,
       };
 
-      nostr.setSignEventCallback(signEvent);
-      const result = await nostr.setupProfile(nostrProfile, password);
+      const result = await nostr.setupProfile(nostrProfile);
 
       if (result) {
         setProfile(editedProfile);

@@ -7,20 +7,17 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import { Nostr } from "../lib/nostr";
 import { CryptoUtils } from "app/lib/crypto";
-import { finalizeEvent } from "nostr-tools/pure";
+import { Nostr } from "../lib/nostr";
 
 interface AuthContextType {
   isSignedIn: boolean;
   pubkey: string | null;
-  nostr: Nostr | null;
   signIn: (privateKey: string, password: string) => Promise<void>;
   signOut: () => void;
   generateNewKey: (
     password: string
   ) => Promise<{ secretKey: string; publicKey: string }>;
-  signEvent: (eventData: any, password: string) => Promise<any>;
   exportPrivateKey: (password: string) => Promise<string>;
 }
 
@@ -33,7 +30,6 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [pubkey, setPubkey] = useState<string | null>(null);
-  const [nostr, setNostr] = useState<Nostr | null>(null);
 
   // Check for existing session on mount
   useEffect(() => {
@@ -41,10 +37,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (storedPubkey) {
       setPubkey(storedPubkey);
       setIsSignedIn(true);
-
-      // Initialize Nostr instance without private key for read-only operations
-      const nostrInstance = new Nostr();
-      setNostr(nostrInstance);
     }
   }, []);
 
@@ -53,7 +45,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     password: string
   ): Promise<void> => {
     try {
-      // Initialize Nostr instance and set the private key
+      // Get public key from private key
       const nostrInstance = new Nostr();
       const publicKey = nostrInstance.getPublicKeyFromPrivateKey(privateKey);
       if (!publicKey) {
@@ -70,10 +62,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // Update state
       setPubkey(publicKey);
-      nostrInstance.setSignEventCallback(signEvent);
-      nostrInstance.setPublicKey(publicKey);
       setIsSignedIn(true);
-      setNostr(nostrInstance);
     } catch (error) {
       console.error("Sign in failed:", error);
       throw error;
@@ -88,16 +77,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Clear state
     setPubkey(null);
     setIsSignedIn(false);
-
-    // Clean up Nostr instance
-    if (nostr) {
-      nostr.destroy();
-    }
-    setNostr(null);
   };
 
   const exportPrivateKey = async (password: string): Promise<string> => {
-    if (!isSignedIn || !nostr) {
+    if (!isSignedIn) {
       throw new Error("Not signed in");
     }
 
@@ -121,19 +104,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const signEvent = async (eventData: any, password: string): Promise<any> => {
-    try {
-      const privateKey = await exportPrivateKey(password);
-      return finalizeEvent(
-        eventData,
-        new Uint8Array(Buffer.from(privateKey, "hex"))
-      );
-    } catch (error) {
-      console.error("Failed to sign event:", error);
-      throw error;
-    }
-  };
-
   const generateNewKey = async (
     password: string
   ): Promise<{ secretKey: string; publicKey: string }> => {
@@ -150,10 +120,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     // Update state
     setPubkey(keyPair.publicKey);
-    nostrInstance.setSignEventCallback(signEvent);
-    nostrInstance.setPublicKey(keyPair.publicKey);
     setIsSignedIn(true);
-    setNostr(nostrInstance);
 
     return keyPair;
   };
@@ -161,12 +128,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const value: AuthContextType = {
     isSignedIn,
     pubkey,
-    nostr,
     signIn,
     signOut,
     exportPrivateKey,
     generateNewKey,
-    signEvent,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

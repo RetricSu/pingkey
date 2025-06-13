@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "app/contexts/auth";
+import { useNostr } from "app/contexts/nostr";
 import { unwrapEvent } from "nostr-tools/nip17";
 import { useEffect, useState } from "react";
 import { Event } from "nostr-tools/core";
@@ -20,7 +21,8 @@ export function LetterCard({
     fullNote: Event;
   };
 }) {
-  const { nostr, isSignedIn, pubkey, exportPrivateKey } = useAuth();
+  const { isSignedIn, exportPrivateKey } = useAuth();
+  const { nostr } = useNostr();
 
   const decryptNote = async () => {
     if (isSignedIn && nostr) {
@@ -110,8 +112,8 @@ export function LetterCard({
 }
 
 export default function Dashboard() {
-  const { nostr, isSignedIn, pubkey, exportPrivateKey } = useAuth();
-
+  const { isSignedIn, pubkey } = useAuth();
+  const { nostr } = useNostr();
   const [giftWrappedNotes, setGiftWrappedNotes] = useState<Event[]>([]);
 
   const fetchGiftWrappedNotes = async () => {

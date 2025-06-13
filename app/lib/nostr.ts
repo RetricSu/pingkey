@@ -1,25 +1,17 @@
 import { generateSecretKey, getPublicKey } from "nostr-tools/pure";
 import { SimplePool } from "nostr-tools/pool";
 import { bytesToHex, hexToBytes } from "@noble/hashes/utils";
-import type { Event } from "nostr-tools/core";
+import type { Event, EventTemplate } from "nostr-tools/core";
 import { Filter, nip44 } from "nostr-tools";
-
-export interface NostrProfile {
-  name?: string;
-  about?: string;
-  picture?: string;
-  nip05?: string;
-  lud16?: string;
-  website?: string;
-}
+import { Profile, RelayListItem } from "./type";
 
 export class Nostr {
-  public publicKey: string | null = null;
-  private signEventCallback:
-    | ((eventData: any, password: string) => Promise<Event>)
+  public requestPublicKey: (() => Promise<string | null>) | null = null;
+  public signEventCallback:
+    | ((eventData: EventTemplate) => Promise<Event>)
     | null = null;
   private pool: SimplePool;
-  private relays: string[];
+  public relays: string[];
 
   constructor(relays: string[] = []) {
     this.pool = new SimplePool();
@@ -48,13 +40,13 @@ export class Nostr {
   }
 
   setSignEventCallback(
-    signEventCallback: (eventData: any, password: string) => Promise<Event>
+    signEventCallback: (eventData: EventTemplate) => Promise<Event>
   ): void {
     this.signEventCallback = signEventCallback;
   }
 
-  setPublicKey(publicKeyHex: string): void {
-    this.publicKey = publicKeyHex;
+  setRequestPublicKey(requestPublicKey: () => Promise<string | null>): void {
+    this.requestPublicKey = requestPublicKey;
   }
 
   getPublicKeyFromPrivateKey(privateKeyHex: string): string {
@@ -64,12 +56,14 @@ export class Nostr {
   /**
    * Set up profile metadata (kind 0 event)
    */
-  async setupProfile(
-    profile: NostrProfile,
-    password: string
-  ): Promise<Event | null> {
-    if (!this.signEventCallback || !this.publicKey) {
+  async setupProfile(profile: Profile): Promise<Event | null> {
+    if (!this.signEventCallback || !this.requestPublicKey) {
       throw new Error("signEventCallback not set.");
+    }
+
+    const publicKey = await this.requestPublicKey();
+    if (!publicKey) {
+      throw new Error("Public key not set.");
     }
 
     const profileEvent = {
@@ -77,12 +71,11 @@ export class Nostr {
       created_at: Math.floor(Date.now() / 1000),
       tags: [],
       content: JSON.stringify(profile),
-      pubkey: this.publicKey,
+      pubkey: publicKey,
     };
 
-    const signedEvent = await this.signEventCallback(profileEvent, password);
-
     try {
+      const signedEvent = await this.signEventCallback(profileEvent);
       await this.publishEvent(signedEvent);
       return signedEvent;
     } catch (error) {
@@ -128,6 +121,11 @@ export class Nostr {
     await Promise.allSettled(promises);
   }
 
+  async publishEventToRelays(event: Event, relays: string[]): Promise<void> {
+    const promises = relays.map((relay) => this.pool.publish([relay], event));
+    await Promise.allSettled(promises);
+  }
+
   /**
    * Fetch events from relays based on filters
    */
@@ -161,7 +159,7 @@ export class Nostr {
   /**
    * Fetch profile metadata for a public key
    */
-  async fetchProfile(pubkey: string): Promise<NostrProfile | null> {
+  async fetchProfile(pubkey: string): Promise<Profile | null> {
     const filters: Filter[] = [
       {
         kinds: [0],
@@ -180,7 +178,7 @@ export class Nostr {
     const latestEvent = events.sort((a, b) => b.created_at - a.created_at)[0];
 
     try {
-      return JSON.parse(latestEvent.content) as NostrProfile;
+      return JSON.parse(latestEvent.content) as Profile;
     } catch (error) {
       console.error("Failed to parse profile content:", error);
       return null;
@@ -201,14 +199,46 @@ export class Nostr {
     return await this.fetchEvents(filters);
   }
 
+  async fetchNip65RelayList(authors: string[]): Promise<RelayListItem[]> {
+    const filters: Filter[] = [
+      {
+        kinds: [10002],
+        authors: authors,
+      },
+    ];
+    const events = await this.fetchEvents(filters);
+    return events
+      .map((event) =>
+        event.tags
+          .find((tag) => tag[0] === "r")
+          ?.map((tag) => {
+            const relayUrl = tag[1];
+            const marker = tag[2] as "r" | "w" | undefined;
+            if (!relayUrl) {
+              return null;
+            } else {
+              return {
+                url: relayUrl,
+                marker: marker,
+              } as RelayListItem;
+            }
+          })
+      )
+      .filter((r) => r !== null) as unknown as RelayListItem[];
+  }
+
   async publishNote(
     kind: number,
     content: string,
-    tags: string[][] = [],
-    password: string
+    tags: string[][] = []
   ): Promise<Event | null> {
-    if (!this.signEventCallback || !this.publicKey) {
-      throw new Error("Secret key not set. Generate or set a key first.");
+    if (!this.signEventCallback || !this.requestPublicKey) {
+      throw new Error("signEventCallback or requestPublicKey not set.");
+    }
+
+    const publicKey = await this.requestPublicKey();
+    if (!publicKey) {
+      throw new Error("Public key not set.");
     }
 
     const noteEvent = {
@@ -216,18 +246,31 @@ export class Nostr {
       created_at: Math.floor(Date.now() / 1000),
       tags: tags,
       content: content,
-      pubkey: this.publicKey,
+      pubkey: publicKey,
     };
 
-    const signedEvent = await this.signEventCallback(noteEvent, password);
-
     try {
+      const signedEvent = await this.signEventCallback(noteEvent);
       await this.publishEvent(signedEvent);
       return signedEvent;
     } catch (error) {
       console.error("Failed to publish note:", error);
       return null;
     }
+  }
+
+  async publishNip65RelayListEvent(relayList: RelayListItem[]) {
+    return await this.publishNote(
+      10002,
+      "",
+      relayList.map((relay) => {
+        if (relay.marker) {
+          return ["r", relay.url, relay.marker];
+        } else {
+          return ["r", relay.url];
+        }
+      })
+    );
   }
 
   /**
