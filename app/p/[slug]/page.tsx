@@ -111,7 +111,8 @@ export default function DynamicPage({ params }: PageProps) {
             <div className="text-center mb-6">
               <h2 className="text-lg font-semibold mb-2">Your POW Stamp</h2>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Your message has been forged with Proof of Work
+                Your message has been forged with Proof of Work. The Stamp will
+                be used as a spam filter for relays.
               </p>
             </div>
 
@@ -119,12 +120,15 @@ export default function DynamicPage({ params }: PageProps) {
               <Stamp hash={signedEvent.id} showArt={true} />
             </div>
 
-            <div className="text-center space-y-2 mb-6">
+            <div className="text-center space-y-2 mb-6 overflow-x-auto">
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Event ID: <span className="font-mono">{signedEvent.id}</span>
+                Event ID with difficulty Leading zeros:{" "}
+                {signedEvent.id.match(/^0*/)?.[0]?.length || 0}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Leading zeros: {signedEvent.id.match(/^0*/)?.[0]?.length || 0}
+                <span className="font-mono">
+                  {signedEvent.id.slice(0, 10)}...{signedEvent.id.slice(-10)}
+                </span>
               </p>
             </div>
 
@@ -142,7 +146,7 @@ export default function DynamicPage({ params }: PageProps) {
 
       const shouldSend = await custom(StampDialog, { maxWidth: "md" });
       if (!shouldSend) {
-        return; // User cancelled
+        return error("You cancelled the message");
       }
 
       await nostr.publishEventToRelays(
