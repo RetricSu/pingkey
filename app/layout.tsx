@@ -6,7 +6,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import Footer from "./components/footer";
 import { ThemeProvider } from "./components/theme-switch";
-import { AuthProvider } from "./contexts/auth-context";
+import { AuthProvider } from "./contexts/auth";
 import { metaData } from "./lib/config";
 
 const inter = Inter({ subsets: ["latin"] });

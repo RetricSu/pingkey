@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useAuth } from "../contexts/auth-context";
+import { useAuth } from "../contexts/auth";
 
 export function SignIn() {
   const { isSignedIn, pubkey, signIn, signOut, generateNewKey } = useAuth();

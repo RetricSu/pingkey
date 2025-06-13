@@ -2,23 +2,18 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { useAuth } from "../../contexts/auth-context";
+import { useAuth } from "../../contexts/auth";
 import type { NostrProfile } from "../../lib/nostr";
 import { generateSecretKey } from "nostr-tools/pure";
 import { hexToBytes } from "@noble/hashes/utils";
 import { wrapEvent } from "nostr-tools/nip17";
+import { defaultProfile } from "app/lib/config";
 
 interface PageProps {
   params: {
     slug: string;
   };
 }
-
-const defaultProfile: NostrProfile = {
-  name: "Anonymous",
-  picture: "https://api.dicebear.com/7.x/avataaars/svg?seed=Anonymous",
-  about: "No profile information available.",
-};
 
 export default function DynamicPage({ params }: PageProps) {
   const { nostr, isSignedIn, pubkey, exportPrivateKey } = useAuth();

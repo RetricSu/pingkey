@@ -1,3 +1,5 @@
+import { Profile } from "./type";
+
 export const metaData = {
   baseUrl: "https://nextfolio-template.vercel.app/",
   title: "ReachMe",
@@ -13,4 +15,11 @@ export const socialLinks = {
   instagram: "https://www.instagram.com/",
   linkedin: "https://www.linkedin.com/",
   email: "mailto:example@gmail.com",
+};
+
+export const defaultProfile: Profile = {
+  name: "Anonymous",
+  picture: "https://api.dicebear.com/7.x/avataaars/svg?seed=Anonymous",
+  about:
+    "No profile set yet. Click 'Edit Profile' to set up your Nostr profile.",
 };

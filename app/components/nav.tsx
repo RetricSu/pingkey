@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ThemeSwitch } from "./theme-switch";
-import { SignIn } from "./auth";
+import { SignIn } from "./sign-in";
 
 const navItems = {
   "/blog": { name: "Blog" },

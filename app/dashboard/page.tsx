@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "app/contexts/auth-context";
+import { useAuth } from "app/contexts/auth";
 import { unwrapEvent } from "nostr-tools/nip17";
 import { useEffect, useState } from "react";
 import { Event } from "nostr-tools/core";
