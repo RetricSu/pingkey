@@ -49,10 +49,10 @@ export default function DynamicPage({ params }: PageProps) {
       }
     }
     async function fetchRelayList() {
-      if (!nostr || !pubkey) return;
+      if (!nostr) return;
 
       try {
-        const relays = await nostr.fetchNip65RelayList([pubkey]);
+        const relays = await nostr.fetchNip65RelayList([slug]);
         setRelayList(relays);
       } catch (err) {
         console.error("Error fetching relay list:", err);

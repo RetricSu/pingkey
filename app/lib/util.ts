@@ -33,3 +33,18 @@ export function formatDate(date: number | string, includeRelative = false) {
 
   return `${fullDate} (${formattedDate})`;
 }
+
+export function createExportFile(pubkey: string, privateKey: string) {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const fileContent = `Nostr Private Key Export
+Generated: ${timestamp}
+Public Key: ${pubkey}
+
+PRIVATE KEY (Keep this secure!):
+${privateKey}
+
+WARNING: Anyone with access to this private key can control your account.
+Store this in a secure location and never share it.`;
+
+  return { fileName: `nostr-private-key-${timestamp}.txt`, fileContent };
+}

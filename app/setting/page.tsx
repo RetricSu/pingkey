@@ -6,7 +6,7 @@ import { useNostr } from "../contexts/nostr";
 import { useUserProfile } from "../hooks/useUserProfile";
 import { useUserRelayList } from "../hooks/useUserRelayList";
 import { Profile, RelayListItem } from "app/lib/type";
-import { defaultProfile } from "app/lib/config";
+import { defaultProfile, defaultRelays } from "app/lib/config";
 import { withAuth } from "app/components/auth/with-auth";
 
 function SettingPage() {
@@ -120,6 +120,15 @@ function SettingPage() {
 
   const handleRemoveRelay = (index: number) => {
     setEditedRelayList(editedRelayList.filter((_, i) => i !== index));
+  };
+
+  const handleAddDefaultRelays = () => {
+    const currentUrls = new Set(editedRelayList.map((relay) => relay.url));
+    const newRelays = defaultRelays
+      .filter((url) => !currentUrls.has(url))
+      .map((url) => ({ url, marker: undefined }));
+
+    setEditedRelayList([...editedRelayList, ...newRelays]);
   };
 
   if (profileLoading || relayListLoading) {
@@ -279,7 +288,72 @@ function SettingPage() {
 
         {isEditingRelays ? (
           <div className="space-y-4">
+            {/* Default Relays Section */}
+            <div className="pb-4 border-b border-neutral-200 dark:border-neutral-800">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xs font-medium text-neutral-900 dark:text-neutral-100">
+                  Default Relays
+                </h3>
+                <button
+                  onClick={handleAddDefaultRelays}
+                  className="text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
+                >
+                  Add Missing Defaults
+                </button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {defaultRelays.map((relayUrl, index) => {
+                  const isAlreadyAdded = editedRelayList.some(
+                    (relay) => relay.url === relayUrl
+                  );
+                  return (
+                    <div
+                      key={index}
+                      className={`flex items-center justify-between p-2 rounded text-xs ${
+                        isAlreadyAdded
+                          ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800"
+                          : "bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800"
+                      }`}
+                    >
+                      <span
+                        className={`truncate ${
+                          isAlreadyAdded
+                            ? "text-green-700 dark:text-green-300"
+                            : "text-neutral-700 dark:text-neutral-300"
+                        }`}
+                      >
+                        {relayUrl}
+                      </span>
+                      {isAlreadyAdded ? (
+                        <span className="text-green-600 dark:text-green-400 ml-2 flex-shrink-0">
+                          ✓
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            const newRelay: RelayListItem = {
+                              url: relayUrl,
+                              marker: undefined,
+                            };
+                            setEditedRelayList([...editedRelayList, newRelay]);
+                          }}
+                          className="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 ml-2 flex-shrink-0"
+                        >
+                          +
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="space-y-2">
+              {editedRelayList.length > 0 && (
+                <h3 className="text-xs font-medium text-neutral-900 dark:text-neutral-100 mb-3">
+                  Your Relays
+                </h3>
+              )}
               {editedRelayList.map((relay, index) => (
                 <div key={index} className="flex items-center gap-2">
                   <input

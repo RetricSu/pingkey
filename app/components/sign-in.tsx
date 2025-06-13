@@ -2,9 +2,18 @@
 
 import { useState } from "react";
 import { useAuth } from "../contexts/auth";
+import { createExportFile } from "app/lib/util";
 
 export function SignIn() {
-  const { isSignedIn, pubkey, signIn, signOut, generateNewKey } = useAuth();
+  const {
+    isSignedIn,
+    pubkey,
+    signIn,
+    signOut,
+    generateNewKey,
+    exportPrivateKey,
+  } = useAuth();
+
   const [showSignIn, setShowSignIn] = useState(false);
   const [privateKey, setPrivateKey] = useState("");
   const [password, setPassword] = useState("");
@@ -51,6 +60,42 @@ export function SignIn() {
     }
   };
 
+  const handleExportKey = async () => {
+    const exportPassword = prompt(
+      "Enter your password to decrypt and export your private key:"
+    );
+    if (!exportPassword) return;
+
+    try {
+      const privateKeyData = await exportPrivateKey(exportPassword);
+      if (!privateKeyData) {
+        alert("No private key found. Please sign in first.");
+        return;
+      }
+
+      const { fileName, fileContent } = createExportFile(
+        pubkey!,
+        privateKeyData
+      );
+
+      // Create and download the file
+      const blob = new Blob([fileContent], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert(
+        "Failed to export private key: " +
+          (err instanceof Error ? err.message : "Unknown error")
+      );
+    }
+  };
+
   if (isSignedIn) {
     return (
       <div className="relative group">
@@ -94,7 +139,8 @@ export function SignIn() {
           </div>
           <div className="p-1">
             <button
-              className="w-full text-left px-2 py-1.5 text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-900 rounded transition-colors"
+              onClick={handleExportKey}
+              className="w-full text-left px-2 py-1.5 text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-900 rounded transition-colors cursor-pointer"
             >
               Export Key
             </button>
@@ -102,7 +148,7 @@ export function SignIn() {
           <div className="p-1">
             <button
               onClick={signOut}
-              className="w-full text-left px-2 py-1.5 text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-900 rounded transition-colors"
+              className="w-full text-left px-2 py-1.5 text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-900 rounded transition-colors cursor-pointer"
             >
               Sign out
             </button>
