@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { useAuth } from "../contexts/auth";
-import { useNotification } from "../contexts/notification";
-import { createExportFile } from "../lib/util";
-import { Dialog } from "./dialog";
+import { useAuth } from "../../contexts/auth";
+import { useNotification } from "../../contexts/notification";
+import { createExportFile } from "../../lib/util";
+import { Dialog } from "../dialog";
 
 interface UserDropdownProps {
   pubkey: string;
@@ -34,7 +34,10 @@ export function UserDropdown({ pubkey, onSignOut }: UserDropdownProps) {
         return;
       }
 
-      const { fileName, fileContent } = createExportFile(pubkey, privateKeyData);
+      const { fileName, fileContent } = createExportFile(
+        pubkey,
+        privateKeyData
+      );
 
       // Create and download the file
       const blob = new Blob([fileContent], { type: "text/plain" });
@@ -46,8 +49,11 @@ export function UserDropdown({ pubkey, onSignOut }: UserDropdownProps) {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      
-      success("Key Exported", "Your private key has been successfully exported.");
+
+      success(
+        "Key Exported",
+        "Your private key has been successfully exported."
+      );
     } catch (err) {
       error(
         "Export Failed",
@@ -56,14 +62,17 @@ export function UserDropdown({ pubkey, onSignOut }: UserDropdownProps) {
     }
   };
 
-  // 菜单配置
   const menuItems: MenuItem[] = [
     {
-      label: "Setting",
+      label: "Mailbox",
+      href: "/mailbox",
+    },
+    {
+      label: "Edit Profile",
       href: "/setting",
     },
     {
-      label: "My Profile",
+      label: "View My Page",
       href: `/p/${pubkey}`,
     },
     {
@@ -103,20 +112,18 @@ export function UserDropdown({ pubkey, onSignOut }: UserDropdownProps) {
           </div>
           {menuItems.map((item, index) => (
             <div key={index} className="p-1">
-              {item.href ? (
-                <a
-                  href={item.href}
-                  className="w-full text-left px-2 py-1.5 text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-900 rounded transition-colors cursor-pointer"                >
-                  {item.label}
-                </a>
-              ) : (
-                <button
-                  onClick={item.onClick}
-                  className="w-full text-left px-2 py-1.5 text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-900 rounded transition-colors cursor-pointer"
-                >
-                  {item.label}
-                </button>
-              )}
+              <button
+                onClick={
+                  item.href
+                    ? () => {
+                        window.location.href = item.href!;
+                      }
+                    : item.onClick
+                }
+                className="w-full text-left px-2 py-1.5 text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-900 rounded transition-colors cursor-pointer"
+              >
+                {item.label}
+              </button>
             </div>
           ))}
         </div>
@@ -135,4 +142,4 @@ export function UserDropdown({ pubkey, onSignOut }: UserDropdownProps) {
       />
     </>
   );
-} 
+}

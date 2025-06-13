@@ -5,7 +5,7 @@ import { SignIn } from "./sign-in";
 const navItems = {
   "/": { name: "Home" },
   "/blog": { name: "Blog" },
-  "/dashboard": { name: "Dashboard" },
+  "/mailbox": { name: "Mailbox" },
 };
 
 export function ReachMeLogo() {

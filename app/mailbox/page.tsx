@@ -8,7 +8,7 @@ import { LetterCard } from "app/components/letter-card";
 import { useUserRelayList } from "app/hooks/useUserRelayList";
 import { withAuth } from "app/components/auth/with-auth";
 
-function Dashboard() {
+function MailBox() {
   const { isSignedIn, pubkey } = useAuth();
   const { nostr } = useNostr();
   const [giftWrappedNotes, setGiftWrappedNotes] = useState<Event[]>([]);
@@ -141,4 +141,4 @@ function Dashboard() {
   );
 }
 
-export default withAuth(Dashboard, { showInlineAuth: true });
+export default withAuth(MailBox, { showInlineAuth: true });

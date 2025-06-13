@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useAuth } from "../contexts/auth";
+import { useAuth } from "../../contexts/auth";
 import { UserDropdown } from "./user-dropdown";
 import { SignInForm } from "./sign-in-form";
 
