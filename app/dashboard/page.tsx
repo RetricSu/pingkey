@@ -2,21 +2,35 @@
 
 import { useAuth } from "app/contexts/auth";
 import { useNostr } from "app/contexts/nostr";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Event } from "nostr-tools/core";
 import { LetterCard } from "app/components/letter-card";
+import { useUserRelayList } from "app/hooks/useUserRelayList";
 
 export default function Dashboard() {
   const { isSignedIn, pubkey } = useAuth();
   const { nostr } = useNostr();
   const [giftWrappedNotes, setGiftWrappedNotes] = useState<Event[]>([]);
+  const { relayList, refetch: refetchRelayList } = useUserRelayList();
 
-  const fetchGiftWrappedNotes = async () => {
-    if (isSignedIn && nostr) {
-      const notes = await nostr.fetchGiftWrappedNotes(pubkey!);
-      setGiftWrappedNotes(notes);
+  const fetchGiftWrappedNotes = useCallback(async () => {
+    if (relayList.length === 0) {
+      await refetchRelayList();
     }
-  };
+
+    if (isSignedIn && nostr) {
+      if (relayList.length > 0) {
+        const notes = await nostr.fetchGiftWrappedNotes(
+          pubkey!,
+          relayList.map((relay) => relay.url)
+        );
+        setGiftWrappedNotes(notes);
+      } else {
+        const notes = await nostr.fetchGiftWrappedNotes(pubkey!);
+        setGiftWrappedNotes(notes);
+      }
+    }
+  }, [isSignedIn, nostr, pubkey, relayList]);
 
   useEffect(() => {
     fetchGiftWrappedNotes();

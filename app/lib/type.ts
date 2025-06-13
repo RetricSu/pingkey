@@ -11,3 +11,12 @@ export interface RelayListItem {
   url: string;
   marker?: "r" | "w";
 }
+
+export interface UserInfoCache {
+  pubkey: string;
+  profile?: Profile;
+  relayList?: RelayListItem[];
+  encryptedPrivateKey: string;
+  updatedAt: number;
+}
+

@@ -30,3 +30,9 @@ export const defaultRelays: string[] = [
   "wss://relay.nostr.band",
   "wss://nostr.wine",
 ];
+
+export const LocalStorageKeys = {
+  userInfoCacheKey: "ReachMe.UserInfoCache",
+};
+
+export const USER_INFO_CACHE_EXPIRED_MS = 10 * 60 * 1000; // 10 minutes

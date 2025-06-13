@@ -3,18 +3,33 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/auth";
 import { useNostr } from "../contexts/nostr";
+import { useUserProfile } from "../hooks/useUserProfile";
+import { useUserRelayList } from "../hooks/useUserRelayList";
 import { Profile, RelayListItem } from "app/lib/type";
 import { defaultProfile } from "app/lib/config";
 
 export default function SettingPage() {
   const { pubkey } = useAuth();
   const { nostr } = useNostr();
+  const {
+    profile,
+    isLoading: profileLoading,
+    error: profileError,
+    refetch: refetchProfile,
+  } = useUserProfile();
+
+  const {
+    relayList,
+    isLoading: relayListLoading,
+    error: relayListError,
+    refetch: refetchRelayList,
+  } = useUserRelayList();
+
   const [isEditing, setIsEditing] = useState(false);
-  const [profile, setProfile] = useState<Profile>(defaultProfile);
-  const [editedProfile, setEditedProfile] = useState<Profile>(profile);
-  const [isLoading, setIsLoading] = useState(true);
+  const [editedProfile, setEditedProfile] = useState<Profile>(
+    profile || defaultProfile
+  );
   const [error, setError] = useState<string | null>(null);
-  const [relayList, setRelayList] = useState<RelayListItem[]>([]);
   const [editedRelayList, setEditedRelayList] = useState<RelayListItem[]>([]);
   const [isEditingRelays, setIsEditingRelays] = useState(false);
   const [newRelayUrl, setNewRelayUrl] = useState("");
@@ -22,47 +37,17 @@ export default function SettingPage() {
     undefined
   );
 
+  // Update editedProfile when profile changes
   useEffect(() => {
-    async function fetchProfile() {
-      if (!nostr || !pubkey) return;
-
-      try {
-        const nostrProfile = await nostr.fetchProfile(pubkey);
-        if (nostrProfile) {
-          setProfile({
-            name: nostrProfile.name || defaultProfile.name,
-            picture: nostrProfile.picture || defaultProfile.picture,
-            about: nostrProfile.about || defaultProfile.about,
-          });
-          setEditedProfile({
-            name: nostrProfile.name || defaultProfile.name,
-            picture: nostrProfile.picture || defaultProfile.picture,
-            about: nostrProfile.about || defaultProfile.about,
-          });
-        }
-      } catch (err) {
-        setError("Failed to fetch profile");
-        console.error("Error fetching profile:", err);
-      } finally {
-        setIsLoading(false);
-      }
+    if (profile) {
+      setEditedProfile(profile);
     }
+  }, [profile]);
 
-    async function fetchRelayList() {
-      if (!nostr || !pubkey) return;
-
-      try {
-        const relays = await nostr.fetchNip65RelayList([pubkey]);
-        setRelayList(relays);
-        setEditedRelayList(relays);
-      } catch (err) {
-        console.error("Error fetching relay list:", err);
-      }
-    }
-
-    fetchProfile();
-    fetchRelayList();
-  }, [nostr, pubkey]);
+  // Update editedRelayList when relayList changes
+  useEffect(() => {
+    setEditedRelayList(relayList);
+  }, [relayList]);
 
   const handleSave = async () => {
     if (!nostr || !pubkey) return;
@@ -77,8 +62,10 @@ export default function SettingPage() {
       const result = await nostr.setupProfile(nostrProfile);
 
       if (result) {
-        setProfile(editedProfile);
+        // Refetch the profile to update cache and local state
+        await refetchProfile();
         setIsEditing(false);
+        setError(null);
       } else {
         setError("Failed to update profile");
       }
@@ -89,7 +76,7 @@ export default function SettingPage() {
   };
 
   const handleCancel = () => {
-    setEditedProfile(profile);
+    setEditedProfile(profile || defaultProfile);
     setIsEditing(false);
   };
 
@@ -99,8 +86,10 @@ export default function SettingPage() {
     try {
       const result = await nostr.publishNip65RelayListEvent(editedRelayList);
       if (result) {
-        setRelayList(editedRelayList);
+        // Refetch the relay list to update cache and local state
+        await refetchRelayList();
         setIsEditingRelays(false);
+        setError(null);
       } else {
         setError("Failed to update relay list");
       }
@@ -132,23 +121,25 @@ export default function SettingPage() {
     setEditedRelayList(editedRelayList.filter((_, i) => i !== index));
   };
 
-  if (isLoading) {
+  if (profileLoading || relayListLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-neutral-200 dark:border-neutral-800 border-t-neutral-900 dark:border-t-neutral-100 rounded-full animate-spin"></div>
           <div className="text-sm text-neutral-600 dark:text-neutral-400">
-            Loading profile...
+            Loading...
           </div>
         </div>
       </div>
     );
   }
 
-  if (error) {
+  if (profileError || relayListError || error) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
+        <div className="text-sm text-red-600 dark:text-red-400">
+          {profileError || relayListError || error}
+        </div>
       </div>
     );
   }
@@ -252,17 +243,17 @@ export default function SettingPage() {
             <div className="flex flex-col sm:flex-row items-start sm:space-x-8 space-y-4 sm:space-y-0">
               <div className="flex flex-col items-center sm:items-start w-full sm:w-auto min-w-[120px]">
                 <img
-                  src={profile.picture}
-                  alt={profile.name}
+                  src={profile?.picture}
+                  alt={profile?.name}
                   className="w-24 h-24 rounded-full border border-neutral-200 dark:border-neutral-800 object-cover mb-2"
                 />
                 <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 text-center sm:text-left">
-                  {profile.name}
+                  {profile?.name}
                 </h3>
               </div>
               <div className="flex-1 w-full flex flex-col justify-center">
                 <p className="text-base text-neutral-700 dark:text-neutral-300 leading-relaxed whitespace-pre-wrap">
-                  {profile.about}
+                  {profile?.about}
                 </p>
               </div>
             </div>

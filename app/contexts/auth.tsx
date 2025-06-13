@@ -9,6 +9,9 @@ import React, {
 } from "react";
 import { CryptoUtils } from "app/lib/crypto";
 import { Nostr } from "../lib/nostr";
+import { useLocalStorage } from "app/hooks/useLocalStorage";
+import { UserInfoCache } from "app/lib/type";
+import { LocalStorageKeys } from "app/lib/config";
 
 interface AuthContextType {
   isSignedIn: boolean;
@@ -28,17 +31,18 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
+  const [userInfoCache, setUserInfoCache, removeUserInfoCache] = useLocalStorage<UserInfoCache | null>(LocalStorageKeys.userInfoCacheKey, null);
+
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [pubkey, setPubkey] = useState<string | null>(null);
 
   // Check for existing session on mount
   useEffect(() => {
-    const storedPubkey = localStorage.getItem("nostr_pubkey");
-    if (storedPubkey) {
-      setPubkey(storedPubkey);
+    if (userInfoCache) {
+      setPubkey(userInfoCache.pubkey);
       setIsSignedIn(true);
     }
-  }, []);
+  }, [userInfoCache]);
 
   const signIn = async (
     privateKey: string,
@@ -57,8 +61,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         privateKey,
         password
       );
-      localStorage.setItem("nostr_encrypted_private_key", encryptedPrivateKey);
-      localStorage.setItem("nostr_pubkey", publicKey);
+      setUserInfoCache({
+        pubkey: publicKey,
+        encryptedPrivateKey: encryptedPrivateKey,
+        updatedAt: Date.now(),
+      });
 
       // Update state
       setPubkey(publicKey);
@@ -71,8 +78,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signOut = (): void => {
     // Clear localStorage
-    localStorage.removeItem("nostr_encrypted_private_key");
-    localStorage.removeItem("nostr_pubkey");
+    removeUserInfoCache();
 
     // Clear state
     setPubkey(null);
@@ -80,14 +86,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const exportPrivateKey = async (password: string): Promise<string> => {
-    if (!isSignedIn) {
+    if (!isSignedIn || !userInfoCache) {
       throw new Error("Not signed in");
     }
 
     try {
-      const encryptedPrivateKey = localStorage.getItem(
-        "nostr_encrypted_private_key"
-      );
+      const encryptedPrivateKey = userInfoCache.encryptedPrivateKey;
       if (!encryptedPrivateKey) {
         throw new Error("No encrypted private key found");
       }
@@ -115,8 +119,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       keyPair.secretKey,
       password
     );
-    localStorage.setItem("nostr_encrypted_private_key", encryptedPrivateKey);
-    localStorage.setItem("nostr_pubkey", keyPair.publicKey);
+    setUserInfoCache({
+      pubkey: keyPair.publicKey,
+      encryptedPrivateKey: encryptedPrivateKey,
+      updatedAt: Date.now(),
+    });
 
     // Update state
     setPubkey(keyPair.publicKey);

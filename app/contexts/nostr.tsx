@@ -8,13 +8,14 @@ import React, {
   useEffect,
 } from "react";
 import { Nostr } from "../lib/nostr";
-import { Event, EventTemplate } from "nostr-tools/core";
 import { CryptoUtils } from "app/lib/crypto";
 import { finalizeEvent } from "nostr-tools/pure";
+import { UserInfoCache } from "app/lib/type";
+import { useLocalStorage } from "app/hooks/useLocalStorage";
+import { LocalStorageKeys } from "app/lib/config";
 
 interface NostrContextType {
   nostr: Nostr | null;
-  signEvent: (eventData: EventTemplate) => Promise<Event>;
   destroyNostr: () => void;
 }
 
@@ -25,13 +26,14 @@ interface NostrProviderProps {
 }
 
 export function NostrProvider({ children }: NostrProviderProps) {
+  const [userInfoCache, setUserInfoCache, removeUserInfoCache] = useLocalStorage<UserInfoCache | null>(LocalStorageKeys.userInfoCacheKey, null);
   const [nostr, setNostr] = useState<Nostr | null>(null);
 
   const initializeNostr = () => {
     const nostrInstance = new Nostr();
 
     nostrInstance.setRequestPublicKey(async () => {
-      const pubkey = localStorage.getItem("nostr_pubkey");
+      const pubkey = userInfoCache?.pubkey;
       if (!pubkey) {
         throw new Error("No public key found");
       }
@@ -40,9 +42,7 @@ export function NostrProvider({ children }: NostrProviderProps) {
 
     nostrInstance.setSignEventCallback(async (eventData) => {
       try {
-        const encryptedPrivateKey = localStorage.getItem(
-          "nostr_encrypted_private_key"
-        );
+        const encryptedPrivateKey = userInfoCache?.encryptedPrivateKey;
         if (!encryptedPrivateKey) {
           throw new Error("No encrypted private key found");
         }
@@ -70,20 +70,6 @@ export function NostrProvider({ children }: NostrProviderProps) {
     setNostr(nostrInstance);
   };
 
-  const signEvent = async (eventData: EventTemplate): Promise<Event> => {
-    if (!nostr) {
-      throw new Error("Nostr not initialized");
-    }
-    if (!nostr.signEventCallback) {
-      throw new Error("Sign event callback not set");
-    }
-    if (!nostr.requestPublicKey) {
-      throw new Error("request Public key not set");
-    }
-
-    return await nostr.signEventCallback(eventData);
-  };
-
   const destroyNostr = () => {
     if (nostr) {
       nostr.destroy();
@@ -97,7 +83,6 @@ export function NostrProvider({ children }: NostrProviderProps) {
 
   const value: NostrContextType = {
     nostr,
-    signEvent,
     destroyNostr,
   };
 
