@@ -8,7 +8,7 @@ import { generateSecretKey } from "nostr-tools/pure";
 import { hexToBytes } from "@noble/hashes/utils";
 import { wrapEvent } from "nostr-tools/nip17";
 import { defaultProfile } from "app/lib/config";
-import { Profile } from "app/lib/type";
+import { Profile, RelayListItem } from "app/lib/type";
 
 interface PageProps {
   params: {
@@ -26,6 +26,7 @@ export default function DynamicPage({ params }: PageProps) {
   const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
+  const [relayList, setRelayList] = useState<RelayListItem[]>([]);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -47,8 +48,19 @@ export default function DynamicPage({ params }: PageProps) {
         setIsLoading(false);
       }
     }
+    async function fetchRelayList() {
+      if (!nostr || !pubkey) return;
+
+      try {
+        const relays = await nostr.fetchNip65RelayList([pubkey]);
+        setRelayList(relays);
+      } catch (err) {
+        console.error("Error fetching relay list:", err);
+      }
+    }
 
     fetchProfile();
+    fetchRelayList();
   }, [nostr, slug]);
 
   const handleSendMessage = async () => {
@@ -77,24 +89,13 @@ export default function DynamicPage({ params }: PageProps) {
       };
       const signedEvent = wrapEvent(senderPrivkey, recipient, message);
 
-      if (isSignedIn && nostr) {
-        await nostr.publishEvent(signedEvent);
-      } else {
-        // Publish to relays
-        const { SimplePool } = await import("nostr-tools/pool");
-        const pool = new SimplePool();
-        const relays = [
-          "wss://relay.damus.io",
-          "wss://nos.lol",
-          "wss://relay.nostr.band",
-          "wss://nostr.wine",
-        ];
-
-        await Promise.allSettled(
-          relays.map((relay) => pool.publish([relay], signedEvent))
-        );
-        pool.close(relays);
+      if (!nostr) {
+        throw new Error("Nostr not initialized");
       }
+      await nostr.publishEventToRelays(
+        signedEvent,
+        relayList.map((relay) => relay.url)
+      );
 
       setMessage("");
       alert("Message sent successfully!");
@@ -159,30 +160,12 @@ export default function DynamicPage({ params }: PageProps) {
               {profile.name || slug}'s Relays
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs text-gray-500 dark:text-gray-400">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>wss://relay.damus.io</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>wss://nos.lol</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>wss://relay.nostr.band</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>wss://nostr.wine</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>wss://relay.snort.social</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>wss://nostr-pub.wellorder.net</span>
-              </div>
+              {relayList.map((relay, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>{relay.url}</span>
+                </div>
+              ))}
             </div>
           </div>
           <div className="space-y-4">

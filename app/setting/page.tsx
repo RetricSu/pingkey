@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/auth";
 import { useNostr } from "../contexts/nostr";
-import { Profile } from "app/lib/type";
+import { Profile, RelayListItem } from "app/lib/type";
 import { defaultProfile } from "app/lib/config";
 
 export default function SettingPage() {
@@ -14,6 +14,13 @@ export default function SettingPage() {
   const [editedProfile, setEditedProfile] = useState<Profile>(profile);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [relayList, setRelayList] = useState<RelayListItem[]>([]);
+  const [editedRelayList, setEditedRelayList] = useState<RelayListItem[]>([]);
+  const [isEditingRelays, setIsEditingRelays] = useState(false);
+  const [newRelayUrl, setNewRelayUrl] = useState("");
+  const [newRelayMarker, setNewRelayMarker] = useState<"r" | "w" | undefined>(
+    undefined
+  );
 
   useEffect(() => {
     async function fetchProfile() {
@@ -41,7 +48,20 @@ export default function SettingPage() {
       }
     }
 
+    async function fetchRelayList() {
+      if (!nostr || !pubkey) return;
+
+      try {
+        const relays = await nostr.fetchNip65RelayList([pubkey]);
+        setRelayList(relays);
+        setEditedRelayList(relays);
+      } catch (err) {
+        console.error("Error fetching relay list:", err);
+      }
+    }
+
     fetchProfile();
+    fetchRelayList();
   }, [nostr, pubkey]);
 
   const handleSave = async () => {
@@ -71,6 +91,45 @@ export default function SettingPage() {
   const handleCancel = () => {
     setEditedProfile(profile);
     setIsEditing(false);
+  };
+
+  const handleSaveRelays = async () => {
+    if (!nostr || !pubkey) return;
+
+    try {
+      const result = await nostr.publishNip65RelayListEvent(editedRelayList);
+      if (result) {
+        setRelayList(editedRelayList);
+        setIsEditingRelays(false);
+      } else {
+        setError("Failed to update relay list");
+      }
+    } catch (err) {
+      setError("Failed to update relay list");
+      console.error("Error updating relay list:", err);
+    }
+  };
+
+  const handleCancelRelays = () => {
+    setEditedRelayList(relayList);
+    setIsEditingRelays(false);
+  };
+
+  const handleAddRelay = () => {
+    if (!newRelayUrl) return;
+
+    const newRelay: RelayListItem = {
+      url: newRelayUrl,
+      marker: newRelayMarker,
+    };
+
+    setEditedRelayList([...editedRelayList, newRelay]);
+    setNewRelayUrl("");
+    setNewRelayMarker(undefined);
+  };
+
+  const handleRemoveRelay = (index: number) => {
+    setEditedRelayList(editedRelayList.filter((_, i) => i !== index));
   };
 
   if (isLoading) {
@@ -207,6 +266,135 @@ export default function SettingPage() {
                 </p>
               </div>
             </div>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-6 bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-lg p-6">
+        <div className="flex items-center justify-between mb-10">
+          <h2 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+            Relay List (NIP-65)
+          </h2>
+          {!isEditingRelays && (
+            <button
+              onClick={() => setIsEditingRelays(true)}
+              className="text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
+            >
+              Edit Relays
+            </button>
+          )}
+        </div>
+
+        {isEditingRelays ? (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              {editedRelayList.map((relay, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={relay.url}
+                    onChange={(e) => {
+                      const newList = [...editedRelayList];
+                      newList[index].url = e.target.value;
+                      setEditedRelayList(newList);
+                    }}
+                    className="flex-1 px-3 py-2 text-sm bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded focus:outline-none focus:ring-1 focus:ring-neutral-300 dark:focus:ring-neutral-700 text-neutral-900 dark:text-neutral-100"
+                  />
+                  <select
+                    value={relay.marker || ""}
+                    onChange={(e) => {
+                      const newList = [...editedRelayList];
+                      newList[index].marker = e.target.value as
+                        | "r"
+                        | "w"
+                        | undefined;
+                      setEditedRelayList(newList);
+                    }}
+                    className="px-3 py-2 text-sm bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded focus:outline-none focus:ring-1 focus:ring-neutral-300 dark:focus:ring-neutral-700 text-neutral-900 dark:text-neutral-100"
+                  >
+                    <option value="">No marker</option>
+                    <option value="r">Read</option>
+                    <option value="w">Write</option>
+                  </select>
+                  <button
+                    onClick={() => handleRemoveRelay(index)}
+                    className="px-2 py-2 text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2 pt-4">
+              <input
+                type="text"
+                value={newRelayUrl}
+                onChange={(e) => setNewRelayUrl(e.target.value)}
+                placeholder="New relay URL"
+                className="flex-1 px-3 py-2 text-sm bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded focus:outline-none focus:ring-1 focus:ring-neutral-300 dark:focus:ring-neutral-700 text-neutral-900 dark:text-neutral-100"
+              />
+              <select
+                value={newRelayMarker || ""}
+                onChange={(e) =>
+                  setNewRelayMarker(e.target.value as "r" | "w" | undefined)
+                }
+                className="px-3 py-2 text-sm bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded focus:outline-none focus:ring-1 focus:ring-neutral-300 dark:focus:ring-neutral-700 text-neutral-900 dark:text-neutral-100"
+              >
+                <option value="">No marker</option>
+                <option value="r">Read</option>
+                <option value="w">Write</option>
+              </select>
+              <button
+                onClick={handleAddRelay}
+                className="px-4 py-2 text-sm bg-neutral-900 dark:bg-neutral-100 text-white dark:text-black rounded hover:bg-neutral-700 dark:hover:bg-neutral-300 transition-colors"
+              >
+                Add
+              </button>
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <button
+                onClick={handleSaveRelays}
+                className="px-4 py-2 text-sm bg-neutral-900 dark:bg-neutral-100 text-white dark:text-black rounded hover:bg-neutral-700 dark:hover:bg-neutral-300 transition-colors"
+              >
+                Save Changes
+              </button>
+              <button
+                onClick={handleCancelRelays}
+                className="px-4 py-2 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {relayList.length === 0 ? (
+              <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                No relays configured. Click "Edit Relays" to add some.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {relayList.map((relay, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between py-2 px-3 bg-neutral-50 dark:bg-neutral-900 rounded"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-neutral-900 dark:text-neutral-100">
+                        {relay.url}
+                      </span>
+                      {relay.marker && (
+                        <span className="text-xs px-2 py-1 bg-neutral-200 dark:bg-neutral-800 rounded text-neutral-700 dark:text-neutral-300">
+                          {relay.marker === "r" ? "Read" : "Write"}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

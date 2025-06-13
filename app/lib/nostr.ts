@@ -207,23 +207,21 @@ export class Nostr {
       },
     ];
     const events = await this.fetchEvents(filters);
-    return events
-      .map((event) =>
-        event.tags
-          .find((tag) => tag[0] === "r")
-          ?.map((tag) => {
-            const relayUrl = tag[1];
-            const marker = tag[2] as "r" | "w" | undefined;
-            if (!relayUrl) {
-              return null;
-            } else {
-              return {
-                url: relayUrl,
-                marker: marker,
-              } as RelayListItem;
-            }
-          })
-      )
+    const eventTags = events.map((event) => event.tags).flat();
+    const relayTags = eventTags.filter((tag) => tag[0] === "r");
+    return relayTags
+      .map((tag) => {
+        const relayUrl = tag[1];
+        const marker = tag[2] as "r" | "w" | undefined;
+        if (!relayUrl) {
+          return null;
+        } else {
+          return {
+            url: relayUrl,
+            marker: marker,
+          } as RelayListItem;
+        }
+      })
       .filter((r) => r !== null) as unknown as RelayListItem[];
   }
 
