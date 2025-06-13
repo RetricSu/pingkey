@@ -7,8 +7,9 @@ import { useUserProfile } from "../hooks/useUserProfile";
 import { useUserRelayList } from "../hooks/useUserRelayList";
 import { Profile, RelayListItem } from "app/lib/type";
 import { defaultProfile } from "app/lib/config";
+import { withAuth } from "app/components/auth/with-auth";
 
-export default function SettingPage() {
+function SettingPage() {
   const { pubkey } = useAuth();
   const { nostr } = useNostr();
   const {
@@ -392,3 +393,5 @@ export default function SettingPage() {
     </div>
   );
 }
+
+export default withAuth(SettingPage, { showInlineAuth: true });

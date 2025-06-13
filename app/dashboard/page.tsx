@@ -6,8 +6,9 @@ import { useCallback, useEffect, useState } from "react";
 import { Event } from "nostr-tools/core";
 import { LetterCard } from "app/components/letter-card";
 import { useUserRelayList } from "app/hooks/useUserRelayList";
+import { withAuth } from "app/components/auth/with-auth";
 
-export default function Dashboard() {
+function Dashboard() {
   const { isSignedIn, pubkey } = useAuth();
   const { nostr } = useNostr();
   const [giftWrappedNotes, setGiftWrappedNotes] = useState<Event[]>([]);
@@ -142,3 +143,5 @@ export default function Dashboard() {
     </section>
   );
 }
+
+export default withAuth(Dashboard, { showInlineAuth: true });
