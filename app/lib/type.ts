@@ -20,3 +20,12 @@ export interface UserInfoCache {
   updatedAt: number;
 }
 
+export interface Recipient {
+  publicKey: string;
+  relayUrl?: string;
+}
+
+export interface ReplyTo {
+  eventId: string;
+  relayUrl?: string;
+}

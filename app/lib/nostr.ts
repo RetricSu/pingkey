@@ -5,12 +5,18 @@ import {
 } from "nostr-tools/pure";
 import { SimplePool } from "nostr-tools/pool";
 import { bytesToHex, hexToBytes } from "@noble/hashes/utils";
-import type { Event, EventTemplate, UnsignedEvent } from "nostr-tools/core";
+import type {
+  Event,
+  EventTemplate,
+  NostrEvent,
+  UnsignedEvent,
+} from "nostr-tools/core";
 import { Filter, nip44 } from "nostr-tools";
-import { Profile, RelayListItem } from "./type";
+import { Profile, RelayListItem, Recipient, ReplyTo } from "./type";
 import { defaultRelays } from "./config";
-import { wrapEvent } from "nostr-tools/nip17";
 import { minePow } from "nostr-tools/nip13";
+import { GiftWrap, PrivateDirectMessage } from "nostr-tools/kinds";
+import { createRumor, createSeal } from "nostr-tools/nip59";
 
 export class Nostr {
   public requestPublicKey: (() => Promise<string | null>) | null = null;
@@ -211,6 +217,69 @@ export class Nostr {
       .filter((r) => r !== null) as unknown as RelayListItem[];
   }
 
+  private async createNip59POWWrapEvent(
+    seal: NostrEvent,
+    recipientPublicKey: string,
+    difficulty: number = 4
+  ): Promise<NostrEvent> {
+    const randomKey = generateSecretKey();
+
+    const unsignedEvent: UnsignedEvent = {
+      kind: GiftWrap,
+      content: await this.nip44Encrypt(
+        bytesToHex(randomKey),
+        recipientPublicKey,
+        JSON.stringify(seal)
+      ),
+      created_at: Math.floor(Date.now() / 1000),
+      tags: [["p", recipientPublicKey]],
+      pubkey: getPublicKey(randomKey),
+    };
+
+    const powUnsignedEvent: UnsignedEvent = minePow(unsignedEvent, difficulty);
+
+    return finalizeEvent(powUnsignedEvent, randomKey) as NostrEvent;
+  }
+
+  private createNip17BaseEvent(
+    recipients: Recipient | Recipient[],
+    message: string,
+    conversationTitle?: string,
+    replyTo?: ReplyTo
+  ): EventTemplate {
+    const baseEvent: EventTemplate = {
+      created_at: Math.ceil(Date.now() / 1000),
+      kind: PrivateDirectMessage,
+      tags: [],
+      content: message,
+    };
+
+    const recipientsArray = Array.isArray(recipients)
+      ? recipients
+      : [recipients];
+
+    recipientsArray.forEach(({ publicKey, relayUrl }) => {
+      baseEvent.tags.push(
+        relayUrl ? ["p", publicKey, relayUrl] : ["p", publicKey]
+      );
+    });
+
+    if (replyTo) {
+      baseEvent.tags.push([
+        "e",
+        replyTo.eventId,
+        replyTo.relayUrl || "",
+        "reply",
+      ]);
+    }
+
+    if (conversationTitle) {
+      baseEvent.tags.push(["subject", conversationTitle]);
+    }
+
+    return baseEvent;
+  }
+
   async createPowGiftWrappedNote(
     senderPrivkey: Uint8Array<ArrayBufferLike>,
     recipient: {
@@ -220,20 +289,15 @@ export class Nostr {
     message: string,
     difficulty: number = 4
   ): Promise<Event> {
-    const signedEvent = wrapEvent(senderPrivkey, recipient, message);
-
-    const randomKey = generateSecretKey();
-    const randomPubKey = getPublicKey(randomKey);
-    const unsignedEvent: UnsignedEvent = {
-      kind: signedEvent.kind,
-      created_at: signedEvent.created_at,
-      tags: signedEvent.tags,
-      content: signedEvent.content,
-      pubkey: randomPubKey,
-    };
-
-    const powUnsignedEvent: UnsignedEvent = minePow(unsignedEvent, difficulty);
-    return finalizeEvent(powUnsignedEvent, randomKey);
+    const event = this.createNip17BaseEvent(recipient, message);
+    const rumor = createRumor(event, senderPrivkey);
+    const seal = createSeal(rumor, senderPrivkey, recipient.publicKey);
+    const wrappedEvent = await this.createNip59POWWrapEvent(
+      seal,
+      recipient.publicKey,
+      difficulty
+    );
+    return wrappedEvent;
   }
 
   async publishNote(
