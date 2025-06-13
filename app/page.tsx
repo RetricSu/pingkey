@@ -1,62 +1,32 @@
-import Image from "next/image";
-import { socialLinks } from "./lib/config";
+"use client";
+
+import Link from "next/link";
+import { useAuth } from "./contexts/auth";
+import { useUserProfile } from "./hooks/useUserProfile";
 
 export default function Page() {
+  const { isSignedIn } = useAuth();
+  const { profile } = useUserProfile();
+
   return (
-    <section>
-      <a href={socialLinks.twitter} target="_blank">
-        <Image
-          src="/profile.png"
-          alt="Profile photo"
-          className="rounded-full bg-gray-100 block lg:mt-5 mt-0 lg:mb-5 mb-10 mx-auto sm:float-right sm:ml-5 sm:mb-5 grayscale hover:grayscale-0"
-          unoptimized
-          width={160}
-          height={160}
-          priority
-        />
-      </a>
-      <h1 className="mb-8 text-2xl font-medium">Portfolio template!</h1>
-      <div className="prose prose-neutral dark:prose-invert">
-        <p>
-          A clean, fast, and lightweight portfolio template built with Next.js,
-          Vercel, and Tailwind CSS.
+    <section className="max-w-2xl mx-auto">
+      {/* Hero Section */}
+      <div className="text-center mb-16">
+        <h1 className="text-2xl md:text-2xl font-light tracking-tight mb-6 text-neutral-900 dark:text-neutral-100 capitalize">
+          Easiest way to reach you on internet
+        </h1>
+
+        <p className="text-lg text-neutral-600 dark:text-neutral-400 mb-12 leading-relaxed">
+          Let other people reach you <br /> without email, phone, or any social
+          media accounts.
         </p>
-        <p>
-          Nextfolio has everything you need for a portfolio: MDX blog, SEO, RSS,
-          Atom & JSON feeds, analytics, Tweet & YouTube embeds, KaTeX and {""}
-          <a
-            target="_blank"
-            href="https://github.com/1msirius/Nextfolio?tab=readme-ov-file#features"
-          >
-            more
-          </a>
-          .
-        </p>
-        <p>
-          Nextfolio is{" "}
-          <a href={socialLinks.github} target="_blank">
-            open-source
-          </a>{" "}
-          and fully customizable, making it easy to add more features.
-        </p>
-        <p>
-          <a
-            href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2F1msirius%2FNextfolio"
-            target="_blank"
-          >
-            Deploy
-          </a>{" "}
-          your Nextfolio site with Vercel in minutes and follow the set up
-          instructions in the{" "}
-          <a href="/blog/getting-started">Getting Started</a> post.
-        </p>
-        <p>
-          Built and maintained by{" "}
-          <a href="https://imsirius.xyz/" target="_blank">
-            Sirius
-          </a>
-          .
-        </p>
+
+        <Link
+          href={isSignedIn ? "/mailbox" : "/signin"}
+          className="inline-block px-6 py-3 text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-600 hover:border-neutral-900 dark:hover:border-neutral-300 transition-colors duration-200"
+        >
+          {isSignedIn ? `Hello Back, ${profile?.name}` : "Set up your profile"}
+        </Link>
       </div>
     </section>
   );

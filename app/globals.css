@@ -4,44 +4,107 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-::selection {
-  background-color: #47a3f3;
-  color: #fefefe;
-}
-
-/* Light theme colors */
+/* Custom fonts - cleaner, more professional */
 :root {
-  --sh-class: #2d5e9d;
-  --sh-identifier: #354150;
-  --sh-sign: #8996a3;
-  --sh-string: #007f7a;
-  --sh-keyword: #e02518;
-  --sh-comment: #a19595;
-  --sh-jsxliterals: #6266d1;
-  --sh-property: #e25a1c;
-  --sh-entity: #e25a1c;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 }
 
-/* Dark theme colors */
+/* Selection styling */
+::selection {
+  background-color: #3b82f6;
+  color: #ffffff;
+}
+
+/* Light theme colors - more sophisticated palette */
+:root {
+  --sh-class: #1e40af;
+  --sh-identifier: #1f2937;
+  --sh-sign: #6b7280;
+  --sh-string: #059669;
+  --sh-keyword: #dc2626;
+  --sh-comment: #9ca3af;
+  --sh-jsxliterals: #7c3aed;
+  --sh-property: #ea580c;
+  --sh-entity: #ea580c;
+  
+  /* Custom color variables */
+  --color-text: #111827;
+  --color-text-secondary: #6b7280;
+  --color-background: #ffffff;
+  --color-background-secondary: #f9fafb;
+  --color-border: #e5e7eb;
+  --color-border-light: #f3f4f6;
+  --color-accent: #3b82f6;
+  --color-accent-hover: #2563eb;
+}
+
+/* Dark theme colors - refined dark palette */
 .dark {
-  background-color: #111010;
-  --sh-class: #4c97f8;
-  --sh-identifier: white;
-  --sh-sign: #8996a3;
-  --sh-string: #0fa295;
-  --sh-keyword: #f47067;
-  --sh-comment: #a19595;
-  --sh-jsxliterals: #6266d1;
-  --sh-property: #e25a1c;
-  --sh-entity: #e25a1c;
+  --color-text: #f9fafb;
+  --color-text-secondary: #9ca3af;
+  --color-background: #0f1419;
+  --color-background-secondary: #1f2937;
+  --color-border: #374151;
+  --color-border-light: #4b5563;
+  --color-accent: #60a5fa;
+  --color-accent-hover: #3b82f6;
+  
+  --sh-class: #60a5fa;
+  --sh-identifier: #f9fafb;
+  --sh-sign: #9ca3af;
+  --sh-string: #34d399;
+  --sh-keyword: #f87171;
+  --sh-comment: #6b7280;
+  --sh-jsxliterals: #a78bfa;
+  --sh-property: #fb923c;
+  --sh-entity: #fb923c;
 }
 
+/* Base styles */
 html {
   min-width: 360px;
+  font-feature-settings: "rlig" 1, "calt" 1;
 }
 
+body {
+  color: var(--color-text);
+  background-color: var(--color-background);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography improvements */
 .prose {
-  @apply text-[#000000] dark:text-[#FFFFFF];
+  @apply text-[var(--color-text)];
+  font-feature-settings: "rlig" 1, "calt" 1;
+  line-height: 1.7;
+}
+
+.prose h1 {
+  @apply text-3xl font-semibold tracking-tight;
+  color: var(--color-text);
+  line-height: 1.2;
+}
+
+.prose h2 {
+  @apply text-2xl font-semibold tracking-tight mt-12 mb-4;
+  color: var(--color-text);
+  line-height: 1.3;
+}
+
+.prose h3 {
+  @apply text-xl font-semibold tracking-tight mt-8 mb-3;
+  color: var(--color-text);
+  line-height: 1.4;
+}
+
+.prose p {
+  @apply mb-6;
+  color: var(--color-text);
+  line-height: 1.7;
 }
 
 .prose .anchor {
@@ -58,15 +121,18 @@ html {
 }
 
 .prose a {
-  @apply transition-all decoration-neutral-400 dark:decoration-neutral-600 underline-offset-2 decoration-[0.1em] font-normal text-[#000000] dark:text-[#FFFFFF];
+  @apply transition-all underline-offset-2 decoration-[0.1em] font-medium;
+  color: var(--color-accent);
+  text-decoration-color: var(--color-accent);
 }
 
 .prose a:hover {
-  @apply dark:decoration-neutral-400 decoration-neutral-600;
+  color: var(--color-accent-hover);
+  text-decoration-color: var(--color-accent-hover);
 }
 
 .prose .anchor:after {
-  @apply text-neutral-300 dark:text-neutral-700;
+  color: var(--color-text-secondary);
   content: "#";
 }
 
@@ -74,18 +140,27 @@ html {
   @apply visible;
 }
 
+/* Code blocks - cleaner styling */
 .prose pre {
-  @apply bg-[#F7F7F7] dark:bg-[#181818] rounded-lg overflow-x-auto;
+  @apply rounded-lg overflow-x-auto border;
+  background-color: var(--color-background-secondary);
+  border-color: var(--color-border);
+  padding: 1.5rem;
+  line-height: 1.6;
 }
 
 .prose code {
-  @apply px-1 py-0.5 rounded-lg;
+  @apply px-2 py-1 rounded font-medium;
+  background-color: var(--color-background-secondary);
+  color: var(--color-text);
+  font-size: 0.875em;
+  font-family: var(--font-mono);
 }
 
 .prose pre code {
-  @apply p-0;
+  @apply p-0 bg-transparent;
   border: initial;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 .prose code span {
@@ -93,61 +168,181 @@ html {
 }
 
 .prose img {
-  /* Don't apply styles to next/image */
-  @apply m-0;
-}
-
-.prose h2,
-h3,
-h4,
-h5,
-h6 {
-  @apply font-medium;
+  @apply m-0 rounded-lg;
 }
 
 .prose strong {
-  @apply font-medium;
+  @apply font-semibold;
+  color: var(--color-text);
 }
 
 .prose > :first-child {
-  /* Override removing top margin, causing layout shift */
-  margin-top: 1.25em;
-  margin-bottom: 1.25em;
+  margin-top: 0;
 }
 
-pre::-webkit-scrollbar {
-  display: none;
-}
-
-pre {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
-}
-
-/* Remove Safari input shadow on mobile */
+/* Form elements - modern styling */
 input[type="text"],
-input[type="email"] {
+input[type="email"],
+textarea {
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
+  @apply transition-all duration-200;
+  background-color: var(--color-background);
+  border-color: var(--color-border);
+  color: var(--color-text);
 }
 
-.prose .tweet a {
-  text-decoration: inherit;
+input[type="text"]:focus,
+input[type="email"]:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgb(59 130 246 / 0.1);
+}
+
+input[type="text"]::placeholder,
+input[type="email"]::placeholder,
+textarea::placeholder {
+  color: var(--color-text-secondary);
+}
+
+/* Button styling */
+button {
+  @apply transition-all duration-200;
   font-weight: 500;
 }
 
+button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(59 130 246 / 0.1);
+}
+
+/* Scrollbar styling */
+pre::-webkit-scrollbar {
+  height: 8px;
+}
+
+pre::-webkit-scrollbar-track {
+  background: var(--color-background-secondary);
+}
+
+pre::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+pre::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+pre {
+  -ms-overflow-style: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) var(--color-background-secondary);
+}
+
+/* Status indicators */
+.status-indicator {
+  @apply inline-flex items-center;
+}
+
+.status-indicator.online {
+  color: #10b981;
+}
+
+.status-indicator.offline {
+  color: var(--color-text-secondary);
+}
+
+/* Table styling */
 table {
   display: block;
   max-width: fit-content;
   overflow-x: auto;
   white-space: nowrap;
+  border-collapse: collapse;
+}
+
+.prose table {
+  @apply w-full border border-collapse;
+  border-color: var(--color-border);
+}
+
+.prose th,
+.prose td {
+  @apply px-4 py-2 border;
+  border-color: var(--color-border);
+}
+
+.prose th {
+  @apply font-semibold;
+  background-color: var(--color-background-secondary);
+  color: var(--color-text);
+}
+
+/* Callout styling */
+.prose .callout {
+  @apply p-4 rounded-lg border-l-4;
+  background-color: var(--color-background-secondary);
+  border-left-color: var(--color-accent);
 }
 
 .prose .callout > p {
   margin: 0;
 }
 
+/* Tweet styling */
+.prose .tweet a {
+  text-decoration: inherit;
+  font-weight: 500;
+}
+
+/* Utility classes */
 .title {
   text-wrap: balance;
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-accent), #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Improved spacing and layout */
+.container {
+  @apply mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+.section-padding {
+  @apply py-12 md:py-16 lg:py-20;
+}
+
+/* Card styling */
+.card {
+  @apply rounded-lg border p-6;
+  background-color: var(--color-background);
+  border-color: var(--color-border);
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+
+.card:hover {
+  border-color: var(--color-accent);
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+/* Improved mobile responsiveness */
+@media (max-width: 640px) {
+  .prose h1 {
+    @apply text-2xl;
+  }
+  
+  .prose h2 {
+    @apply text-xl mt-8;
+  }
+  
+  .prose h3 {
+    @apply text-lg mt-6;
+  }
 }
