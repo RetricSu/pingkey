@@ -1,10 +1,16 @@
-import { generateSecretKey, getPublicKey } from "nostr-tools/pure";
+import {
+  finalizeEvent,
+  generateSecretKey,
+  getPublicKey,
+} from "nostr-tools/pure";
 import { SimplePool } from "nostr-tools/pool";
 import { bytesToHex, hexToBytes } from "@noble/hashes/utils";
-import type { Event, EventTemplate } from "nostr-tools/core";
+import type { Event, EventTemplate, UnsignedEvent } from "nostr-tools/core";
 import { Filter, nip44 } from "nostr-tools";
 import { Profile, RelayListItem } from "./type";
 import { defaultRelays } from "./config";
+import { wrapEvent } from "nostr-tools/nip17";
+import { minePow } from "nostr-tools/nip13";
 
 export class Nostr {
   public requestPublicKey: (() => Promise<string | null>) | null = null;
@@ -113,7 +119,7 @@ export class Nostr {
   async fetchEvents(
     filters: Filter[],
     relays: string[] = this.globalRelays,
-    timeoutMs: number = 10000,
+    timeoutMs: number = 10000
   ): Promise<Event[]> {
     return new Promise((resolve) => {
       const events: Event[] = [];
@@ -203,6 +209,31 @@ export class Nostr {
         }
       })
       .filter((r) => r !== null) as unknown as RelayListItem[];
+  }
+
+  async createPowGiftWrappedNote(
+    senderPrivkey: Uint8Array<ArrayBufferLike>,
+    recipient: {
+      publicKey: string;
+      relay?: string;
+    },
+    message: string,
+    difficulty: number = 4
+  ): Promise<Event> {
+    const signedEvent = wrapEvent(senderPrivkey, recipient, message);
+
+    const randomKey = generateSecretKey();
+    const randomPubKey = getPublicKey(randomKey);
+    const unsignedEvent: UnsignedEvent = {
+      kind: signedEvent.kind,
+      created_at: signedEvent.created_at,
+      tags: signedEvent.tags,
+      content: signedEvent.content,
+      pubkey: randomPubKey,
+    };
+
+    const powUnsignedEvent: UnsignedEvent = minePow(unsignedEvent, difficulty);
+    return finalizeEvent(powUnsignedEvent, randomKey);
   }
 
   async publishNote(

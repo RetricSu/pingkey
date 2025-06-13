@@ -87,11 +87,17 @@ export default function DynamicPage({ params }: PageProps) {
       const recipient = {
         publicKey: slug,
       };
-      const signedEvent = wrapEvent(senderPrivkey, recipient, message);
 
       if (!nostr) {
         throw new Error("Nostr not initialized");
       }
+
+      const signedEvent = await nostr.createPowGiftWrappedNote(
+        senderPrivkey,
+        recipient,
+        message
+      );
+
       await nostr.publishEventToRelays(
         signedEvent,
         relayList.map((relay) => relay.url)
