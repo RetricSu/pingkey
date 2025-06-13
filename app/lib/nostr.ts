@@ -4,31 +4,21 @@ import { bytesToHex, hexToBytes } from "@noble/hashes/utils";
 import type { Event, EventTemplate } from "nostr-tools/core";
 import { Filter, nip44 } from "nostr-tools";
 import { Profile, RelayListItem } from "./type";
+import { defaultRelays } from "./config";
 
 export class Nostr {
   public requestPublicKey: (() => Promise<string | null>) | null = null;
   public signEventCallback:
     | ((eventData: EventTemplate) => Promise<Event>)
     | null = null;
+  private globalRelays: string[];
   private pool: SimplePool;
-  public relays: string[];
 
-  constructor(relays: string[] = []) {
+  constructor(relays: string[] = defaultRelays) {
     this.pool = new SimplePool();
-    this.relays =
-      relays.length > 0
-        ? relays
-        : [
-            "wss://relay.damus.io",
-            "wss://nos.lol",
-            "wss://relay.nostr.band",
-            "wss://nostr.wine",
-          ];
+    this.globalRelays = relays;
   }
 
-  /**
-   * Generate a new secret key and derive the public key
-   */
   generateNewKey(): { secretKey: string; publicKey: string } {
     const secretKey = generateSecretKey();
     const publicKey = getPublicKey(secretKey);
@@ -37,6 +27,10 @@ export class Nostr {
       secretKey: bytesToHex(secretKey),
       publicKey: publicKey,
     };
+  }
+
+  getPublicKeyFromPrivateKey(privateKeyHex: string): string {
+    return getPublicKey(hexToBytes(privateKeyHex));
   }
 
   setSignEventCallback(
@@ -49,13 +43,6 @@ export class Nostr {
     this.requestPublicKey = requestPublicKey;
   }
 
-  getPublicKeyFromPrivateKey(privateKeyHex: string): string {
-    return getPublicKey(hexToBytes(privateKeyHex));
-  }
-
-  /**
-   * Set up profile metadata (kind 0 event)
-   */
   async setupProfile(profile: Profile): Promise<Event | null> {
     if (!this.signEventCallback || !this.requestPublicKey) {
       throw new Error("signEventCallback not set.");
@@ -110,11 +97,8 @@ export class Nostr {
     return nip44.decrypt(payload, conversationKey);
   }
 
-  /**
-   * Publish an event to relays
-   */
   async publishEvent(event: Event): Promise<void> {
-    const promises = this.relays.map((relay) =>
+    const promises = this.globalRelays.map((relay) =>
       this.pool.publish([relay], event)
     );
 
@@ -126,12 +110,10 @@ export class Nostr {
     await Promise.allSettled(promises);
   }
 
-  /**
-   * Fetch events from relays based on filters
-   */
   async fetchEvents(
     filters: Filter[],
-    timeoutMs: number = 10000
+    relays: string[] = this.globalRelays,
+    timeoutMs: number = 10000,
   ): Promise<Event[]> {
     return new Promise((resolve) => {
       const events: Event[] = [];
@@ -139,7 +121,7 @@ export class Nostr {
         resolve(events);
       }, timeoutMs);
 
-      const sub = this.pool.subscribeMany(this.relays, filters, {
+      const sub = this.pool.subscribeMany(relays, filters, {
         onevent(event) {
           events.push(event);
         },
@@ -156,9 +138,6 @@ export class Nostr {
     });
   }
 
-  /**
-   * Fetch profile metadata for a public key
-   */
   async fetchProfile(pubkey: string): Promise<Profile | null> {
     const filters: Filter[] = [
       {
@@ -168,7 +147,7 @@ export class Nostr {
       },
     ];
 
-    const events = await this.fetchEvents(filters, 5000);
+    const events = await this.fetchEvents(filters, this.globalRelays, 5000);
 
     if (events.length === 0) {
       return null;
@@ -187,6 +166,7 @@ export class Nostr {
 
   async fetchGiftWrappedNotes(
     receiptPubkey: string,
+    relays: string[] = this.globalRelays,
     limit: number = 50
   ): Promise<Event[]> {
     const filters: Filter[] = [
@@ -196,7 +176,7 @@ export class Nostr {
         limit: limit,
       },
     ];
-    return await this.fetchEvents(filters);
+    return await this.fetchEvents(filters, relays);
   }
 
   async fetchNip65RelayList(authors: string[]): Promise<RelayListItem[]> {
@@ -275,8 +255,8 @@ export class Nostr {
    * Add a relay to the pool
    */
   addRelay(relayUrl: string): void {
-    if (!this.relays.includes(relayUrl)) {
-      this.relays.push(relayUrl);
+    if (!this.globalRelays.includes(relayUrl)) {
+      this.globalRelays.push(relayUrl);
     }
   }
 
@@ -284,20 +264,17 @@ export class Nostr {
    * Remove a relay from the pool
    */
   removeRelay(relayUrl: string): void {
-    this.relays = this.relays.filter((relay) => relay !== relayUrl);
+    this.globalRelays = this.globalRelays.filter((relay) => relay !== relayUrl);
   }
 
   /**
    * Get current relays
    */
   getRelays(): string[] {
-    return [...this.relays];
+    return [...this.globalRelays];
   }
 
-  /**
-   * Close all connections and clean up
-   */
   destroy(): void {
-    this.pool.close(this.relays);
+    this.pool.close(this.globalRelays);
   }
 }

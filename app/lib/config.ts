@@ -23,3 +23,10 @@ export const defaultProfile: Profile = {
   about:
     "No profile set yet. Click 'Edit Profile' to set up your Nostr profile.",
 };
+
+export const defaultRelays: string[] = [
+  "wss://relay.damus.io",
+  "wss://nos.lol",
+  "wss://relay.nostr.band",
+  "wss://nostr.wine",
+];
