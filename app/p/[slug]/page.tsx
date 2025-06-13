@@ -4,9 +4,9 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useAuth } from "../../contexts/auth";
 import { useNostr } from "../../contexts/nostr";
+import { useNotification } from "../../contexts/notification";
 import { generateSecretKey } from "nostr-tools/pure";
 import { hexToBytes } from "@noble/hashes/utils";
-import { wrapEvent } from "nostr-tools/nip17";
 import { defaultProfile } from "app/lib/config";
 import { Profile, RelayListItem } from "app/lib/type";
 
@@ -19,10 +19,11 @@ interface PageProps {
 export default function DynamicPage({ params }: PageProps) {
   const { isSignedIn, pubkey, exportPrivateKey } = useAuth();
   const { nostr } = useNostr();
+  const { success, error } = useNotification();
   const { slug } = params;
   const [profile, setProfile] = useState<Profile>(defaultProfile);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [profileError, setProfileError] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
@@ -42,7 +43,7 @@ export default function DynamicPage({ params }: PageProps) {
           });
         }
       } catch (err) {
-        setError("Failed to fetch profile");
+        setProfileError("Failed to fetch profile");
         console.error("Error fetching profile:", err);
       } finally {
         setIsLoading(false);
@@ -104,7 +105,7 @@ export default function DynamicPage({ params }: PageProps) {
       );
 
       setMessage("");
-      alert("Message sent successfully!");
+      success("Message sent successfully!");
     } catch (err) {
       console.error("Failed to send message:", err);
       setSendError(
@@ -128,10 +129,12 @@ export default function DynamicPage({ params }: PageProps) {
     );
   }
 
-  if (error) {
+  if (profileError) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
+        <div className="text-sm text-red-600 dark:text-red-400">
+          {profileError}
+        </div>
       </div>
     );
   }
