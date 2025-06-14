@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { usePowWorker } from "./usePowWorker";
 import { useNostr } from "../contexts/nostr";
 import { useNotification } from "../contexts/notification";
+import { POW_CONFIG } from "app/lib/config";
 
 interface PowCreationParams {
   senderPrivkey: Uint8Array;
@@ -25,7 +26,7 @@ export function usePowCreation(): UsePowCreationReturn {
     usePowWorker();
 
   const [isMining, setIsMining] = useState(false);
-  const [powDifficulty, setPowDifficulty] = useState<number>(4);
+  const [powDifficulty, setPowDifficulty] = useState<number>(POW_CONFIG.default_difficulty);
 
   const cancelMining = useCallback(() => {
     cancelCurrentPow();
@@ -35,7 +36,7 @@ export function usePowCreation(): UsePowCreationReturn {
   const createPowNote = useCallback(
     async (params: PowCreationParams) => {
       if (!nostr) {
-        throw new Error("Nostr not initialized");
+        return error("Nostr not initialized");
       }
 
       const { senderPrivkey, recipient, message, difficulty } = params;
@@ -43,8 +44,8 @@ export function usePowCreation(): UsePowCreationReturn {
       setIsMining(true);
 
       try {
-        // Smart switching: Use Web Worker for difficulty >= 2, main thread for lower
-        const shouldUseWorker = powDifficulty >= 2;
+        // Smart switching: Use Web Worker for difficulty >= difficulty_mode_level, main thread for lower
+        const shouldUseWorker = powDifficulty >= POW_CONFIG.difficulty_mode_level;
         let signedEvent;
 
         if (shouldUseWorker) {
@@ -79,7 +80,7 @@ export function usePowCreation(): UsePowCreationReturn {
                     reject(
                       new Error("Mining timeout - try reducing difficulty")
                     ),
-                  30000
+                  POW_CONFIG.main_thread_mining_timeout_ms
                 )
               ),
             ]);

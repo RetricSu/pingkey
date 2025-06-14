@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { useNotification } from "../contexts/notification";
+import { POW_CONFIG } from "app/lib/config";
 
 interface PowMiningIndicatorProps {
   isMining: boolean;
@@ -21,7 +22,7 @@ export function PowMiningIndicator({
 
   if (!isMining) return null;
 
-  const isUsingWebWorker = powDifficulty >= 2;
+  const isUsingWebWorker = powDifficulty >= POW_CONFIG.difficulty_mode_level;
 
   return (
     <div className="p-3 bg-neutral-50 dark:bg-neutral-900/20 border border-neutral-200 dark:border-neutral-800 rounded text-sm text-neutral-700 dark:text-neutral-300">

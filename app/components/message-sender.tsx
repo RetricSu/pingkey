@@ -11,6 +11,7 @@ import { custom, CustomDialogProps } from "./simple-dialog";
 import { Stamp } from "./stamp";
 import { usePowCreation } from "../hooks/usePowCreation";
 import { PowMiningIndicator } from "./pow-mining-indicator";
+import { POW_CONFIG } from "app/lib/config";
 
 interface MessageSenderProps {
   slug: string;
@@ -66,15 +67,12 @@ export function MessageSender({
       if (!nostr) {
         throw new Error("Nostr not initialized");
       }
-
-      const difficulty = powDifficulty * 8; // 1 byte = 8 bits
-
       // Use the POW creation hook to handle all the complexity
       const signedEvent = await createPowNote({
         senderPrivkey,
         recipient,
         message,
-        difficulty,
+        difficulty: powDifficulty,
       });
 
       // Show stamp dialog with the event ID
@@ -85,11 +83,14 @@ export function MessageSender({
         return (
           <div className="p-6">
             <div className="text-center mb-6">
-              <h2 className="text-lg font-semibold mb-2">Your POW Stamp</h2>
+              <h2 className="text-lg font-semibold mb-2">
+                POW Stamp Generated!
+              </h2>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Your message has been forged with Proof of Work (Difficulty:{" "}
-                {powDifficulty}). The Stamp will be used as a spam filter for
-                relays.
+                Your message has been forged and ready to send with Proof of
+                Work Stamp (Difficulty: {powDifficulty}). The Stamp will be used
+                as a spam filter for relays. Higer difficulty means more
+                spam-proof, but slower to forge.
               </p>
             </div>
 
@@ -98,10 +99,6 @@ export function MessageSender({
             </div>
 
             <div className="text-center space-y-2 mb-6 overflow-x-auto">
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Event ID with difficulty Leading zeros:{" "}
-                {signedEvent.id.match(/^0*/)?.[0]?.length || 0}
-              </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 <span className="font-mono">
                   {signedEvent.id.slice(0, 10)}...{signedEvent.id.slice(-10)}
@@ -178,9 +175,13 @@ export function MessageSender({
               id="pow-difficulty"
               type="number"
               min="1"
-              max="20"
+              max="64"
               value={powDifficulty}
-              onChange={(e) => setPowDifficulty(parseInt(e.target.value) || 8)}
+              onChange={(e) =>
+                setPowDifficulty(
+                  parseInt(e.target.value) || POW_CONFIG.default_difficulty
+                )
+              }
               className="w-12 bg-transparent text-sm text-gray-900 dark:text-gray-100 focus:outline-none text-center font-mono"
             />
           </div>
@@ -200,7 +201,10 @@ export function MessageSender({
 
         <div className="text-sm text-gray-500 dark:text-gray-400">
           {isSignedIn
-            ? "Signed in as " + pubkey?.slice(0, 6) + "..." + pubkey?.slice(-4)
+            ? "Signed in as " +
+              (profileName
+                ? profileName
+                : pubkey?.slice(0, 6) + "..." + pubkey?.slice(-4))
             : "Sending as anonymous"}
         </div>
       </div>
