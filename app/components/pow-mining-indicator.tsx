@@ -24,16 +24,16 @@ export function PowMiningIndicator({
   const isUsingWebWorker = powDifficulty >= 2;
 
   return (
-    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded text-sm text-blue-600 dark:text-blue-400">
+    <div className="p-3 bg-neutral-50 dark:bg-neutral-900/20 border border-neutral-200 dark:border-neutral-800 rounded text-sm text-neutral-700 dark:text-neutral-300">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin"></div>
+          <div className="w-4 h-4 border-2 border-neutral-300 dark:border-neutral-600 border-t-neutral-600 dark:border-t-neutral-300 rounded-full animate-spin"></div>
           <div>
-            <div>
+            <div className="text-neutral-900 dark:text-neutral-100 font-medium">
               Mining Proof of Work... This may take a while depending on
               difficulty.
             </div>
-            <div className="text-xs mt-1 opacity-75">
+            <div className="text-xs mt-1 opacity-75 text-neutral-600 dark:text-neutral-400">
               {isUsingWebWorker
                 ? "🧵 Using Web Worker (non-blocking UI)"
                 : "⚡ Using main thread (faster for low difficulty)"}
@@ -43,7 +43,7 @@ export function PowMiningIndicator({
         {isUsingWebWorker && (
           <button
             onClick={handleCancel}
-            className="px-3 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+            className="px-3 py-1 text-xs bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded hover:bg-neutral-700 dark:hover:bg-neutral-300 transition-colors"
           >
             Cancel
           </button>
