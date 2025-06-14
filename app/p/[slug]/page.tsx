@@ -11,6 +11,7 @@ import { defaultProfile } from "app/lib/config";
 import { Profile, RelayListItem } from "app/lib/type";
 import { custom, CustomDialogProps } from "../../components/simple-dialog";
 import { Stamp } from "../../components/stamp";
+import { usePowWorker } from "../../hooks/usePowWorker";
 
 interface PageProps {
   params: Promise<{
@@ -22,12 +23,14 @@ export default function DynamicPage({ params }: PageProps) {
   const { isSignedIn, pubkey, exportPrivateKey } = useAuth();
   const { nostr } = useNostr();
   const { success, error } = useNotification();
+  const { createPowNote } = usePowWorker();
   const [slug, setSlug] = useState<string>("");
   const [profile, setProfile] = useState<Profile>(defaultProfile);
   const [isLoading, setIsLoading] = useState(true);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [isMining, setIsMining] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const [relayList, setRelayList] = useState<RelayListItem[]>([]);
   const [powDifficulty, setPowDifficulty] = useState<number>(4);
@@ -108,12 +111,56 @@ export default function DynamicPage({ params }: PageProps) {
       }
 
       const difficulty = powDifficulty * 8; // 1 byte = 8 bits
-      const signedEvent = await nostr.createPowGiftWrappedNote(
-        senderPrivkey,
-        recipient,
-        message,
-        difficulty
-      );
+
+      // Start mining in Web Worker (non-blocking)
+      setIsMining(true);
+
+      // Option 1: Use Web Worker for POW computation (recommended for high difficulty)
+      // This will run the POW mining in a separate thread to avoid blocking the UI
+      const shouldUseWorker = powDifficulty >= 2; // Use worker for difficulty 2 and above
+
+      let signedEvent;
+      if (shouldUseWorker) {
+        try {
+          signedEvent = await createPowNote({
+            senderPrivkey,
+            recipient,
+            message,
+            difficulty,
+          });
+        } catch (workerError) {
+          console.warn(
+            "Web Worker failed, falling back to main thread:",
+            workerError
+          );
+          // Fallback to main thread with timeout
+          signedEvent = (await Promise.race([
+            nostr.createPowGiftWrappedNote(
+              senderPrivkey,
+              recipient,
+              message,
+              difficulty
+            ),
+            new Promise<never>((_, reject) =>
+              setTimeout(
+                () =>
+                  reject(new Error("Mining timeout - try reducing difficulty")),
+                30000
+              )
+            ),
+          ])) as any;
+        }
+      } else {
+        // For low difficulty, use main thread (faster for simple computation)
+        signedEvent = await nostr.createPowGiftWrappedNote(
+          senderPrivkey,
+          recipient,
+          message,
+          difficulty
+        );
+      }
+
+      setIsMining(false);
 
       // Show stamp dialog with the event ID
       const StampDialog = ({
@@ -178,6 +225,7 @@ export default function DynamicPage({ params }: PageProps) {
       );
     } finally {
       setIsSending(false);
+      setIsMining(false);
     }
   };
 
@@ -249,6 +297,25 @@ export default function DynamicPage({ params }: PageProps) {
               </div>
             )}
 
+            {isMining && (
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded text-sm text-blue-600 dark:text-blue-400">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin"></div>
+                  <div>
+                    <div>
+                      Mining Proof of Work... This may take a while depending on
+                      difficulty.
+                    </div>
+                    <div className="text-xs mt-1 opacity-75">
+                      {powDifficulty >= 2
+                        ? "🧵 Using Web Worker (non-blocking UI)"
+                        : "⚡ Using main thread (faster for low difficulty)"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
@@ -278,10 +345,14 @@ export default function DynamicPage({ params }: PageProps) {
 
                 <button
                   onClick={handleSendMessage}
-                  disabled={isSending || !message.trim()}
+                  disabled={isSending || isMining || !message.trim()}
                   className="px-6 py-2 bg-gray-900 dark:bg-gray-100 text-sm text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSending ? "Sending..." : "Send Letter"}
+                  {isMining
+                    ? "Mining POW..."
+                    : isSending
+                    ? "Sending..."
+                    : "Send Letter"}
                 </button>
               </div>
 
