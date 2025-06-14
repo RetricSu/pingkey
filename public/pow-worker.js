@@ -15,6 +15,10 @@ let minePow,
   createSeal,
   nip44;
 
+// Cancellation support
+let shouldCancel = false;
+let currentRequestId = null;
+
 self.addEventListener("message", async function (e) {
   const { type, data } = e.data;
 
@@ -34,9 +38,25 @@ self.addEventListener("message", async function (e) {
     return;
   }
 
+  if (type === "CANCEL_POW") {
+    const { requestId } = data;
+    if (currentRequestId === requestId) {
+      shouldCancel = true;
+      self.postMessage({
+        type: "POW_CANCELLED",
+        requestId: requestId,
+      });
+    }
+    return;
+  }
+
   if (type === "CREATE_POW_NOTE") {
     try {
       const { senderPrivkey, recipient, message, difficulty, requestId } = data;
+
+      // Set current request and reset cancellation flag
+      currentRequestId = requestId;
+      shouldCancel = false;
 
       // Convert array back to Uint8Array
       const privkeyBytes = new Uint8Array(senderPrivkey);
@@ -55,6 +75,12 @@ self.addEventListener("message", async function (e) {
 
       // Simulate mining work - this will take actual time and CPU
       while (true) {
+        // Check for cancellation
+        if (shouldCancel) {
+          currentRequestId = null;
+          return; // Exit silently, cancellation message already sent
+        }
+
         nonce++;
         // Simulate hash computation (in real implementation, this would be actual hash generation)
         hash = "simulated_hash_" + nonce.toString(16).padStart(16, "0");
@@ -72,6 +98,11 @@ self.addEventListener("message", async function (e) {
 
         // Prevent infinite loops and allow cancellation
         if (nonce % 1000 === 0) {
+          // Check for cancellation more frequently
+          if (shouldCancel) {
+            currentRequestId = null;
+            return;
+          }
           // Yield control occasionally
           await new Promise((resolve) => setTimeout(resolve, 0));
         }
@@ -81,6 +112,9 @@ self.addEventListener("message", async function (e) {
           throw new Error("POW mining timeout");
         }
       }
+
+      // Clear current request when completed
+      currentRequestId = null;
 
       const mockEvent = {
         id: "0".repeat(difficulty / 4) + hash.slice(difficulty / 4),

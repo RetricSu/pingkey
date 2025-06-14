@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { useAuth } from "../../contexts/auth";
 import { useNostr } from "../../contexts/nostr";
@@ -23,7 +23,7 @@ export default function DynamicPage({ params }: PageProps) {
   const { isSignedIn, pubkey, exportPrivateKey } = useAuth();
   const { nostr } = useNostr();
   const { success, error } = useNotification();
-  const { createPowNote } = usePowWorker();
+  const { createPowNote, cancelCurrentPow } = usePowWorker();
   const [slug, setSlug] = useState<string>("");
   const [profile, setProfile] = useState<Profile>(defaultProfile);
   const [isLoading, setIsLoading] = useState(true);
@@ -81,6 +81,14 @@ export default function DynamicPage({ params }: PageProps) {
     fetchRelayList();
   }, [nostr, slug]);
 
+  const handleCancelMining = useCallback(() => {
+    cancelCurrentPow();
+    setIsMining(false);
+    setIsSending(false);
+    setSendError(null);
+    success("POW mining cancelled");
+  }, [cancelCurrentPow, success]);
+
   const handleSendMessage = async () => {
     if (!message.trim()) return;
     setIsSending(true);
@@ -129,6 +137,9 @@ export default function DynamicPage({ params }: PageProps) {
             difficulty,
           });
         } catch (workerError) {
+          if (workerError.message === "POW mining cancelled by user") {
+            return; // User cancelled, just exit
+          }
           console.warn(
             "Web Worker failed, falling back to main thread:",
             workerError
@@ -299,19 +310,29 @@ export default function DynamicPage({ params }: PageProps) {
 
             {isMining && (
               <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded text-sm text-blue-600 dark:text-blue-400">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin"></div>
-                  <div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin"></div>
                     <div>
-                      Mining Proof of Work... This may take a while depending on
-                      difficulty.
-                    </div>
-                    <div className="text-xs mt-1 opacity-75">
-                      {powDifficulty >= 2
-                        ? "🧵 Using Web Worker (non-blocking UI)"
-                        : "⚡ Using main thread (faster for low difficulty)"}
+                      <div>
+                        Mining Proof of Work... This may take a while depending
+                        on difficulty.
+                      </div>
+                      <div className="text-xs mt-1 opacity-75">
+                        {powDifficulty >= 2
+                          ? "🧵 Using Web Worker (non-blocking UI)"
+                          : "⚡ Using main thread (faster for low difficulty)"}
+                      </div>
                     </div>
                   </div>
+                  {powDifficulty >= 2 && (
+                    <button
+                      onClick={handleCancelMining}
+                      className="px-3 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  )}
                 </div>
               </div>
             )}

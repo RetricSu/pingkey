@@ -29,7 +29,7 @@ We've implemented a Web Worker solution that moves the POW computation to a sepa
 ## Usage
 
 ```typescript
-const { createPowNote } = usePowWorker();
+const { createPowNote, cancelCurrentPow } = usePowWorker();
 
 // This will run in a Web Worker (non-blocking)
 const event = await createPowNote({
@@ -38,6 +38,9 @@ const event = await createPowNote({
   message,
   difficulty
 });
+
+// Cancel the current POW operation
+cancelCurrentPow();
 ```
 
 ## Benefits
@@ -47,12 +50,14 @@ const event = await createPowNote({
 3. **Responsive**: UI remains responsive during computation
 4. **Fallback**: Graceful degradation if Web Worker fails
 5. **Smart switching**: Uses main thread for low difficulty (faster), Web Worker for high difficulty
+6. **Cancellable**: Users can cancel long-running POW operations with a cancel button
 
 ## Configuration
 
-- **Difficulty threshold**: Web Worker is used for difficulty ≥ 4
+- **Difficulty threshold**: Web Worker is used for difficulty ≥ 2
 - **Timeout**: 60-second safety timeout for mining operations
 - **Fallback**: Main thread with 30-second timeout if Web Worker fails
+- **Cancellation**: Cancel button appears for Web Worker operations (difficulty ≥ 2)
 
 ## Production Considerations
 
