@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect } from "react";
+import { useRef, useCallback, useEffect, useState } from "react";
 
 interface PowWorkerData {
   senderPrivkey: Uint8Array;
@@ -20,66 +20,92 @@ interface UsePowWorkerReturn {
 
 export function usePowWorker(): UsePowWorkerReturn {
   const workerRef = useRef<Worker | null>(null);
-  const isWorkerReady = useRef(false);
+  const [isWorkerReady, setIsWorkerReady] = useState(false);
   const pendingRequests = useRef<
     Map<string, { resolve: Function; reject: Function }>
   >(new Map());
   const currentRequestIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    // Initialize worker
-    workerRef.current = new Worker("/pow-worker.js");
+    // Create worker from TypeScript file
+    try {
+      // Use the modern Next.js worker approach
+      workerRef.current = new Worker(
+        new URL("../../workers/pow.worker.ts", import.meta.url)
+      );
 
-    workerRef.current.onmessage = (e) => {
-      const { type, result, error, requestId } = e.data;
+      workerRef.current.onmessage = (e) => {
+        const { type, result, error, requestId } = e.data;
 
-      if (type === "NOSTR_READY") {
-        isWorkerReady.current = true;
-        return;
-      }
-
-      if (type === "POW_COMPLETE" && requestId) {
-        const request = pendingRequests.current.get(requestId);
-        if (request) {
-          request.resolve(result);
-          pendingRequests.current.delete(requestId);
-          currentRequestIdRef.current = null;
+        if (type === "NOSTR_READY") {
+          setIsWorkerReady(true);
+          console.log("POW Worker ready!");
+          return;
         }
-        return;
-      }
 
-      if (type === "POW_CANCELLED" && requestId) {
-        const request = pendingRequests.current.get(requestId);
-        if (request) {
-          request.reject(new Error("POW mining cancelled by user"));
-          pendingRequests.current.delete(requestId);
-          currentRequestIdRef.current = null;
+        if (type === "POW_PROGRESS") {
+          console.log("POW Progress:", e.data.progress);
+          return;
         }
-        return;
-      }
 
-      if (type === "ERROR" && requestId) {
-        const request = pendingRequests.current.get(requestId);
-        if (request) {
-          request.reject(new Error(error));
-          pendingRequests.current.delete(requestId);
-          currentRequestIdRef.current = null;
+        if (type === "POW_COMPLETE" && requestId) {
+          const request = pendingRequests.current.get(requestId);
+          if (request) {
+            request.resolve(result);
+            pendingRequests.current.delete(requestId);
+            currentRequestIdRef.current = null;
+          }
+          return;
         }
-        return;
-      }
-    };
 
-    workerRef.current.onerror = (error) => {
-      console.error("Worker error:", error);
-    };
+        if (type === "POW_CANCELLED" && requestId) {
+          const request = pendingRequests.current.get(requestId);
+          if (request) {
+            request.reject(new Error("POW mining cancelled by user"));
+            pendingRequests.current.delete(requestId);
+            currentRequestIdRef.current = null;
+          }
+          return;
+        }
 
-    // Initialize the worker
-    workerRef.current.postMessage({ type: "INIT_NOSTR" });
+        if (type === "ERROR" && requestId) {
+          const request = pendingRequests.current.get(requestId);
+          if (request) {
+            request.reject(new Error(error));
+            pendingRequests.current.delete(requestId);
+            currentRequestIdRef.current = null;
+          }
+          return;
+        }
+      };
+
+      workerRef.current.onerror = (error) => {
+        console.error("Worker error:", error);
+        setIsWorkerReady(false);
+        pendingRequests.current.forEach(({ reject }) => {
+          reject(new Error("Worker error occurred"));
+        });
+        pendingRequests.current.clear();
+        currentRequestIdRef.current = null;
+      };
+
+      workerRef.current.onmessageerror = (error) => {
+        console.error("Worker message error:", error);
+        setIsWorkerReady(false);
+      };
+    } catch (error) {
+      console.error("Failed to create worker:", error);
+      setIsWorkerReady(false);
+    }
 
     return () => {
       if (workerRef.current) {
         workerRef.current.terminate();
+        workerRef.current = null;
       }
+      setIsWorkerReady(false);
+      pendingRequests.current.clear();
+      currentRequestIdRef.current = null;
     };
   }, []);
 
@@ -88,6 +114,11 @@ export function usePowWorker(): UsePowWorkerReturn {
       return new Promise((resolve, reject) => {
         if (!workerRef.current) {
           reject(new Error("Worker not initialized"));
+          return;
+        }
+
+        if (!isWorkerReady) {
+          reject(new Error("Worker not ready"));
           return;
         }
 
@@ -103,13 +134,20 @@ export function usePowWorker(): UsePowWorkerReturn {
           requestId,
         };
 
-        workerRef.current.postMessage({
-          type: "CREATE_POW_NOTE",
-          data: serializedData,
-        });
+        try {
+          workerRef.current.postMessage({
+            type: "CREATE_POW_NOTE",
+            data: serializedData,
+          });
+        } catch (error) {
+          // Clean up if postMessage fails
+          pendingRequests.current.delete(requestId);
+          currentRequestIdRef.current = null;
+          reject(new Error("Failed to send message to worker"));
+        }
       });
     },
-    []
+    [isWorkerReady]
   );
 
   const cancelCurrentPow = useCallback(() => {
@@ -117,15 +155,19 @@ export function usePowWorker(): UsePowWorkerReturn {
       return;
     }
 
-    workerRef.current.postMessage({
-      type: "CANCEL_POW",
-      data: { requestId: currentRequestIdRef.current },
-    });
+    try {
+      workerRef.current.postMessage({
+        type: "CANCEL_POW",
+        data: { requestId: currentRequestIdRef.current },
+      });
+    } catch (error) {
+      console.error("Failed to cancel POW:", error);
+    }
   }, []);
 
   return {
     createPowNote,
-    isWorkerReady: isWorkerReady.current,
+    isWorkerReady,
     cancelCurrentPow,
   };
 }

@@ -45,7 +45,8 @@ export function usePowCreation(): UsePowCreationReturn {
 
       try {
         // Smart switching: Use Web Worker for difficulty >= difficulty_mode_level, main thread for lower
-        const shouldUseWorker = powDifficulty >= POW_CONFIG.difficulty_mode_level;
+        const shouldUseWorker = difficulty >= POW_CONFIG.difficulty_mode_level;
+        console.log(`POW Mining: difficulty=${difficulty}, shouldUseWorker=${shouldUseWorker}, threshold=${POW_CONFIG.difficulty_mode_level}`);
         let signedEvent;
 
         if (shouldUseWorker) {
