@@ -30,6 +30,7 @@ export default function DynamicPage({ params }: PageProps) {
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const [relayList, setRelayList] = useState<RelayListItem[]>([]);
+  const [powDifficulty, setPowDifficulty] = useState<number>(4);
 
   // Resolve async params
   useEffect(() => {
@@ -42,7 +43,7 @@ export default function DynamicPage({ params }: PageProps) {
 
   useEffect(() => {
     if (!slug) return; // Don't run until slug is resolved
-    
+
     async function fetchProfile() {
       if (!nostr) return;
 
@@ -106,10 +107,12 @@ export default function DynamicPage({ params }: PageProps) {
         throw new Error("Nostr not initialized");
       }
 
+      const difficulty = powDifficulty * 8; // 1 byte = 8 bits
       const signedEvent = await nostr.createPowGiftWrappedNote(
         senderPrivkey,
         recipient,
-        message
+        message,
+        difficulty
       );
 
       // Show stamp dialog with the event ID
@@ -122,8 +125,9 @@ export default function DynamicPage({ params }: PageProps) {
             <div className="text-center mb-6">
               <h2 className="text-lg font-semibold mb-2">Your POW Stamp</h2>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Your message has been forged with Proof of Work. The Stamp will
-                be used as a spam filter for relays.
+                Your message has been forged with Proof of Work (Difficulty:{" "}
+                {powDifficulty}). The Stamp will be used as a spam filter for
+                relays.
               </p>
             </div>
 
@@ -244,6 +248,7 @@ export default function DynamicPage({ params }: PageProps) {
                 {sendError}
               </div>
             )}
+
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
@@ -253,13 +258,32 @@ export default function DynamicPage({ params }: PageProps) {
             />
 
             <div className="flex justify-between items-center">
-              <button
-                onClick={handleSendMessage}
-                disabled={isSending || !message.trim()}
-                className="px-6 py-2 bg-gray-900 dark:bg-gray-100 text-sm text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSending ? "Sending..." : "Send Letter"}
-              </button>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center bg-gray-50 dark:bg-gray-800 rounded-lg px-3 py-2 border border-gray-200 dark:border-gray-700">
+                  <span className="text-xs font-medium text-gray-600 dark:text-gray-400 mr-2">
+                    POW
+                  </span>
+                  <input
+                    id="pow-difficulty"
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={powDifficulty}
+                    onChange={(e) =>
+                      setPowDifficulty(parseInt(e.target.value) || 8)
+                    }
+                    className="w-12 bg-transparent text-sm text-gray-900 dark:text-gray-100 focus:outline-none text-center font-mono"
+                  />
+                </div>
+
+                <button
+                  onClick={handleSendMessage}
+                  disabled={isSending || !message.trim()}
+                  className="px-6 py-2 bg-gray-900 dark:bg-gray-100 text-sm text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSending ? "Sending..." : "Send Letter"}
+                </button>
+              </div>
 
               <div className="text-sm text-gray-500 dark:text-gray-400">
                 {isSignedIn
