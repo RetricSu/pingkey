@@ -1,13 +1,17 @@
-import { 
-  finalizeEvent, 
-  generateSecretKey, 
+import {
+  Event,
+  finalizeEvent,
+  generateSecretKey,
   getPublicKey,
+  UnsignedEvent,
 } from "nostr-tools/pure";
 import { createRumor, createSeal } from "nostr-tools/nip59";
 import { nip44 } from "nostr-tools";
+import { fastEventHash, getPow } from "nostr-tools/nip13";
+import { POW_CONFIG } from "app/lib/config";
 
 // Worker types
-interface PowWorkerData {
+export interface PowWorkerData {
   senderPrivkey: number[];
   recipient: { publicKey: string };
   message: string;
@@ -15,9 +19,17 @@ interface PowWorkerData {
   requestId: string;
 }
 
-interface PowWorkerMessage {
-  type: "CREATE_POW_NOTE" | "CANCEL_POW";
-  data: PowWorkerData | { requestId: string };
+export interface PowWorkerProgress {
+  nonce: number;
+  timeElapsed: number;
+}
+
+export interface PowWorkerMessage {
+  type: "CREATE_POW_NOTE" | "CANCEL_POW" | "POW_PROGRESS";
+  data:
+    | PowWorkerData
+    | { requestId: string }
+    | { progress: PowWorkerProgress; requestId: string };
 }
 
 // Cancellation support
@@ -25,7 +37,10 @@ let shouldCancel = false;
 let currentRequestId: string | null = null;
 
 // Helper function to create NIP-17 base event
-function createNip17BaseEvent(recipient: { publicKey: string }, message: string) {
+function createNip17BaseEvent(
+  recipient: { publicKey: string },
+  message: string
+) {
   return {
     created_at: Math.ceil(Date.now() / 1000),
     kind: 14, // PrivateDirectMessage
@@ -35,11 +50,18 @@ function createNip17BaseEvent(recipient: { publicKey: string }, message: string)
 }
 
 // Custom POW mining function with cancellation support
-async function minePowWithCancellation(event: any, difficulty: number): Promise<any> {
+async function minePowWithCancellation(
+  unsigned: UnsignedEvent,
+  difficulty: number
+): Promise<any> {
   return new Promise((resolve, reject) => {
-    let nonce = 0;
+    let count = 0;
+    let event = unsigned as unknown as Omit<Event, "sig">;
+    const tag = ["nonce", count.toString(), difficulty.toString()];
+    event.tags.push(tag);
+
     const startTime = Date.now();
-    
+
     const mineLoop = async () => {
       try {
         while (true) {
@@ -48,50 +70,38 @@ async function minePowWithCancellation(event: any, difficulty: number): Promise<
             return;
           }
 
-          // Create event with current nonce
-          const eventWithNonce = {
-            ...event,
-            tags: [...event.tags, ["nonce", nonce.toString(), difficulty.toString()]],
-          };
+          const now = Math.floor(new Date().getTime() / 1000);
 
-          // Calculate event ID
-          const eventData = [
-            0,
-            eventWithNonce.pubkey,
-            eventWithNonce.created_at,
-            eventWithNonce.kind,
-            eventWithNonce.tags,
-            eventWithNonce.content,
-          ];
-          
-          const serialized = JSON.stringify(eventData);
-          const eventId = await sha256(serialized);
-          
-          // Check if we have enough leading zeros
-          if (countLeadingZeros(eventId) >= difficulty) {
-            resolve({ ...eventWithNonce, id: eventId });
-            return;
+          if (now !== event.created_at) {
+            count = 0;
+            event.created_at = now;
           }
 
-          nonce++;
+          tag[1] = (++count).toString();
 
-          // Yield control and post progress
-          if (nonce % 10000 === 0) {
-            await new Promise(resolve => setTimeout(resolve, 1));
-            
-            if (nonce % 50000 === 0) {
-              self.postMessage({
-                type: "POW_PROGRESS",
-                progress: { nonce, timeElapsed: Date.now() - startTime },
-                requestId: currentRequestId,
-              });
-            }
-            
-            // Safety timeout (5 minutes)
-            if (Date.now() - startTime > 300000) {
-              reject(new Error("POW mining timeout - try reducing difficulty"));
-              return;
-            }
+          event.id = fastEventHash(event);
+
+          if (getPow(event.id) >= difficulty) {
+            resolve(event);
+            break;
+          }
+
+          // todo: this has a bug that it will trigger multiple times in a row(every 3 seconds)
+          if ((Date.now() - startTime) % 3000 === 0) {
+            self.postMessage({
+              type: "POW_PROGRESS",
+              progress: { nonce: count, timeElapsed: Date.now() - startTime },
+              requestId: currentRequestId,
+            });
+          }
+
+          // Safety timeout
+          if (
+            Date.now() - startTime >
+            POW_CONFIG.web_worker_mining_timeout_ms
+          ) {
+            reject(new Error("POW mining timeout - try reducing difficulty"));
+            break;
           }
         }
       } catch (error) {
@@ -103,29 +113,16 @@ async function minePowWithCancellation(event: any, difficulty: number): Promise<
   });
 }
 
-// Helper functions
-function countLeadingZeros(hex: string): number {
-  let count = 0;
-  for (let i = 0; i < hex.length; i++) {
-    if (hex[i] === '0') {
-      count++;
-    } else {
-      break;
-    }
-  }
-  return count;
-}
-
-async function sha256(message: string): Promise<string> {
-  const msgUint8 = new TextEncoder().encode(message);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-async function createNip59POWWrapEvent(seal: any, recipientPublicKey: string, difficulty: number): Promise<any> {
+async function createNip59POWWrapEvent(
+  seal: any,
+  recipientPublicKey: string,
+  difficulty: number
+): Promise<any> {
   const randomKey = generateSecretKey();
-  const conversationKey = nip44.getConversationKey(randomKey, recipientPublicKey);
+  const conversationKey = nip44.getConversationKey(
+    randomKey,
+    recipientPublicKey
+  );
   const encryptedContent = nip44.encrypt(JSON.stringify(seal), conversationKey);
 
   const unsignedEvent = {
@@ -137,7 +134,7 @@ async function createNip59POWWrapEvent(seal: any, recipientPublicKey: string, di
   };
 
   const powEvent = await minePowWithCancellation(unsignedEvent, difficulty);
-  
+
   if (shouldCancel) {
     throw new Error("Cancelled");
   }
@@ -146,59 +143,63 @@ async function createNip59POWWrapEvent(seal: any, recipientPublicKey: string, di
 }
 
 // Message handler
-self.addEventListener("message", async function (e: MessageEvent<PowWorkerMessage>) {
-  const { type, data } = e.data;
+self.addEventListener(
+  "message",
+  async function (e: MessageEvent<PowWorkerMessage>) {
+    const { type, data } = e.data;
 
-  if (type === "CANCEL_POW") {
-    const { requestId } = data as { requestId: string };
-    if (currentRequestId === requestId) {
-      shouldCancel = true;
-      self.postMessage({
-        type: "POW_CANCELLED",
-        requestId: requestId,
-      });
-    }
-    return;
-  }
-
-  if (type === "CREATE_POW_NOTE") {
-    try {
-      const { senderPrivkey, recipient, message, difficulty, requestId } = data as PowWorkerData;
-      currentRequestId = requestId;
-      shouldCancel = false;
-
-      const privkeyBytes = new Uint8Array(senderPrivkey);
-      const event = createNip17BaseEvent(recipient, message);
-      const rumor = createRumor(event, privkeyBytes);
-      const seal = createSeal(rumor, privkeyBytes, recipient.publicKey);
-      
-      const wrappedEvent = await createNip59POWWrapEvent(
-        seal,
-        recipient.publicKey,
-        difficulty
-      );
-
-      currentRequestId = null;
-
-      self.postMessage({
-        type: "POW_COMPLETE",
-        result: wrappedEvent,
-        requestId: requestId,
-      });
-    } catch (error) {
-      if (error instanceof Error && error.message === "Cancelled") {
-        return;
+    if (type === "CANCEL_POW") {
+      const { requestId } = data as { requestId: string };
+      if (currentRequestId === requestId) {
+        shouldCancel = true;
+        self.postMessage({
+          type: "POW_CANCELLED",
+          requestId: requestId,
+        });
       }
-      
-      currentRequestId = null;
-      self.postMessage({
-        type: "ERROR",
-        error: error instanceof Error ? error.message : "Unknown error",
-        requestId: (data as PowWorkerData).requestId,
-      });
+      return;
+    }
+
+    if (type === "CREATE_POW_NOTE") {
+      try {
+        const { senderPrivkey, recipient, message, difficulty, requestId } =
+          data as PowWorkerData;
+        currentRequestId = requestId;
+        shouldCancel = false;
+
+        const privkeyBytes = new Uint8Array(senderPrivkey);
+        const event = createNip17BaseEvent(recipient, message);
+        const rumor = createRumor(event, privkeyBytes);
+        const seal = createSeal(rumor, privkeyBytes, recipient.publicKey);
+
+        const wrappedEvent = await createNip59POWWrapEvent(
+          seal,
+          recipient.publicKey,
+          difficulty
+        );
+
+        currentRequestId = null;
+
+        self.postMessage({
+          type: "POW_COMPLETE",
+          result: wrappedEvent,
+          requestId: requestId,
+        });
+      } catch (error) {
+        if (error instanceof Error && error.message === "Cancelled") {
+          return;
+        }
+
+        currentRequestId = null;
+        self.postMessage({
+          type: "ERROR",
+          error: error instanceof Error ? error.message : "Unknown error",
+          requestId: (data as PowWorkerData).requestId,
+        });
+      }
     }
   }
-});
+);
 
 // Initialize worker as ready
-self.postMessage({ type: "NOSTR_READY" }); 
+self.postMessage({ type: "NOSTR_READY" });
