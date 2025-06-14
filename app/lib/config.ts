@@ -36,3 +36,10 @@ export const LocalStorageKeys = {
 };
 
 export const USER_INFO_CACHE_EXPIRED_MS = 10 * 60 * 1000; // 10 minutes
+
+export const POW_CONFIG = {
+  default_difficulty: 16, // 2 bytes = 16 bits
+  difficulty_mode_level: 16,
+  main_thread_mining_timeout_ms: 30000,
+  web_worker_mining_timeout_ms: 60000,
+}
