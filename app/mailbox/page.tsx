@@ -19,17 +19,13 @@ function MailBox() {
   const [currentFilter, setCurrentFilter] = useState<FilterType>("all");
   const [isLoading, setIsLoading] = useState(true);
   const [powThreshold, setPowThreshold] = useState(16);
-  const { relayList, refetch: refetchRelayList } = useUserRelayList();
+  const { relayList, isLoading: isRelayListLoading } = useUserRelayList();
 
   const fetchGiftWrappedNotes = useCallback(async () => {
-    if (!isSignedIn || !nostr) return;
+    if (!isSignedIn || !nostr || isRelayListLoading) return;
 
     setIsLoading(true);
     try {
-      if (relayList.length === 0) {
-        await refetchRelayList();
-      }
-
       if (relayList.length > 0) {
         const notes = await nostr.fetchGiftWrappedNotes(
           pubkey!,
@@ -45,14 +41,14 @@ function MailBox() {
     } finally {
       setIsLoading(false);
     }
-  }, [isSignedIn, nostr, pubkey, relayList, refetchRelayList]);
+  }, [isSignedIn, nostr, pubkey, relayList, isRelayListLoading]);
 
   useEffect(() => {
     fetchGiftWrappedNotes();
   }, [fetchGiftWrappedNotes]);
 
-  // Show loader while fetching notes
-  if (isLoading) {
+  // Show loader while fetching relay list or notes
+  if (isLoading || isRelayListLoading) {
     return <Loader message="Loading your letters..." />;
   }
 
