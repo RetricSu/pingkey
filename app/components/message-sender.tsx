@@ -7,11 +7,11 @@ import { useNotification } from "../contexts/notification";
 import { generateSecretKey } from "nostr-tools/pure";
 import { hexToBytes } from "@noble/hashes/utils";
 import { RelayListItem } from "../lib/type";
-import { custom, CustomDialogProps } from "./dialog";
-import { Stamp } from "./stamp";
+import { custom } from "./dialog";
 import { usePowCreation } from "../hooks/usePowCreation";
 import { PowMiningIndicator } from "./pow-mining-indicator";
 import { POW_CONFIG } from "app/lib/config";
+import { buildGeneratedStampDialog } from "./generated-stamp";
 
 interface MessageSenderProps {
   slug: string;
@@ -76,47 +76,7 @@ export function MessageSender({
       });
 
       // Show stamp dialog with the event ID
-      const StampDialog = ({
-        onResolve,
-        onReject,
-      }: CustomDialogProps<boolean>) => {
-        return (
-          <div className="p-6">
-            <div className="text-center mb-6">
-              <h2 className="text-lg font-semibold mb-2">
-                POW Stamp Generated!
-              </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Your message has been forged and ready to send with Proof of
-                Work Stamp (Difficulty: {powDifficulty}). The Stamp will be used
-                as a spam filter for relays. Higer difficulty means more
-                spam-proof, but slower to forge.
-              </p>
-            </div>
-
-            <div className="flex justify-center mb-6">
-              <Stamp hash={signedEvent.id} showArt={true} />
-            </div>
-
-            <div className="text-center space-y-2 mb-6 overflow-x-auto">
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                <span className="font-mono">
-                  {signedEvent.id.slice(0, 10)}...{signedEvent.id.slice(-10)}
-                </span>
-              </p>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => onResolve(true)}
-                className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-              >
-                Send Message
-              </button>
-            </div>
-          </div>
-        );
-      };
+      const StampDialog = buildGeneratedStampDialog(powDifficulty, signedEvent);
 
       const shouldSend = await custom(StampDialog, { maxWidth: "md" });
       if (!shouldSend) {

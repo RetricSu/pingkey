@@ -131,7 +131,7 @@ export function ReadingLetterModal({
           <div className="flex justify-center w-full">
             <button
               onClick={() => {
-                window.location.href = `/compose?replyTo=${letter.eventId}&replyToPubkey=${letter.from}`;
+                window.location.href = `/compose?replyToEventId=${letter.eventId}&replyToPubkey=${letter.from}`;
               }}
               className="w-full px-6 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors font-medium text-sm flex items-center gap-2 justify-center"
             >

@@ -9,19 +9,19 @@ import { useUserRelayList } from "app/hooks/useUserRelayList";
 import { withAuth } from "app/components/auth/with-auth";
 import { Loader } from "app/components/loader";
 
-type FilterType = 'all' | 'unread' | 'read';
+type FilterType = "all" | "unread" | "read";
 
 function MailBox() {
   const { isSignedIn, pubkey } = useAuth();
   const { nostr } = useNostr();
   const [giftWrappedNotes, setGiftWrappedNotes] = useState<Event[]>([]);
-  const [currentFilter, setCurrentFilter] = useState<FilterType>('all');
+  const [currentFilter, setCurrentFilter] = useState<FilterType>("all");
   const [isLoading, setIsLoading] = useState(true);
   const { relayList, refetch: refetchRelayList } = useUserRelayList();
 
   const fetchGiftWrappedNotes = useCallback(async () => {
     if (!isSignedIn || !nostr) return;
-    
+
     setIsLoading(true);
     try {
       if (relayList.length === 0) {
@@ -67,11 +67,11 @@ function MailBox() {
   // Filter letters based on current filter
   const filteredLetters = sampleLetters.filter((letter) => {
     switch (currentFilter) {
-      case 'unread':
+      case "unread":
         return !letter.read;
-      case 'read':
+      case "read":
         return letter.read;
-      case 'all':
+      case "all":
       default:
         return true;
     }
@@ -82,11 +82,16 @@ function MailBox() {
   const readCount = totalCount - unreadCount;
 
   const getButtonClassName = (filterType: FilterType) => {
-    const baseClasses = "px-3 py-1.5 text-sm font-medium rounded-md transition-colors";
-    const activeClasses = "text-neutral-900 dark:text-neutral-100 bg-neutral-100 dark:bg-neutral-800";
-    const inactiveClasses = "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100";
-    
-    return `${baseClasses} ${currentFilter === filterType ? activeClasses : inactiveClasses}`;
+    const baseClasses =
+      "px-3 py-1.5 text-sm font-medium rounded-md transition-colors";
+    const activeClasses =
+      "text-neutral-900 dark:text-neutral-100 bg-neutral-100 dark:bg-neutral-800";
+    const inactiveClasses =
+      "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100";
+
+    return `${baseClasses} ${
+      currentFilter === filterType ? activeClasses : inactiveClasses
+    }`;
   };
 
   return (
@@ -111,7 +116,12 @@ function MailBox() {
 
         {/* Actions */}
         <div className="flex items-center gap-3">
-          <button className="px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-sm font-medium rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors">
+          <button
+            className="cursor-pointer px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-sm font-medium rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors"
+            onClick={() => {
+              window.location.href = "/compose";
+            }}
+          >
             Compose
           </button>
         </div>
@@ -119,21 +129,21 @@ function MailBox() {
 
       {/* Filters */}
       <div className="flex items-center gap-4 pb-4 border-b border-neutral-200 dark:border-neutral-800">
-        <button 
-          className={getButtonClassName('all')}
-          onClick={() => setCurrentFilter('all')}
+        <button
+          className={getButtonClassName("all")}
+          onClick={() => setCurrentFilter("all")}
         >
           All
         </button>
-        <button 
-          className={getButtonClassName('unread')}
-          onClick={() => setCurrentFilter('unread')}
+        <button
+          className={getButtonClassName("unread")}
+          onClick={() => setCurrentFilter("unread")}
         >
           Unread ({unreadCount})
         </button>
-        <button 
-          className={getButtonClassName('read')}
-          onClick={() => setCurrentFilter('read')}
+        <button
+          className={getButtonClassName("read")}
+          onClick={() => setCurrentFilter("read")}
         >
           Read ({readCount})
         </button>
@@ -175,16 +185,20 @@ function MailBox() {
             </svg>
           </div>
           <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-2">
-            {currentFilter === 'all' ? 'No letters yet' : 
-             currentFilter === 'unread' ? 'No unread letters' : 
-             'No read letters'}
+            {currentFilter === "all"
+              ? "No letters yet"
+              : currentFilter === "unread"
+              ? "No unread letters"
+              : "No read letters"}
           </h3>
           <p className="text-neutral-500 dark:text-neutral-400 mb-6">
-            {currentFilter === 'all' ? 'When people send you letters, they\'ll appear here.' :
-             currentFilter === 'unread' ? 'All your letters have been read!' :
-             'No letters have been read yet.'}
+            {currentFilter === "all"
+              ? "When people send you letters, they'll appear here."
+              : currentFilter === "unread"
+              ? "All your letters have been read!"
+              : "No letters have been read yet."}
           </p>
-          {currentFilter === 'all' && (
+          {currentFilter === "all" && (
             <button className="px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-sm font-medium rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors">
               Share your profile
             </button>
