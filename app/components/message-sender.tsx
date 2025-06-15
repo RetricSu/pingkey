@@ -12,6 +12,7 @@ import { usePowCreation } from "../hooks/usePowCreation";
 import { PowMiningIndicator } from "./pow-mining-indicator";
 import { POW_CONFIG } from "app/lib/config";
 import { buildGeneratedStampDialog } from "./generated-stamp";
+import { prompt } from "./dialog";
 
 interface MessageSenderProps {
   slug: string;
@@ -51,11 +52,18 @@ export function MessageSender({
       if (!isSignedIn) {
         senderPrivkey = generateSecretKey();
       } else {
-        const password = prompt(
-          "Please enter your password to send the message"
+        const password = await prompt(
+          "Enter your password",
+          "Please enter your password to send the message:",
+          "",
+          {
+            type: "password",
+            placeholder: "Enter password",
+            confirmLabel: "Send",
+          }
         );
         if (!password) {
-          throw new Error("Password required to send message");
+          return error("Password required to send message");
         }
         senderPrivkey = hexToBytes(await exportPrivateKey(password));
       }
@@ -65,7 +73,7 @@ export function MessageSender({
       };
 
       if (!nostr) {
-        throw new Error("Nostr not initialized");
+        return error("Nostr not initialized");
       }
       // Use the POW creation hook to handle all the complexity
       const signedEvent = await createPowNote({
@@ -111,18 +119,18 @@ export function MessageSender({
         </div>
       )}
 
-      <PowMiningIndicator
-        isMining={isMining}
-        powDifficulty={powDifficulty}
-        onCancel={cancelMining}
-      />
-
       <textarea
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         placeholder={`Leaving a message to ${profileName}. A minimal stamp forged from Proof of Work(POW) is required.`}
         className="w-full h-32 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
         rows={6}
+      />
+
+      <PowMiningIndicator
+        isMining={isMining}
+        powDifficulty={powDifficulty}
+        onCancel={cancelMining}
       />
 
       <div className="flex justify-between items-center">

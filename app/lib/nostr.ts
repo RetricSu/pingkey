@@ -13,7 +13,7 @@ import type {
 } from "nostr-tools/core";
 import { Filter, nip44 } from "nostr-tools";
 import { Profile, RelayListItem, Recipient, ReplyTo } from "./type";
-import { defaultRelays } from "./config";
+import { defaultRelays, POW_CONFIG } from "./config";
 import { minePow } from "nostr-tools/nip13";
 import { GiftWrap, PrivateDirectMessage } from "nostr-tools/kinds";
 import { createRumor, createSeal } from "nostr-tools/nip59";
@@ -244,8 +244,7 @@ export class Nostr {
   private createNip17BaseEvent(
     recipients: Recipient | Recipient[],
     message: string,
-    conversationTitle?: string,
-    replyTo?: ReplyTo
+    extraTags?: string[][]
   ): EventTemplate {
     const baseEvent: EventTemplate = {
       created_at: Math.ceil(Date.now() / 1000),
@@ -264,17 +263,8 @@ export class Nostr {
       );
     });
 
-    if (replyTo) {
-      baseEvent.tags.push([
-        "e",
-        replyTo.eventId,
-        replyTo.relayUrl || "",
-        "reply",
-      ]);
-    }
-
-    if (conversationTitle) {
-      baseEvent.tags.push(["subject", conversationTitle]);
+    if (extraTags && extraTags.length > 0) {
+      baseEvent.tags.push(...extraTags);
     }
 
     return baseEvent;
@@ -287,9 +277,10 @@ export class Nostr {
       relay?: string;
     },
     message: string,
-    difficulty: number = 8
+    difficulty: number = POW_CONFIG.default_difficulty,
+    extraTags?: string[][]
   ): Promise<Event> {
-    const event = this.createNip17BaseEvent(recipient, message);
+    const event = this.createNip17BaseEvent(recipient, message, extraTags);
     const rumor = createRumor(event, senderPrivkey);
     const seal = createSeal(rumor, senderPrivkey, recipient.publicKey);
     const wrappedEvent = await this.createNip59POWWrapEvent(
@@ -372,4 +363,9 @@ export class Nostr {
   destroy(): void {
     this.pool.close(this.globalRelays);
   }
+}
+
+export function getSubjectTitleFromEvent(event: Event): string | null {
+  const subject = event.tags.find((tag) => tag[0] === "subject");
+  return subject ? subject[1] : null;
 }

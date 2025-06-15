@@ -15,6 +15,7 @@ export interface PowWorkerData {
   senderPrivkey: number[];
   recipient: { publicKey: string };
   message: string;
+  extraTags?: string[][];
   difficulty: number;
   requestId: string;
 }
@@ -39,12 +40,17 @@ let currentRequestId: string | null = null;
 // Helper function to create NIP-17 base event
 function createNip17BaseEvent(
   recipient: { publicKey: string },
-  message: string
+  message: string,
+  extraTags?: string[][]
 ) {
+  const tags = [["p", recipient.publicKey]];
+  if (extraTags && extraTags.length > 0) {
+    tags.push(...extraTags);
+  }
   return {
     created_at: Math.ceil(Date.now() / 1000),
     kind: 14, // PrivateDirectMessage
-    tags: [["p", recipient.publicKey]],
+    tags,
     content: message,
   };
 }
@@ -162,13 +168,13 @@ self.addEventListener(
 
     if (type === "CREATE_POW_NOTE") {
       try {
-        const { senderPrivkey, recipient, message, difficulty, requestId } =
+        const { senderPrivkey, recipient, message, difficulty, extraTags, requestId } =
           data as PowWorkerData;
         currentRequestId = requestId;
         shouldCancel = false;
 
         const privkeyBytes = new Uint8Array(senderPrivkey);
-        const event = createNip17BaseEvent(recipient, message);
+        const event = createNip17BaseEvent(recipient, message, extraTags);
         const rumor = createRumor(event, privkeyBytes);
         const seal = createSeal(rumor, privkeyBytes, recipient.publicKey);
 

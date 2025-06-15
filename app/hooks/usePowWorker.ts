@@ -5,6 +5,7 @@ interface PowWorkerData {
   recipient: { publicKey: string };
   message: string;
   difficulty: number;
+  extraTags?: string[][];
 }
 
 interface PowWorkerResult {

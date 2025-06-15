@@ -10,7 +10,7 @@ interface ReadingLetterModalProps {
   onClose: () => void;
   letter: {
     from: string;
-    subject: string;
+    subject?: string | null;
     content: string;
     receivedAt: number;
     eventId: string;
@@ -117,13 +117,8 @@ export function ReadingLetterModal({
 
           {/* Letter Body - clean and readable */}
           <div className="mb-12">
-            <div className="prose prose-lg prose-neutral dark:prose-invert max-w-none">
-              <div className="text-neutral-800 dark:text-neutral-200 leading-loose font-serif text-lg whitespace-pre-wrap">
-                <span className="text-4xl float-left leading-none pr-2 pt-1 font-serif text-neutral-700 dark:text-neutral-300">
-                  {letter.content.charAt(0)}
-                </span>
-                <span className="text-lg">{letter.content.slice(1)}</span>
-              </div>
+            <div className="text-neutral-800 dark:text-neutral-200 leading-loose font-serif whitespace-pre-wrap">
+              {letter.content}
             </div>
           </div>
 

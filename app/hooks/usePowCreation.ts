@@ -9,6 +9,7 @@ interface PowCreationParams {
   recipient: { publicKey: string };
   message: string;
   difficulty: number;
+  extraTags?: string[][];
 }
 
 interface UsePowCreationReturn {
@@ -39,7 +40,7 @@ export function usePowCreation(): UsePowCreationReturn {
         return error("Nostr not initialized");
       }
 
-      const { senderPrivkey, recipient, message, difficulty } = params;
+      const { senderPrivkey, recipient, message, difficulty, extraTags } = params;
 
       setIsMining(true);
 
@@ -56,6 +57,7 @@ export function usePowCreation(): UsePowCreationReturn {
               recipient,
               message,
               difficulty,
+              extraTags,
             });
           } catch (workerError: any) {
             if (workerError.message === "POW mining cancelled by user") {
@@ -73,7 +75,8 @@ export function usePowCreation(): UsePowCreationReturn {
                 senderPrivkey,
                 recipient,
                 message,
-                difficulty
+                difficulty,
+                extraTags
               ),
               new Promise<never>((_, reject) =>
                 setTimeout(
@@ -92,7 +95,8 @@ export function usePowCreation(): UsePowCreationReturn {
             senderPrivkey,
             recipient,
             message,
-            difficulty
+            difficulty,
+            extraTags
           );
         }
 

@@ -9,7 +9,6 @@ import { withAuth } from "app/components/auth/with-auth";
 import { PowMiningIndicator } from "app/components/pow-mining-indicator";
 import { custom } from "app/components/dialog";
 import { POW_CONFIG } from "app/lib/config";
-import { ReplyTo } from "app/lib/type";
 import { hexToBytes } from "@noble/hashes/utils";
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -87,17 +86,13 @@ function ComposePage() {
       };
 
       // Build the letter content with subject if provided
-      const letterContent = subject.trim()
-        ? `Subject: ${subject.trim()}\n\n${content.trim()}`
-        : content.trim();
+      const letterContent = content.trim();
 
       // Handle reply functionality
-      let replyTo: ReplyTo | undefined;
       const replyToEventId = searchParams.get("replyToEventId");
-      if (replyToEventId) {
-        replyTo = {
-          eventId: replyToEventId,
-        };
+      const extraTags = replyToEventId ? [["e", replyToEventId]] : [];
+      if (subject && subject.trim() !== "") {
+        extraTags.push(["subject", subject]);
       }
 
       // Create the POW note with reply information
@@ -106,6 +101,7 @@ function ComposePage() {
         recipient,
         message: letterContent,
         difficulty: powDifficulty,
+        extraTags,
       });
 
       // Show stamp dialog with the event ID
@@ -191,7 +187,7 @@ function ComposePage() {
             type="text"
             value={recipientPubkey}
             onChange={(e) => setRecipientPubkey(e.target.value)}
-            placeholder="npub... or hex public key"
+            placeholder="hex public key"
             className="w-full px-3 py-2 text-sm bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-300 dark:focus:ring-neutral-600 transition-all font-mono"
             disabled={isReply}
           />

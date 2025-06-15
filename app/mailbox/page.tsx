@@ -55,7 +55,6 @@ function MailBox() {
   const sampleLetters = giftWrappedNotes.map((note) => ({
     id: note.id,
     from: note.pubkey,
-    subject: "...",
     content: note.content,
     receivedAt: note.created_at * 1000,
     read: false,

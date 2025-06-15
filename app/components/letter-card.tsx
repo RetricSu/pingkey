@@ -11,6 +11,7 @@ import { Stamp } from "./stamp";
 import { ReadingLetterModal } from "./reading-letter";
 import { getPow } from "nostr-tools/nip13";
 import { prompt } from "./dialog";
+import { getSubjectTitleFromEvent } from "app/lib/nostr";
 
 export function LetterCard({
   letter,
@@ -18,7 +19,6 @@ export function LetterCard({
   letter: {
     id: string;
     from: string;
-    subject: string;
     content: string;
     receivedAt: number;
     read: boolean;
@@ -30,7 +30,7 @@ export function LetterCard({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [decryptedLetter, setDecryptedLetter] = useState<{
     from: string;
-    subject: string;
+    subject?: string | null;
     content: string;
     receivedAt: number;
     eventId: string;
@@ -60,7 +60,7 @@ export function LetterCard({
         // Set the decrypted content and open modal
         setDecryptedLetter({
           from: letter.from,
-          subject: letter.subject,
+          subject: getSubjectTitleFromEvent(decryptedNote as Event),
           content: decryptedNote.content,
           receivedAt: letter.receivedAt,
           eventId: letter.fullNote.id,
