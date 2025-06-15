@@ -1,4 +1,12 @@
-# Nextfolio
+# ReachMe
+
+todo:
+
+- [x] fix the no-relay-list re-rendering bug in mailbox page
+- [ ] support for subject line in reading-letter and compose page
+- [ ] support my-send letter in mailbox page
+- [ ] update site metadata and social links
+- [ ] write a blog post about the project
 
 A clean, fast, and lightweight portfolio template built with [Next.js](https://nextjs.org/), [Vercel](https://vercel.com/), and [Tailwind CSS](https://tailwindcss.com/).
 
