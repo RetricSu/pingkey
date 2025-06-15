@@ -120,7 +120,7 @@ export function MessageSender({
       <textarea
         value={message}
         onChange={(e) => setMessage(e.target.value)}
-        placeholder="Write your message here..."
+        placeholder={`Leaving a message to ${profileName}. A minimal stamp forged from Proof of Work(POW) is required.`}
         className="w-full h-32 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
         rows={6}
       />
