@@ -70,6 +70,10 @@ export function UserDropdown({ pubkey, onSignOut }: UserDropdownProps) {
 
   const menuItems: MenuItem[] = [
     {
+      label: "Compose",
+      href: "/compose",
+    },
+    {
       label: "Mailbox",
       href: "/mailbox",
     },

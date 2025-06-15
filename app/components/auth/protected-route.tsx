@@ -54,7 +54,7 @@ export function ProtectedRoute({
             You need to sign in with your Nostr account to access this page.
           </p>
           <button
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/signin")}
             className="px-6 py-3 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-sm font-medium rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors"
           >
             Go to Sign In

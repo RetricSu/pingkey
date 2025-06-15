@@ -9,7 +9,6 @@ import { withAuth } from "app/components/auth/with-auth";
 import { PowMiningIndicator } from "app/components/pow-mining-indicator";
 import { custom } from "app/components/dialog";
 import { POW_CONFIG } from "app/lib/config";
-import { ReplyTo } from "app/lib/type";
 import { hexToBytes } from "@noble/hashes/utils";
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -87,17 +86,13 @@ function ComposePage() {
       };
 
       // Build the letter content with subject if provided
-      const letterContent = subject.trim()
-        ? `Subject: ${subject.trim()}\n\n${content.trim()}`
-        : content.trim();
+      const letterContent = content.trim();
 
       // Handle reply functionality
-      let replyTo: ReplyTo | undefined;
       const replyToEventId = searchParams.get("replyToEventId");
-      if (replyToEventId) {
-        replyTo = {
-          eventId: replyToEventId,
-        };
+      const extraTags = replyToEventId ? [["e", replyToEventId]] : [];
+      if (subject && subject.trim() !== "") {
+        extraTags.push(["subject", subject]);
       }
 
       // Create the POW note with reply information
@@ -106,6 +101,7 @@ function ComposePage() {
         recipient,
         message: letterContent,
         difficulty: powDifficulty,
+        extraTags,
       });
 
       // Show stamp dialog with the event ID
