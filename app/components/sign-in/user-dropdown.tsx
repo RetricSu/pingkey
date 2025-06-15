@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useAuth } from "../../contexts/auth";
 import { useNotification } from "../../contexts/notification";
 import { createExportFile } from "../../lib/util";
-import { Dialog } from "../dialog";
+import { prompt } from "../dialog";
 
 interface UserDropdownProps {
   pubkey: string;
@@ -18,13 +18,19 @@ interface MenuItem {
 export function UserDropdown({ pubkey, onSignOut }: UserDropdownProps) {
   const { exportPrivateKey } = useAuth();
   const { success, error } = useNotification();
-  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
 
   const handleExportKey = async () => {
-    setShowPasswordDialog(true);
-  };
+    const password = await prompt(
+      "Export Private Key",
+      "Enter your password to decrypt and export your private key:",
+      "",
+      {
+        type: "password",
+        placeholder: "Enter password",
+        confirmLabel: "Export",
+      }
+    );
 
-  const handlePasswordConfirm = async (password?: string) => {
     if (!password) return;
 
     try {
@@ -128,18 +134,6 @@ export function UserDropdown({ pubkey, onSignOut }: UserDropdownProps) {
           ))}
         </div>
       </div>
-
-      <Dialog
-        isOpen={showPasswordDialog}
-        onClose={() => setShowPasswordDialog(false)}
-        title="Export Private Key"
-        message="Enter your password to decrypt and export your private key:"
-        type="prompt"
-        inputType="password"
-        placeholder="Enter password"
-        confirmLabel="Export"
-        onConfirm={handlePasswordConfirm}
-      />
     </>
   );
 }

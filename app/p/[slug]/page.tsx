@@ -6,6 +6,7 @@ import { useNostr } from "../../contexts/nostr";
 import { defaultProfile } from "app/lib/config";
 import { Profile, RelayListItem } from "app/lib/type";
 import { MessageSender } from "../../components/message-sender";
+import { Loader } from "../../components/loader";
 
 interface PageProps {
   params: Promise<{
@@ -68,16 +69,7 @@ export default function DynamicPage({ params }: PageProps) {
   }, [nostr, slug]);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-neutral-200 dark:border-neutral-800 border-t-neutral-900 dark:border-t-neutral-100 rounded-full animate-spin"></div>
-          <div className="text-sm text-neutral-600 dark:text-neutral-400">
-            Loading profile...
-          </div>
-        </div>
-      </div>
-    );
+    return <Loader message="Loading profile..." />;
   }
 
   if (profileError) {
@@ -105,16 +97,11 @@ export default function DynamicPage({ params }: PageProps) {
         <h1 className="mb-8 text-2xl font-medium capitalize">
           {profile.name || slug}
         </h1>
-        <div className="prose prose-neutral dark:prose-invert">
+        <div className="prose prose-neutral dark:prose-invert whitespace-pre-wrap leading-relaxed">
           <p>{profile.about}</p>
         </div>
 
-        <div className="mt-8  pt-8 text-sm text-gray-500 dark:text-gray-400">
-          <p>Feel free to reach me by leaving a letter to my relays.</p>
-          <p>A minimal stamp forged from Proof of Work(POW) is required.</p>
-        </div>
-
-        <div className="mt-1 border-t border-gray-100 dark:border-gray-800">
+        <div className="mt-16 border-t border-gray-100 dark:border-gray-800">
           <div className="mt-4 mb-6 pt-4">
             <h3 className="text-sm font-medium mb-3 text-gray-700 dark:text-gray-300">
               {profile.name || slug}'s Relays

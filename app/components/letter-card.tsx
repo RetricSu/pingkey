@@ -8,7 +8,9 @@ import { Event } from "nostr-tools/core";
 import { formatDate } from "app/lib/util";
 import { hexToBytes } from "@noble/hashes/utils";
 import { Stamp } from "./stamp";
-import { ReadingModal } from "./reading-modal";
+import { ReadingLetterModal } from "./reading-letter";
+import { getPow } from "nostr-tools/nip13";
+import { prompt } from "./dialog";
 
 export function LetterCard({
   letter,
@@ -31,11 +33,21 @@ export function LetterCard({
     subject: string;
     content: string;
     receivedAt: number;
+    eventId: string;
   } | null>(null);
 
   const decryptNote = async () => {
     if (isSignedIn && nostr) {
-      const password = prompt("Enter your password");
+      const password = await prompt(
+        "Enter your password",
+        "Please enter your password to decrypt the letter:",
+        "",
+        {
+          type: "password",
+          placeholder: "Enter password",
+          confirmLabel: "Decrypt",
+        }
+      );
       if (!password) return;
 
       try {
@@ -51,6 +63,7 @@ export function LetterCard({
           subject: letter.subject,
           content: decryptedNote.content,
           receivedAt: letter.receivedAt,
+          eventId: letter.fullNote.id,
         });
         setIsModalOpen(true);
       } catch (error) {
@@ -99,9 +112,12 @@ export function LetterCard({
         {/* Letter content area */}
         <div className="relative">
           {/* Letter body */}
-          <div className="bg-neutral-50/50 dark:bg-neutral-800/20 rounded-lg p-4 mb-6 border border-neutral-100 dark:border-neutral-800/50">
+          <div className="text-center bg-neutral-50/50 dark:bg-neutral-800/20 rounded-lg p-4 mb-6 border border-neutral-100 dark:border-neutral-800/50">
             <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed text-sm font-medium line-clamp-4 italic">
-              "{letter.content}"
+              POW Difficulty: {getPow(letter.fullNote.id)}
+            </p>
+            <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed text-sm font-medium line-clamp-4 italic">
+              {letter.fullNote.id}
             </p>
           </div>
         </div>
@@ -117,7 +133,7 @@ export function LetterCard({
         </div>
       </div>
 
-      <ReadingModal
+      <ReadingLetterModal
         isOpen={isModalOpen}
         onClose={closeModal}
         letter={decryptedLetter}
