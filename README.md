@@ -3,7 +3,7 @@
 todo:
 
 - [x] fix the no-relay-list re-rendering bug in mailbox page
-- [ ] support for subject line in reading-letter and compose page
+- [x] support for subject line in reading-letter and compose page
 - [ ] support my-send letter in mailbox page
 - [ ] update site metadata and social links
 - [ ] write a blog post about the project
