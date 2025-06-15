@@ -8,7 +8,7 @@ import { Event } from "nostr-tools/core";
 import { formatDate } from "app/lib/util";
 import { hexToBytes } from "@noble/hashes/utils";
 import { Stamp } from "./stamp";
-import { ReadingModal } from "./reading-modal";
+import { ReadingLetterModal } from "./reading-letter";
 import { getPow } from "nostr-tools/nip13";
 import { prompt } from "./dialog";
 
@@ -133,7 +133,7 @@ export function LetterCard({
         </div>
       </div>
 
-      <ReadingModal
+      <ReadingLetterModal
         isOpen={isModalOpen}
         onClose={closeModal}
         letter={decryptedLetter}
