@@ -7,6 +7,7 @@ import { Event } from "nostr-tools/core";
 import { LetterCard } from "app/components/letter-card";
 import { useUserRelayList } from "app/hooks/useUserRelayList";
 import { withAuth } from "app/components/auth/with-auth";
+import { Loader } from "app/components/loader";
 
 type FilterType = 'all' | 'unread' | 'read';
 
@@ -15,14 +16,18 @@ function MailBox() {
   const { nostr } = useNostr();
   const [giftWrappedNotes, setGiftWrappedNotes] = useState<Event[]>([]);
   const [currentFilter, setCurrentFilter] = useState<FilterType>('all');
+  const [isLoading, setIsLoading] = useState(true);
   const { relayList, refetch: refetchRelayList } = useUserRelayList();
 
   const fetchGiftWrappedNotes = useCallback(async () => {
-    if (relayList.length === 0) {
-      await refetchRelayList();
-    }
+    if (!isSignedIn || !nostr) return;
+    
+    setIsLoading(true);
+    try {
+      if (relayList.length === 0) {
+        await refetchRelayList();
+      }
 
-    if (isSignedIn && nostr) {
       if (relayList.length > 0) {
         const notes = await nostr.fetchGiftWrappedNotes(
           pubkey!,
@@ -33,12 +38,21 @@ function MailBox() {
         const notes = await nostr.fetchGiftWrappedNotes(pubkey!);
         setGiftWrappedNotes(notes);
       }
+    } catch (error) {
+      console.error("Error fetching gift wrapped notes:", error);
+    } finally {
+      setIsLoading(false);
     }
-  }, [isSignedIn, nostr, pubkey, relayList]);
+  }, [isSignedIn, nostr, pubkey, relayList, refetchRelayList]);
 
   useEffect(() => {
     fetchGiftWrappedNotes();
-  }, [isSignedIn, nostr, pubkey]);
+  }, [fetchGiftWrappedNotes]);
+
+  // Show loader while fetching notes
+  if (isLoading) {
+    return <Loader message="Loading your letters..." />;
+  }
 
   const sampleLetters = giftWrappedNotes.map((note) => ({
     id: note.id,

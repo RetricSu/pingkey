@@ -8,6 +8,7 @@ import { useUserRelayList } from "../hooks/useUserRelayList";
 import { Profile, RelayListItem } from "app/lib/type";
 import { defaultProfile, defaultRelays } from "app/lib/config";
 import { withAuth } from "app/components/auth/with-auth";
+import { Loader } from "app/components/loader";
 
 function SettingPage() {
   const { pubkey } = useAuth();
@@ -132,16 +133,7 @@ function SettingPage() {
   };
 
   if (profileLoading || relayListLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-neutral-200 dark:border-neutral-800 border-t-neutral-900 dark:border-t-neutral-100 rounded-full animate-spin"></div>
-          <div className="text-sm text-neutral-600 dark:text-neutral-400">
-            Loading...
-          </div>
-        </div>
-      </div>
-    );
+    return <Loader />;
   }
 
   if (profileError || relayListError || error) {
