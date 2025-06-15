@@ -8,8 +8,9 @@ import { LetterCard } from "app/components/letter-card";
 import { useUserRelayList } from "app/hooks/useUserRelayList";
 import { withAuth } from "app/components/auth/with-auth";
 import { Loader } from "app/components/loader";
+import { getPow } from "nostr-tools/nip13";
 
-type FilterType = "all" | "unread" | "read";
+type FilterType = "all" | "unread" | "read" | "pow";
 
 function MailBox() {
   const { isSignedIn, pubkey } = useAuth();
@@ -17,6 +18,7 @@ function MailBox() {
   const [giftWrappedNotes, setGiftWrappedNotes] = useState<Event[]>([]);
   const [currentFilter, setCurrentFilter] = useState<FilterType>("all");
   const [isLoading, setIsLoading] = useState(true);
+  const [powThreshold, setPowThreshold] = useState(16);
   const { relayList, refetch: refetchRelayList } = useUserRelayList();
 
   const fetchGiftWrappedNotes = useCallback(async () => {
@@ -62,6 +64,7 @@ function MailBox() {
     receivedAt: note.created_at * 1000,
     read: false,
     fullNote: note,
+    powDifficulty: getPow(note.id),
   }));
 
   // Filter letters based on current filter
@@ -71,6 +74,8 @@ function MailBox() {
         return !letter.read;
       case "read":
         return letter.read;
+      case "pow":
+        return letter.powDifficulty >= powThreshold;
       case "all":
       default:
         return true;
@@ -80,6 +85,9 @@ function MailBox() {
   const unreadCount = sampleLetters.filter((letter) => !letter.read).length;
   const totalCount = sampleLetters.length;
   const readCount = totalCount - unreadCount;
+  const powCount = sampleLetters.filter(
+    (letter) => letter.powDifficulty >= powThreshold
+  ).length;
 
   const getButtonClassName = (filterType: FilterType) => {
     const baseClasses =
@@ -128,25 +136,45 @@ function MailBox() {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-4 pb-4 border-b border-neutral-200 dark:border-neutral-800">
-        <button
-          className={getButtonClassName("all")}
-          onClick={() => setCurrentFilter("all")}
-        >
-          All
-        </button>
-        <button
-          className={getButtonClassName("unread")}
-          onClick={() => setCurrentFilter("unread")}
-        >
-          Unread ({unreadCount})
-        </button>
-        <button
-          className={getButtonClassName("read")}
-          onClick={() => setCurrentFilter("read")}
-        >
-          Read ({readCount})
-        </button>
+      <div className="flex justify-between items-center gap-4 pb-4 border-b border-neutral-200 dark:border-neutral-800">
+        <div className="flex items-center gap-2">
+          <button
+            className={getButtonClassName("all")}
+            onClick={() => setCurrentFilter("all")}
+          >
+            All
+          </button>
+          <button
+            className={getButtonClassName("unread")}
+            onClick={() => setCurrentFilter("unread")}
+          >
+            Unread ({unreadCount})
+          </button>
+          <button
+            className={getButtonClassName("read")}
+            onClick={() => setCurrentFilter("read")}
+          >
+            Read ({readCount})
+          </button>
+          <button
+            className={getButtonClassName("pow")}
+            onClick={() => setCurrentFilter("pow")}
+          >
+            POW ({powCount})
+          </button>
+        </div>
+
+        <div className="text-xs">
+          <label htmlFor="powThreshold">Filter POW {">= "}</label>
+          <input
+            type="number"
+            min="1"
+            max="64"
+            value={powThreshold}
+            onChange={(e) => setPowThreshold(parseInt(e.target.value) || 16)}
+            className="w-12 px-2 py-1 text-xs border border-neutral-300 dark:border-neutral-600 rounded bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-1 focus:ring-neutral-400 dark:focus:ring-neutral-500"
+          />
+        </div>
       </div>
 
       {/* Letters */}
@@ -189,14 +217,18 @@ function MailBox() {
               ? "No letters yet"
               : currentFilter === "unread"
               ? "No unread letters"
-              : "No read letters"}
+              : currentFilter === "read"
+              ? "No read letters"
+              : `No letters with POW ≥ ${powThreshold}`}
           </h3>
           <p className="text-neutral-500 dark:text-neutral-400 mb-6">
             {currentFilter === "all"
               ? "When people send you letters, they'll appear here."
               : currentFilter === "unread"
               ? "All your letters have been read!"
-              : "No letters have been read yet."}
+              : currentFilter === "read"
+              ? "No letters have been read yet."
+              : `No letters found with POW difficulty ${powThreshold} or higher.`}
           </p>
           {currentFilter === "all" && (
             <button className="px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-sm font-medium rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors">

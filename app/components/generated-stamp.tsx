@@ -14,7 +14,7 @@ export function buildGeneratedStampDialog(
           <p className="text-sm text-gray-600 dark:text-gray-400">
             Your message has been forged and ready to send with Proof of Work
             Stamp (Difficulty: {powDifficulty}). The Stamp will be used as a
-            spam filter for relays. Higer difficulty means more spam-proof, but
+            spam filter for relays. Higher difficulty means more spam-proof, but
             slower to forge.
           </p>
         </div>
