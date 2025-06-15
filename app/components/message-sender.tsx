@@ -7,7 +7,7 @@ import { useNotification } from "../contexts/notification";
 import { generateSecretKey } from "nostr-tools/pure";
 import { hexToBytes } from "@noble/hashes/utils";
 import { RelayListItem } from "../lib/type";
-import { custom, CustomDialogProps } from "./simple-dialog";
+import { custom, CustomDialogProps } from "./dialog";
 import { Stamp } from "./stamp";
 import { usePowCreation } from "../hooks/usePowCreation";
 import { PowMiningIndicator } from "./pow-mining-indicator";

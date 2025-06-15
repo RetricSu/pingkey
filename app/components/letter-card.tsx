@@ -10,7 +10,7 @@ import { hexToBytes } from "@noble/hashes/utils";
 import { Stamp } from "./stamp";
 import { ReadingModal } from "./reading-modal";
 import { getPow } from "nostr-tools/nip13";
-import { prompt } from "./simple-dialog";
+import { prompt } from "./dialog";
 
 export function LetterCard({
   letter,
@@ -46,7 +46,6 @@ export function LetterCard({
           type: "password",
           placeholder: "Enter password",
           confirmLabel: "Decrypt",
-          cancelLabel: "Cancel",
         }
       );
       if (!password) return;
