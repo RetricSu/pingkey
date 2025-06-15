@@ -10,6 +10,7 @@ import { hexToBytes } from "@noble/hashes/utils";
 import { Stamp } from "./stamp";
 import { ReadingModal } from "./reading-modal";
 import { getPow } from "nostr-tools/nip13";
+import { prompt } from "./simple-dialog";
 
 export function LetterCard({
   letter,
@@ -37,7 +38,17 @@ export function LetterCard({
 
   const decryptNote = async () => {
     if (isSignedIn && nostr) {
-      const password = prompt("Enter your password");
+      const password = await prompt(
+        "Enter your password",
+        "Please enter your password to decrypt the letter:",
+        "",
+        {
+          type: "password",
+          placeholder: "Enter password",
+          confirmLabel: "Decrypt",
+          cancelLabel: "Cancel",
+        }
+      );
       if (!password) return;
 
       try {
