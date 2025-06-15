@@ -8,10 +8,13 @@ import { LetterCard } from "app/components/letter-card";
 import { useUserRelayList } from "app/hooks/useUserRelayList";
 import { withAuth } from "app/components/auth/with-auth";
 
+type FilterType = 'all' | 'unread' | 'read';
+
 function MailBox() {
   const { isSignedIn, pubkey } = useAuth();
   const { nostr } = useNostr();
   const [giftWrappedNotes, setGiftWrappedNotes] = useState<Event[]>([]);
+  const [currentFilter, setCurrentFilter] = useState<FilterType>('all');
   const { relayList, refetch: refetchRelayList } = useUserRelayList();
 
   const fetchGiftWrappedNotes = useCallback(async () => {
@@ -42,13 +45,35 @@ function MailBox() {
     from: note.pubkey.slice(0, 6) + "...",
     subject: "...",
     content: note.content.slice(0, 20),
-    receivedAt: note.created_at,
+    receivedAt: note.created_at * 1000,
     read: false,
     fullNote: note,
   }));
 
+  // Filter letters based on current filter
+  const filteredLetters = sampleLetters.filter((letter) => {
+    switch (currentFilter) {
+      case 'unread':
+        return !letter.read;
+      case 'read':
+        return letter.read;
+      case 'all':
+      default:
+        return true;
+    }
+  });
+
   const unreadCount = sampleLetters.filter((letter) => !letter.read).length;
   const totalCount = sampleLetters.length;
+  const readCount = totalCount - unreadCount;
+
+  const getButtonClassName = (filterType: FilterType) => {
+    const baseClasses = "px-3 py-1.5 text-sm font-medium rounded-md transition-colors";
+    const activeClasses = "text-neutral-900 dark:text-neutral-100 bg-neutral-100 dark:bg-neutral-800";
+    const inactiveClasses = "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100";
+    
+    return `${baseClasses} ${currentFilter === filterType ? activeClasses : inactiveClasses}`;
+  };
 
   return (
     <section className="space-y-8">
@@ -80,21 +105,30 @@ function MailBox() {
 
       {/* Filters */}
       <div className="flex items-center gap-4 pb-4 border-b border-neutral-200 dark:border-neutral-800">
-        <button className="px-3 py-1.5 text-sm font-medium text-neutral-900 dark:text-neutral-100 bg-neutral-100 dark:bg-neutral-800 rounded-md">
+        <button 
+          className={getButtonClassName('all')}
+          onClick={() => setCurrentFilter('all')}
+        >
           All
         </button>
-        <button className="px-3 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
+        <button 
+          className={getButtonClassName('unread')}
+          onClick={() => setCurrentFilter('unread')}
+        >
           Unread ({unreadCount})
         </button>
-        <button className="px-3 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
-          Read
+        <button 
+          className={getButtonClassName('read')}
+          onClick={() => setCurrentFilter('read')}
+        >
+          Read ({readCount})
         </button>
       </div>
 
       {/* Letters */}
-      {sampleLetters.length > 0 ? (
+      {filteredLetters.length > 0 ? (
         <div className="grid gap-4">
-          {sampleLetters
+          {filteredLetters
             .sort((a, b) => {
               // Sort unread first, then by date
               if (a.read !== b.read) {
@@ -127,14 +161,20 @@ function MailBox() {
             </svg>
           </div>
           <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-2">
-            No letters yet
+            {currentFilter === 'all' ? 'No letters yet' : 
+             currentFilter === 'unread' ? 'No unread letters' : 
+             'No read letters'}
           </h3>
           <p className="text-neutral-500 dark:text-neutral-400 mb-6">
-            When people send you letters, they'll appear here.
+            {currentFilter === 'all' ? 'When people send you letters, they\'ll appear here.' :
+             currentFilter === 'unread' ? 'All your letters have been read!' :
+             'No letters have been read yet.'}
           </p>
-          <button className="px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-sm font-medium rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors">
-            Share your profile
-          </button>
+          {currentFilter === 'all' && (
+            <button className="px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-sm font-medium rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors">
+              Share your profile
+            </button>
+          )}
         </div>
       )}
     </section>

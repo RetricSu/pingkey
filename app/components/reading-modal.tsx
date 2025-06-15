@@ -12,6 +12,7 @@ interface ReadingModalProps {
     subject: string;
     content: string;
     receivedAt: number;
+    eventId: string;
   } | null;
 }
 
@@ -54,7 +55,7 @@ export function ReadingModal({ isOpen, onClose, letter }: ReadingModalProps) {
       >
         {/* Floating Stamp in top-left corner */}
         <div className="absolute -top-1 -left-1 z-10">
-          <Stamp />
+          <Stamp hash={letter.eventId} showArt={true} />
         </div>
 
         {/* Close button */}
