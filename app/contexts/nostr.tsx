@@ -13,6 +13,7 @@ import { finalizeEvent } from "nostr-tools/pure";
 import { UserInfoCache } from "app/lib/type";
 import { useLocalStorage } from "app/hooks/useLocalStorage";
 import { LocalStorageKeys } from "app/lib/config";
+import { prompt } from "app/components/dialog";
 
 interface NostrContextType {
   nostr: Nostr | null;
@@ -26,7 +27,10 @@ interface NostrProviderProps {
 }
 
 export function NostrProvider({ children }: NostrProviderProps) {
-  const [userInfoCache, setUserInfoCache, removeUserInfoCache] = useLocalStorage<UserInfoCache | null>(LocalStorageKeys.userInfoCacheKey, null);
+  const [userInfoCache] = useLocalStorage<UserInfoCache | null>(
+    LocalStorageKeys.userInfoCacheKey,
+    null
+  );
   const [nostr, setNostr] = useState<Nostr | null>(null);
 
   const initializeNostr = () => {
@@ -47,7 +51,16 @@ export function NostrProvider({ children }: NostrProviderProps) {
           throw new Error("No encrypted private key found");
         }
 
-        const password = prompt("Enter your password");
+        const password = await prompt(
+          "Enter your password",
+          "Please enter your password to sign the event:",
+          "",
+          {
+            type: "password",
+            placeholder: "Enter password",
+            confirmLabel: "Sign",
+          }
+        );
         if (!password) {
           throw new Error("Password not set");
         }

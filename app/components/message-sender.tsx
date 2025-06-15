@@ -12,6 +12,7 @@ import { usePowCreation } from "../hooks/usePowCreation";
 import { PowMiningIndicator } from "./pow-mining-indicator";
 import { POW_CONFIG } from "app/lib/config";
 import { buildGeneratedStampDialog } from "./generated-stamp";
+import { prompt } from "./dialog";
 
 interface MessageSenderProps {
   slug: string;
@@ -51,11 +52,18 @@ export function MessageSender({
       if (!isSignedIn) {
         senderPrivkey = generateSecretKey();
       } else {
-        const password = prompt(
-          "Please enter your password to send the message"
+        const password = await prompt(
+          "Enter your password",
+          "Please enter your password to send the message:",
+          "",
+          {
+            type: "password",
+            placeholder: "Enter password",
+            confirmLabel: "Send",
+          }
         );
         if (!password) {
-          throw new Error("Password required to send message");
+          return error("Password required to send message");
         }
         senderPrivkey = hexToBytes(await exportPrivateKey(password));
       }
@@ -65,7 +73,7 @@ export function MessageSender({
       };
 
       if (!nostr) {
-        throw new Error("Nostr not initialized");
+        return error("Nostr not initialized");
       }
       // Use the POW creation hook to handle all the complexity
       const signedEvent = await createPowNote({

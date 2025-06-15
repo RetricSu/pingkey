@@ -187,7 +187,7 @@ function ComposePage() {
             type="text"
             value={recipientPubkey}
             onChange={(e) => setRecipientPubkey(e.target.value)}
-            placeholder="npub... or hex public key"
+            placeholder="hex public key"
             className="w-full px-3 py-2 text-sm bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-300 dark:focus:ring-neutral-600 transition-all font-mono"
             disabled={isReply}
           />
