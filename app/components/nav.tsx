@@ -8,7 +8,7 @@ const navItems = {
   "/mailbox": { name: "Mailbox" },
 };
 
-export function ReachMeLogo() {
+export function PingKeyLogo() {
   return (
     <Link
       href="/"
@@ -62,7 +62,7 @@ export function ReachMeLogo() {
           className="text-neutral-600 dark:text-neutral-400"
         />
       </svg>
-      <span className="font-medium text-lg">ReachMe</span>
+      <span className="font-medium text-lg">PingKey</span>
     </Link>
   );
 }

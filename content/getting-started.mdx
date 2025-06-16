@@ -1,86 +1,84 @@
 ---
-title: "Getting Started with Nextfolio"
-publishedAt: "2024-08-13"
-summary: "Instructions to build and configure your Nextfolio portfolio."
-tags: "Configuration, Web development"
+title: "Introducing PingKey: a worry-free way to let people reach you"
+publishedAt: "2025-06-16"
+summary: "Instructions to build and configure your PingKey."
 ---
 
-Nextfolio includes all the essentials for a stunning portfolio website.
+A stress-free way to stay reachable—without running a server, leaking your inbox, or spinning up “yet another chat.”
 
-Start by [deploying](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2F1msirius%2FNextfolio) your portfolio with Vercel in minutes, or fork the [repository](https://github.com/1msirius/Nextfolio) and follow the instructions below to set it up.
+---
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2F1msirius%2FNextfolio)
+## Why We Built PingKey
 
-## Installation
+If you publish open-source code, write a blog, or tinker in public, you probably paste an email address or social handle everywhere “just in case someone needs me.”
+Sooner or later that channel drowns in spam, bots harvest it, or it vanishes behind a banned domain. You deserve something lighter.
 
-Nextfolio uses [pnpm](https://pnpm.io/installation) for dependency management, so ensure it is installed on your system.
+PingKey is our answer: a single, shareable link that lets anyone drop you a *one-off, signed* message—no account, no app, no server of yours to babysit.
 
-Execute [create-next-app](https://github.com/vercel/next.js/tree/canary/packages/create-next-app) with [pnpm](https://pnpm.io/installation) to bootstrap the example:
+---
 
-```
-pnpm create next-app --example https://github.com/1msirius/Nextfolio my-portfolio
-```
+## What Makes It Different
 
-Start the development server:
+### **1. Zero Infrastructure**
 
-```
-pnpm dev
-```
+PingKey sits on the Nostr relay network, so you don’t host or maintain anything. Spin up a key pair in seconds and you’re live.
 
-The server will be running at [http://localhost:3000](http://localhost:3000).
+### **2. Censorship-Resilient**
 
-## Configuration
+Relays are interchangeable. If one disappears, flip a switch and your PingKey keeps working. Your “contact me” link never dies.
 
-Customize your Nextfolio setup by updating your information to ensure proper SEO, feed generation, Open Graph integration, and other settings.
+### **3. Proof-of-Work Stamps**
 
-### Config.ts
+Each sender solves a tiny proof-of-work puzzle in their browser. It costs them fractions of a second, but bots hate it. The solved puzzle turns into a unique pixel-perfect “stamp” that travels with the message—geeks love collecting them, spammers skip the hassle.
 
-Update the site metadata and social links in the **app/config.ts** file. These constants are utilized across the site for SEO, feeds, social links, and Open Graph integration.
+### **4. One-Shot by Design**
 
-```
-export const metaData = {
-  baseUrl: "https://nextfolio-template.vercel.app", // Update with your site base URL
-  title: "Nextfolio", // Update with your site title
-  name: "Sirius", // Update with your name
-  ogImage: "/opengraph-image.png", // Update with your Open Graph image
-  description:
-    "A clean, fast, and lightweight portfolio template built with Next.js, Vercel, and Tailwind CSS for optimal performance.", // Update with your site description
-};
+PingKey is *not* another chat thread. After you read a message you can reply or let it fade into an encrypted archive. It keeps your mental inbox clean.
 
-export const socialLinks = {
-  twitter: "https://x.com/1tssirius", // Update with your Twitter URL
-  github: "https://github.com/1msirius/Nextfolio", // Update with your GitHub URL
-  instagram: "https://www.instagram.com/", // Update with your Instagram URL
-  linkedin: "https://www.linkedin.com/", // Update with your LinkedIn URL
-  email: "mailto:example@gmail.com", // Update with your email address
-};
-```
+### **5. Private by Default**
 
-### Sitemap
+Messages ride over end-to-end encryption; only your key can open them. We never see plaintext, and there’s no hidden analytics pixel tracking your visitors.
 
-Adjust the routes to match your portfolio’s navigation in **app/sitemap.ts** file for SEO optimization:
+---
 
-```
-let routes = ["", "blog", "projects", "photos"].map((route) => ({ // Update routes according to your navbar
-  url: `${BaseUrl}${route}`,
-  lastModified: new Date().toISOString().split("T")[0],
-}));
-```
+## How It Works (Plain English)
 
-### Profile Photo
+1. **Generate your PingKey**
+   One click in the web UI creates your private link—nothing to download.
 
-Update your profile photo by replacing the **public/profile.png** file with your image.
+2. **Paste it anywhere**
+   README, personal site, Hacker News profile—wherever people might need you.
 
-### Favicon
+3. **Visitor writes & mines**
+   When someone types a note, their browser spends a heartbeat solving a micro PoW. Success forges a colorful stamp.
 
-Update your favicon by replacing the **public/favicon.ico** file with your custom icon.
+4. **Message relays to you**
+   Only you have the key to decrypt and read the message that sending to you.
+---
 
-## Analytics
+## Who Should Try It Now
 
-Nextfolio uses [Vercel Web Analytics](https://vercel.com/docs/analytics/quickstart) and [Speed Insights](https://vercel.com/docs/speed-insights/quickstart) to monitor user interactions and website's performance. Simply deploy your site on Vercel and enable both features through the Vercel dashboard.
+* **Open-source maintainers** tired of public email spam
+* **Indie hackers & bloggers** who want feedback without a full comment system
+* **Privacy maximalists** looking for a contact lane that can’t be censored
+* **Hackers & collectors** who appreciate proof-of-work art and novel protocols
 
-## Ready!
+If that sounds like you, we’d love your early feedback. PingKey is open-source—fork it, file issues, or just drop us a stamped hello.
 
-You're all set! Update your blog posts in the **/content** folder, add your project data in **app/project/projectdata.tsx**, and update your images in **app/photos/page.tsx**.
+---
 
-Your portfolio is equipped with SEO, [RSS](/rss.xml), [Atom](/atom.xml), and [JSON](/feed.json) feeds, as well as analytics. Nextfolio is fully customizable, allowing you to add features as needed.
+## Roadmap Sneak Peek
+
+* **Custom stamp themes**—print your logo inside the PoW mosaic
+
+---
+
+## Get Started
+
+1. Visit **pingkey.xyz**
+2. Click **Build My Contact Link.”**
+3. Paste it where the world can see.
+
+That’s it. No servers, no sign-ups, no stress. Just peace-of-mind reachability for the independent web. 
+
+*See you in the pings!*
