@@ -33,7 +33,8 @@ export function LetterCard({
     subject?: string | null;
     content: string;
     receivedAt: number;
-    eventId: string;
+    deliveryEventId: string;
+    replyToEventId: string;
   } | null>(null);
 
   const decryptNote = async () => {
@@ -59,11 +60,12 @@ export function LetterCard({
 
         // Set the decrypted content and open modal
         setDecryptedLetter({
-          from: letter.from,
+          from: decryptedNote.pubkey,
           subject: getSubjectTitleFromEvent(decryptedNote as Event),
           content: decryptedNote.content,
           receivedAt: letter.receivedAt,
-          eventId: letter.fullNote.id,
+          deliveryEventId: letter.fullNote.id,
+          replyToEventId: decryptedNote.id,
         });
         setIsModalOpen(true);
       } catch (error) {

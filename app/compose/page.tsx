@@ -48,7 +48,7 @@ function ComposePage() {
 
     if (replyToEventId && replyToPubkey) {
       setSubject("Re: ");
-      setContent("\n\n---\nIn reply to: " + replyToEventId);
+      setContent("In reply to: " + replyToEventId + "\n\n");
     }
   }, [searchParams]);
 
@@ -68,7 +68,7 @@ function ComposePage() {
         {
           type: "password",
           placeholder: "Enter password",
-          confirmLabel: "Decrypt",
+          confirmLabel: "Send",
         }
       );
       if (!password) {

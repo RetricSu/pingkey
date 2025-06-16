@@ -9,4 +9,5 @@ todo:
 - [x] update site metadata and social links
 - [x] write a blog post about the project
 - [x] support viewing stamp
-- [ ] show the key to the anonymous user and tell them to use this key to receive a reply after they leave a message.
+- [x] display collected stamps wall
+- [x] show the key to the anonymous user and tell them to use this key to receive a reply after they leave a message.
