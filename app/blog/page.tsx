@@ -3,7 +3,7 @@ import { formatDate, getBlogPosts } from "app/lib/posts";
 
 export const metadata = {
   title: "Blog",
-  description: "Nextfolio Blog",
+  description: "PingKey Team Blog",
 };
 
 export default function BlogPosts() {
@@ -11,7 +11,7 @@ export default function BlogPosts() {
 
   return (
     <section>
-      <h1 className="mb-4 pb-2 border-b border-neutral-200 dark:border-neutral-800 font-medium">Blog From ReachMe's team</h1>
+      <h1 className="mb-4 pb-2 border-b border-neutral-200 dark:border-neutral-800 font-medium">Blog From PingKey's team</h1>
       <div className="mt-4">
         {allBlogs
           .sort((a, b) => {
