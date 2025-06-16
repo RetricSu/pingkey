@@ -90,9 +90,9 @@ export function PowHashArt({
   className = "",
   clickable = true,
 }: PowHashArtProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
   const sketchRef = useRef<any>(null);
   const [isMounted, setIsMounted] = useState(false);
+  const [containerElement, setContainerElement] = useState<HTMLDivElement | null>(null);
 
   // Function to count leading zeros in a hexadecimal string
   const countLeadingZeros = (hashStr: string): number => {
@@ -146,14 +146,16 @@ export function PowHashArt({
     }
   };
 
-  useEffect(() => {
+    useEffect(() => {
     // Only run on the client side
     if (typeof window === "undefined") return;
-
+    
     setIsMounted(true);
-
+    
     const initializeSketch = async () => {
-      if (!containerRef.current) return;
+      if (!containerElement) {
+        return;
+      }
 
       // Remove existing canvas if any
       if (sketchRef.current) {
@@ -163,15 +165,16 @@ export function PowHashArt({
       const currentHash = hash || generateSimulatedHash(leadingZeros);
       const currentLeadingZeros = hash ? countLeadingZeros(hash) : leadingZeros;
 
-      // Dynamically import p5.js only on the client side
-      const p5Module = await import("p5");
-      const p5 = p5Module.default;
+      try {
+        // Dynamically import p5.js only on the client side
+        const p5Module = await import("p5");
+        const p5 = p5Module.default;
 
-      const sketch = (p: any) => {
+        const sketch = (p: any) => {
         p.setup = () => {
           const canvas = p.createCanvas(width, height);
-          if (containerRef.current) {
-            canvas.parent(containerRef.current);
+          if (containerElement) {
+            canvas.parent(containerElement);
           }
           p.noLoop();
           p.rectMode(p.CENTER);
@@ -485,9 +488,14 @@ export function PowHashArt({
       };
 
       sketchRef.current = new p5(sketch);
+      } catch (error) {
+        console.error("Failed to load p5.js or create sketch:", error);
+      }
     };
 
-    initializeSketch().catch(console.error);
+    if (containerElement) {
+      initializeSketch().catch(console.error);
+    }
 
     return () => {
       if (sketchRef.current) {
@@ -495,7 +503,7 @@ export function PowHashArt({
         sketchRef.current = null;
       }
     };
-  }, [hash, leadingZeros, width, height]);
+  }, [hash, leadingZeros, width, height, containerElement]);
 
   // Show placeholder during SSR and before client-side mount
   if (!isMounted) {
@@ -513,7 +521,7 @@ export function PowHashArt({
 
   return (
     <div
-      ref={containerRef}
+      ref={setContainerElement}
       className={`pow-hash-art ${className} ${
         clickable ? "cursor-pointer hover:opacity-80 transition-opacity" : ""
       }`}
