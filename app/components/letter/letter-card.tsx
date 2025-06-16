@@ -7,10 +7,10 @@ import { unwrapEvent } from "nostr-tools/nip17";
 import { Event } from "nostr-tools/core";
 import { formatDate } from "app/lib/util";
 import { hexToBytes } from "@noble/hashes/utils";
-import { Stamp } from "./stamp";
+import { Stamp } from "../stamp/stamp";
 import { ReadingLetterModal } from "./reading-letter";
 import { getPow } from "nostr-tools/nip13";
-import { prompt } from "./dialog";
+import { prompt } from "../dialog";
 import { getSubjectTitleFromEvent } from "app/lib/nostr";
 
 export function LetterCard({

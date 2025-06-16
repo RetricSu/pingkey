@@ -4,7 +4,7 @@ import { useAuth } from "app/contexts/auth";
 import { useNostr } from "app/contexts/nostr";
 import { useCallback, useEffect, useState } from "react";
 import { Event } from "nostr-tools/core";
-import { LetterCard } from "app/components/letter-card";
+import { LetterCard } from "app/components/letter/letter-card";
 import { useUserRelayList } from "app/hooks/useUserRelayList";
 import { withAuth } from "app/components/auth/with-auth";
 import { Loader } from "app/components/loader";

@@ -9,4 +9,4 @@ todo:
 - [x] update site metadata and social links
 - [x] write a blog post about the project
 - [ ] support viewing stamp
-- [ ] show the key to the anonymous user and tell them to use this key to receive a reply after they leave a message. 
+- [ ] show the key to the anonymous user and tell them to use this key to receive a reply after they leave a message.

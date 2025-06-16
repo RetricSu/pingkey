@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { formatDate } from "app/lib/util";
-import { Stamp } from "./stamp";
+import { Stamp } from "../stamp/stamp";
 import { getPow } from "nostr-tools/nip13";
 
 interface ReadingLetterModalProps {

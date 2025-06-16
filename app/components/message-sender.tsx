@@ -9,9 +9,9 @@ import { hexToBytes } from "@noble/hashes/utils";
 import { RelayListItem } from "../lib/type";
 import { custom } from "./dialog";
 import { usePowCreation } from "../hooks/usePowCreation";
-import { PowMiningIndicator } from "./pow-mining-indicator";
+import { PowMiningIndicator } from "./stamp/pow-mining-indicator";
 import { POW_CONFIG } from "app/lib/config";
-import { buildGeneratedStampDialog } from "./generated-stamp";
+import { buildGeneratedStampDialog } from "./stamp/mint-stamp";
 import { prompt } from "./dialog";
 
 interface MessageSenderProps {
