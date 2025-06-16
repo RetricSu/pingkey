@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useRef } from "react";
 import p5 from "p5";
+import { custom } from "../dialog";
+import { getPow } from "nostr-tools/nip13";
 
 interface PowHashArtProps {
   hash?: string;
@@ -8,6 +10,77 @@ interface PowHashArtProps {
   width?: number;
   height?: number;
   className?: string;
+  clickable?: boolean;
+}
+
+// Expanded dialog component for showing the art in full size
+function PowHashArtDialog({
+  hash,
+  leadingZeros,
+  onResolve,
+  onReject,
+}: {
+  hash?: string;
+  leadingZeros?: number;
+  onResolve: (result: any) => void;
+  onReject: () => void;
+}) {
+  return (
+    <div className="p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+          POW Stamp
+        </h2>
+        <button
+          onClick={onReject}
+          className="w-6 h-6 flex items-center justify-center text-neutral-400 dark:text-neutral-600 hover:text-neutral-600 dark:hover:text-neutral-400 transition-colors rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M18 6 6 18" />
+            <path d="M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div className="flex justify-center mb-4">
+        <PowHashArt
+          hash={hash}
+          leadingZeros={leadingZeros}
+          width={400}
+          height={500}
+          className="border border-neutral-200 dark:border-neutral-700 rounded-lg"
+          clickable={false}
+        />
+      </div>
+
+      <div className="text-center space-y-2">
+        <p className="text-xs text-neutral-500 dark:text-neutral-400">
+          Hash:{" "}
+          {hash ? `${hash.slice(0, 16)}...${hash.slice(-16)}` : "Simulated"}
+        </p>
+        <p className="text-xs text-neutral-500 dark:text-neutral-400">
+          Pow Difficulty: {hash ? getPow(hash) : "Unknown"}
+        </p>
+      </div>
+
+      <div className="flex flex-col items-center justify-center gap-2 my-6 text-center text-sm text-neutral-500 dark:text-neutral-400">
+        <p>
+          Every Pow Stamp is a unique piece of art <br /> determined by the hash
+          of the message.
+        </p>
+        <p>The higher the difficulty, the more complex the stamp art.</p>
+      </div>
+    </div>
+  );
 }
 
 export function PowHashArt({
@@ -16,6 +89,7 @@ export function PowHashArt({
   width = 100,
   height = 120,
   className = "",
+  clickable = true,
 }: PowHashArtProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const sketchRef = useRef<any>(null);
@@ -47,6 +121,29 @@ export function PowHashArt({
       );
     }
     return hashStr;
+  };
+
+  // Handle click to open expanded dialog
+  const handleClick = async () => {
+    if (!clickable) return;
+
+    try {
+      await custom(
+        (props) => (
+          <PowHashArtDialog
+            hash={hash}
+            leadingZeros={leadingZeros}
+            {...props}
+          />
+        ),
+        {
+          maxWidth: "lg",
+          closeOnBackdrop: true,
+        }
+      );
+    } catch (error) {
+      // User closed the dialog, no action needed
+    }
   };
 
   useEffect(() => {
@@ -394,8 +491,12 @@ export function PowHashArt({
   return (
     <div
       ref={containerRef}
-      className={`pow-hash-art ${className}`}
+      className={`pow-hash-art ${className} ${
+        clickable ? "cursor-pointer hover:opacity-80 transition-opacity" : ""
+      }`}
       style={{ width, height }}
+      onClick={handleClick}
+      title={clickable ? "Click to view larger" : undefined}
     />
   );
 }

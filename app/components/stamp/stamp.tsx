@@ -97,6 +97,7 @@ export function Stamp({ hash, showArt = false }: StampProps) {
                   width={32}
                   height={40}
                   className="rounded-sm"
+                  clickable={true}
                 />
               ) : (
                 <svg

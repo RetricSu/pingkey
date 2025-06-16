@@ -116,10 +116,8 @@ export function ReadingLetterModal({
           </div>
 
           {/* Letter Body - clean and readable */}
-          <div className="mb-12">
-            <div className="text-neutral-800 dark:text-neutral-200 leading-loose font-serif whitespace-pre-wrap">
-              {letter.content}
-            </div>
+          <div className="mb-12 text-neutral-800 dark:text-neutral-200 font-serif whitespace-pre-wrap">
+            {letter.content}
           </div>
 
           {/* Reply Button */}
