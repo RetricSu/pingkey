@@ -9,6 +9,7 @@ import { useUserRelayList } from "app/hooks/useUserRelayList";
 import { withAuth } from "app/components/auth/with-auth";
 import { Loader } from "app/components/loader";
 import { getPow } from "nostr-tools/nip13";
+import { StampWall } from "app/components/stamp/stamp-wall";
 
 type FilterType = "all" | "unread" | "read" | "pow";
 
@@ -19,6 +20,7 @@ function MailBox() {
   const [currentFilter, setCurrentFilter] = useState<FilterType>("all");
   const [isLoading, setIsLoading] = useState(true);
   const [powThreshold, setPowThreshold] = useState(16);
+  const [showStampWall, setShowStampWall] = useState(false);
   const { relayList, isLoading: isRelayListLoading } = useUserRelayList();
 
   const fetchGiftWrappedNotes = useCallback(async () => {
@@ -84,6 +86,11 @@ function MailBox() {
     (letter) => letter.powDifficulty >= powThreshold
   ).length;
 
+  // Get event IDs for stamp wall (only letters with POW > 0)
+  const stampEventIds = sampleLetters
+    .filter((letter) => letter.powDifficulty > 0)
+    .map((letter) => letter.id);
+
   const getButtonClassName = (filterType: FilterType) => {
     const baseClasses =
       "px-3 py-1.5 text-sm font-medium rounded-md transition-colors";
@@ -135,28 +142,34 @@ function MailBox() {
         <div className="flex items-center gap-2">
           <button
             className={getButtonClassName("all")}
-            onClick={() => setCurrentFilter("all")}
+            onClick={() => {
+              setCurrentFilter("all");
+              setShowStampWall(false);
+            }}
           >
-            All
-          </button>
-          <button
-            className={getButtonClassName("unread")}
-            onClick={() => setCurrentFilter("unread")}
-          >
-            Unread ({unreadCount})
-          </button>
-          <button
-            className={getButtonClassName("read")}
-            onClick={() => setCurrentFilter("read")}
-          >
-            Read ({readCount})
+            Received
           </button>
           <button
             className={getButtonClassName("pow")}
-            onClick={() => setCurrentFilter("pow")}
+            onClick={() => {
+              setCurrentFilter("pow");
+              setShowStampWall(false);
+            }}
           >
-            POW ({powCount})
+            Filter By POW ({powCount})
           </button>
+          {stampEventIds.length > 0 && (
+            <button
+              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                showStampWall
+                  ? "text-neutral-900 dark:text-neutral-100 bg-neutral-100 dark:bg-neutral-800"
+                  : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
+              }`}
+              onClick={() => setShowStampWall(!showStampWall)}
+            >
+              Collected Stamps ({stampEventIds.length})
+            </button>
+          )}
         </div>
 
         <div className="text-xs">
@@ -172,8 +185,24 @@ function MailBox() {
         </div>
       </div>
 
-      {/* Letters */}
-      {filteredLetters.length > 0 ? (
+      {/* Content - Letters or Stamp Wall */}
+      {showStampWall ? (
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
+              POW Stamp Collection
+            </h2>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+              {stampEventIds.length} stamps collected
+            </p>
+          </div>
+          <StampWall
+            eventIds={stampEventIds}
+            columns={4}
+            stampSize={{ width: 120, height: 150 }}
+          />
+        </div>
+      ) : filteredLetters.length > 0 ? (
         <div className="grid gap-4">
           {filteredLetters
             .sort((a, b) => {
