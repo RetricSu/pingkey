@@ -1,4 +1,4 @@
-import { CustomDialogProps } from "./dialog";
+import { CustomDialogProps } from "../dialog";
 import { Stamp } from "./stamp";
 import { Event } from "nostr-tools/core";
 

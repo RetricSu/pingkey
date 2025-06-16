@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { useNotification } from "../contexts/notification";
+import { useNotification } from "app/contexts/notification";
 import { POW_CONFIG } from "app/lib/config";
 
 interface PowMiningIndicatorProps {

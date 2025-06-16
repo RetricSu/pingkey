@@ -7,10 +7,10 @@ import { unwrapEvent } from "nostr-tools/nip17";
 import { Event } from "nostr-tools/core";
 import { formatDate } from "app/lib/util";
 import { hexToBytes } from "@noble/hashes/utils";
-import { Stamp } from "./stamp";
+import { Stamp } from "../stamp/stamp";
 import { ReadingLetterModal } from "./reading-letter";
 import { getPow } from "nostr-tools/nip13";
-import { prompt } from "./dialog";
+import { prompt } from "../dialog";
 import { getSubjectTitleFromEvent } from "app/lib/nostr";
 
 export function LetterCard({
@@ -33,7 +33,8 @@ export function LetterCard({
     subject?: string | null;
     content: string;
     receivedAt: number;
-    eventId: string;
+    deliveryEventId: string;
+    replyToEventId: string;
   } | null>(null);
 
   const decryptNote = async () => {
@@ -59,11 +60,12 @@ export function LetterCard({
 
         // Set the decrypted content and open modal
         setDecryptedLetter({
-          from: letter.from,
+          from: decryptedNote.pubkey,
           subject: getSubjectTitleFromEvent(decryptedNote as Event),
           content: decryptedNote.content,
           receivedAt: letter.receivedAt,
-          eventId: letter.fullNote.id,
+          deliveryEventId: letter.fullNote.id,
+          replyToEventId: decryptedNote.id,
         });
         setIsModalOpen(true);
       } catch (error) {

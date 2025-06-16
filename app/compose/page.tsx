@@ -6,14 +6,14 @@ import { useNotification } from "app/contexts/notification";
 import { usePowCreation } from "app/hooks/usePowCreation";
 import { useUserRelayList } from "app/hooks/useUserRelayList";
 import { withAuth } from "app/components/auth/with-auth";
-import { PowMiningIndicator } from "app/components/pow-mining-indicator";
+import { PowMiningIndicator } from "app/components/stamp/pow-mining-indicator";
 import { custom } from "app/components/dialog";
 import { POW_CONFIG } from "app/lib/config";
 import { hexToBytes } from "@noble/hashes/utils";
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { prompt } from "app/components/dialog";
-import { buildGeneratedStampDialog } from "app/components/generated-stamp";
+import { buildGeneratedStampDialog } from "app/components/stamp/mint-stamp";
 
 function ComposePage() {
   const { exportPrivateKey } = useAuth();
@@ -48,7 +48,7 @@ function ComposePage() {
 
     if (replyToEventId && replyToPubkey) {
       setSubject("Re: ");
-      setContent("\n\n---\nIn reply to: " + replyToEventId);
+      setContent("In reply to: " + replyToEventId + "\n\n");
     }
   }, [searchParams]);
 
@@ -68,7 +68,7 @@ function ComposePage() {
         {
           type: "password",
           placeholder: "Enter password",
-          confirmLabel: "Decrypt",
+          confirmLabel: "Send",
         }
       );
       if (!password) {
