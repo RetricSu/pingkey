@@ -1,6 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
-import p5 from "p5";
+import { useEffect, useRef, useState } from "react";
 import { custom } from "../dialog";
 import { getPow } from "nostr-tools/nip13";
 
@@ -93,6 +92,7 @@ export function PowHashArt({
 }: PowHashArtProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const sketchRef = useRef<any>(null);
+  const [isMounted, setIsMounted] = useState(false);
 
   // Function to count leading zeros in a hexadecimal string
   const countLeadingZeros = (hashStr: string): number => {
@@ -147,7 +147,12 @@ export function PowHashArt({
   };
 
   useEffect(() => {
-    const initializeSketch = () => {
+    // Only run on the client side
+    if (typeof window === "undefined") return;
+
+    setIsMounted(true);
+
+    const initializeSketch = async () => {
       if (!containerRef.current) return;
 
       // Remove existing canvas if any
@@ -158,7 +163,11 @@ export function PowHashArt({
       const currentHash = hash || generateSimulatedHash(leadingZeros);
       const currentLeadingZeros = hash ? countLeadingZeros(hash) : leadingZeros;
 
-      const sketch = (p: p5) => {
+      // Dynamically import p5.js only on the client side
+      const p5Module = await import("p5");
+      const p5 = p5Module.default;
+
+      const sketch = (p: any) => {
         p.setup = () => {
           const canvas = p.createCanvas(width, height);
           if (containerRef.current) {
@@ -170,7 +179,7 @@ export function PowHashArt({
           drawArt(p, currentHash, currentLeadingZeros);
         };
 
-        const drawArt = (p: p5, hashStr: string, zeros: number) => {
+        const drawArt = (p: any, hashStr: string, zeros: number) => {
           p.clear();
 
           // Convert hash to integer array for deterministic randomness
@@ -478,7 +487,7 @@ export function PowHashArt({
       sketchRef.current = new p5(sketch);
     };
 
-    initializeSketch();
+    initializeSketch().catch(console.error);
 
     return () => {
       if (sketchRef.current) {
@@ -487,6 +496,20 @@ export function PowHashArt({
       }
     };
   }, [hash, leadingZeros, width, height]);
+
+  // Show placeholder during SSR and before client-side mount
+  if (!isMounted) {
+    return (
+      <div
+        className={`pow-hash-art ${className} bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center`}
+        style={{ width, height }}
+      >
+        <div className="text-neutral-400 dark:text-neutral-600 text-xs">
+          Loading...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
