@@ -19,3 +19,4 @@ todo:
 - [ ] display rich info in user about section
 - [ ] support embeddable one line script to integrate into html page
 - [ ] support adding attachment files with the letter(useful to transfer files)
+- [ ] support mailing list (seems easy, just treat the list group as a user, the user(controlled by the list admin) publish kind 0 contains all the users's pubkey, the nip65 relay list contains the most in-common relays among the users)
