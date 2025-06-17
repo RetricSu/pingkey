@@ -94,7 +94,7 @@ export default function DynamicPage({ params }: PageProps) {
           height={160}
           priority
         />
-        <h1 className="mb-8 text-2xl font-medium capitalize">
+        <h1 className="mb-8 text-2xl font-medium capitalize md:text-left text-center">
           {profile.name || slug}
         </h1>
         <div className="prose prose-neutral dark:prose-invert whitespace-pre-wrap leading-relaxed">

@@ -177,7 +177,7 @@ export function MessageSender({
         onCancel={cancelMining}
       />
 
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
         <div className="flex items-center gap-3">
           <div className="flex items-center bg-gray-50 dark:bg-gray-800 rounded-lg px-3 py-2 border border-gray-200 dark:border-gray-700">
             <span className="text-xs font-medium text-gray-600 dark:text-gray-400 mr-2">
@@ -211,7 +211,7 @@ export function MessageSender({
           </button>
         </div>
 
-        <div className="text-sm text-gray-500 dark:text-gray-400">
+        <div className="text-sm text-gray-500 dark:text-gray-400 sm:text-right">
           {isSignedIn
             ? "Signed in as " +
               (profileName
