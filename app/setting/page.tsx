@@ -14,6 +14,7 @@ import {
 import { useLocalStorage } from "app/hooks/useLocalStorage";
 import { withAuth } from "app/components/auth/with-auth";
 import { Loader } from "app/components/loader";
+import { alert } from "app/components/dialog";
 
 function SettingPage() {
   const { pubkey } = useAuth();
@@ -411,7 +412,10 @@ function SettingPage() {
                 </h3>
               )}
               {editedRelayList.map((relay, index) => (
-                <div key={index} className="flex items-center gap-2">
+                <div
+                  key={index}
+                  className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800"
+                >
                   <input
                     type="text"
                     value={relay.url}
@@ -420,71 +424,75 @@ function SettingPage() {
                       newList[index].url = e.target.value;
                       setEditedRelayList(newList);
                     }}
-                    className="flex-1 px-3 py-2 text-sm bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded focus:outline-none focus:ring-1 focus:ring-neutral-300 dark:focus:ring-neutral-700 text-neutral-900 dark:text-neutral-100"
+                    className="flex-1 px-3 py-3 text-sm bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded focus:outline-none focus:ring-1 focus:ring-neutral-300 dark:focus:ring-neutral-700 text-neutral-900 dark:text-neutral-100"
                   />
-                  <select
-                    value={relay.marker || ""}
-                    onChange={(e) => {
-                      const newList = [...editedRelayList];
-                      newList[index].marker = e.target.value as
-                        | "r"
-                        | "w"
-                        | undefined;
-                      setEditedRelayList(newList);
-                    }}
-                    className="px-3 py-2 text-sm bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded focus:outline-none focus:ring-1 focus:ring-neutral-300 dark:focus:ring-neutral-700 text-neutral-900 dark:text-neutral-100"
-                  >
-                    <option value="">No marker</option>
-                    <option value="r">Read</option>
-                    <option value="w">Write</option>
-                  </select>
-                  <button
-                    onClick={() => handleRemoveRelay(index)}
-                    className="px-2 py-2 text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
-                  >
-                    Remove
-                  </button>
+                  <div className="flex gap-2">
+                    <select
+                      value={relay.marker || ""}
+                      onChange={(e) => {
+                        const newList = [...editedRelayList];
+                        newList[index].marker = e.target.value as
+                          | "r"
+                          | "w"
+                          | undefined;
+                        setEditedRelayList(newList);
+                      }}
+                      className="flex-1 sm:w-auto px-3 py-3 text-sm bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded focus:outline-none focus:ring-1 focus:ring-neutral-300 dark:focus:ring-neutral-700 text-neutral-900 dark:text-neutral-100"
+                    >
+                      <option value="">No marker</option>
+                      <option value="r">Read</option>
+                      <option value="w">Write</option>
+                    </select>
+                    <button
+                      onClick={() => handleRemoveRelay(index)}
+                      className="px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 bg-white dark:bg-black border border-red-200 dark:border-red-800 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors min-w-[80px] sm:w-auto"
+                    >
+                      Remove
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
 
-            <div className="flex items-center gap-2 pt-4">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-4 p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800">
               <input
                 type="text"
                 value={newRelayUrl}
                 onChange={(e) => setNewRelayUrl(e.target.value)}
                 placeholder="New relay URL"
-                className="flex-1 px-3 py-2 text-sm bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded focus:outline-none focus:ring-1 focus:ring-neutral-300 dark:focus:ring-neutral-700 text-neutral-900 dark:text-neutral-100"
+                className="flex-1 px-3 py-3 text-sm bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded focus:outline-none focus:ring-1 focus:ring-neutral-300 dark:focus:ring-neutral-700 text-neutral-900 dark:text-neutral-100"
               />
-              <select
-                value={newRelayMarker || ""}
-                onChange={(e) =>
-                  setNewRelayMarker(e.target.value as "r" | "w" | undefined)
-                }
-                className="px-3 py-2 text-sm bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded focus:outline-none focus:ring-1 focus:ring-neutral-300 dark:focus:ring-neutral-700 text-neutral-900 dark:text-neutral-100"
-              >
-                <option value="">No marker</option>
-                <option value="r">Read</option>
-                <option value="w">Write</option>
-              </select>
-              <button
-                onClick={handleAddRelay}
-                className="px-4 py-2 text-sm bg-neutral-900 dark:bg-neutral-100 text-white dark:text-black rounded hover:bg-neutral-700 dark:hover:bg-neutral-300 transition-colors"
-              >
-                Add
-              </button>
+              <div className="flex gap-2">
+                <select
+                  value={newRelayMarker || ""}
+                  onChange={(e) =>
+                    setNewRelayMarker(e.target.value as "r" | "w" | undefined)
+                  }
+                  className="flex-1 sm:w-auto px-3 py-3 text-sm bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded focus:outline-none focus:ring-1 focus:ring-neutral-300 dark:focus:ring-neutral-700 text-neutral-900 dark:text-neutral-100"
+                >
+                  <option value="">No marker</option>
+                  <option value="r">Read</option>
+                  <option value="w">Write</option>
+                </select>
+                <button
+                  onClick={handleAddRelay}
+                  className="px-4 py-3 text-sm bg-neutral-900 dark:bg-neutral-100 text-white dark:text-black rounded hover:bg-neutral-700 dark:hover:bg-neutral-300 transition-colors min-w-[60px] sm:w-auto"
+                >
+                  Add
+                </button>
+              </div>
             </div>
 
-            <div className="flex gap-2 pt-4">
+            <div className="flex flex-col sm:flex-row gap-2 pt-4">
               <button
                 onClick={handleSaveRelays}
-                className="px-4 py-2 text-sm bg-neutral-900 dark:bg-neutral-100 text-white dark:text-black rounded hover:bg-neutral-700 dark:hover:bg-neutral-300 transition-colors"
+                className="px-4 py-3 text-sm bg-neutral-900 dark:bg-neutral-100 text-white dark:text-black rounded hover:bg-neutral-700 dark:hover:bg-neutral-300 transition-colors"
               >
                 Save Changes
               </button>
               <button
                 onClick={handleCancelRelays}
-                className="px-4 py-2 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
+                className="px-4 py-3 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors border border-neutral-200 dark:border-neutral-800 rounded hover:bg-neutral-50 dark:hover:bg-neutral-900"
               >
                 Cancel
               </button>
@@ -524,14 +532,35 @@ function SettingPage() {
       {/* Default Relays Configuration Section */}
       <div className="mt-6 bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-lg p-6">
         <div className="flex items-center justify-between mb-10">
-          <div>
-            <h2 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+          <div className="flex items-center align-middle gap-2">
+            <h2 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
               Boot Node Relay List Configuration
+              <button
+                onClick={() =>
+                  alert(
+                    "Boot Node Relay List",
+                    "These are the default relays used for finding people's relay lists and general network connectivity."
+                  )
+                }
+                className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
+                title="More information"
+              >
+                <svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                  <path d="M12 17h.01" />
+                </svg>
+              </button>
             </h2>
-            <p className="text-sm text-neutral-600 dark:text-neutral-400">
-              These are the default relays used for finding people's relay lists
-              and general network connectivity.
-            </p>
           </div>
           {!isEditingDefaultRelays && (
             <button
@@ -571,7 +600,10 @@ function SettingPage() {
                 </h3>
               )}
               {editedDefaultRelays.map((relayUrl, index) => (
-                <div key={index} className="flex items-center gap-2">
+                <div
+                  key={index}
+                  className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800"
+                >
                   <input
                     type="text"
                     value={relayUrl}
@@ -580,11 +612,11 @@ function SettingPage() {
                       newList[index] = e.target.value;
                       setEditedDefaultRelays(newList);
                     }}
-                    className="flex-1 px-3 py-2 text-sm bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded focus:outline-none focus:ring-1 focus:ring-neutral-300 dark:focus:ring-neutral-700 text-neutral-900 dark:text-neutral-100"
+                    className="flex-1 px-3 py-3 text-sm bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded focus:outline-none focus:ring-1 focus:ring-neutral-300 dark:focus:ring-neutral-700 text-neutral-900 dark:text-neutral-100"
                   />
                   <button
                     onClick={() => handleRemoveDefaultRelay(index)}
-                    className="px-2 py-2 text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                    className="px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 bg-white dark:bg-black border border-red-200 dark:border-red-800 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors min-w-[80px] sm:w-auto"
                   >
                     Remove
                   </button>
@@ -592,13 +624,13 @@ function SettingPage() {
               ))}
             </div>
 
-            <div className="flex items-center gap-2 pt-4">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-4 p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800">
               <input
                 type="text"
                 value={newDefaultRelay}
                 onChange={(e) => setNewDefaultRelay(e.target.value)}
                 placeholder="New default relay URL"
-                className="flex-1 px-3 py-2 text-sm bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded focus:outline-none focus:ring-1 focus:ring-neutral-300 dark:focus:ring-neutral-700 text-neutral-900 dark:text-neutral-100"
+                className="flex-1 px-3 py-3 text-sm bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded focus:outline-none focus:ring-1 focus:ring-neutral-300 dark:focus:ring-neutral-700 text-neutral-900 dark:text-neutral-100"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     handleAddDefaultRelay();
@@ -607,22 +639,22 @@ function SettingPage() {
               />
               <button
                 onClick={handleAddDefaultRelay}
-                className="px-4 py-2 text-sm bg-neutral-900 dark:bg-neutral-100 text-white dark:text-black rounded hover:bg-neutral-700 dark:hover:bg-neutral-300 transition-colors"
+                className="px-4 py-3 text-sm bg-neutral-900 dark:bg-neutral-100 text-white dark:text-black rounded hover:bg-neutral-700 dark:hover:bg-neutral-300 transition-colors min-w-[60px] sm:w-auto"
               >
                 Add
               </button>
             </div>
 
-            <div className="flex gap-2 pt-4">
+            <div className="flex flex-col sm:flex-row gap-2 pt-4">
               <button
                 onClick={handleSaveDefaultRelays}
-                className="px-4 py-2 text-sm bg-neutral-900 dark:bg-neutral-100 text-white dark:text-black rounded hover:bg-neutral-700 dark:hover:bg-neutral-300 transition-colors"
+                className="px-4 py-3 text-sm bg-neutral-900 dark:bg-neutral-100 text-white dark:text-black rounded hover:bg-neutral-700 dark:hover:bg-neutral-300 transition-colors"
               >
                 Save Changes
               </button>
               <button
                 onClick={handleCancelDefaultRelays}
-                className="px-4 py-2 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
+                className="px-4 py-3 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors border border-neutral-200 dark:border-neutral-800 rounded hover:bg-neutral-50 dark:hover:bg-neutral-900"
               >
                 Cancel
               </button>
