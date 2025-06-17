@@ -7,6 +7,7 @@ import { defaultProfile } from "app/lib/config";
 import { Profile, RelayListItem } from "app/lib/type";
 import { MessageSender } from "../../components/message-sender";
 import { Loader } from "../../components/loader";
+import { QRCodeComponent } from "../../components/qr-code";
 
 interface PageProps {
   params: Promise<{
@@ -98,7 +99,16 @@ export default function DynamicPage({ params }: PageProps) {
           {profile.name || slug}
         </h1>
         <div className="prose prose-neutral dark:prose-invert whitespace-pre-wrap leading-relaxed">
-          <p>{profile.about}</p>
+          <p>{profile.about} </p>
+        </div>
+
+        {/* QR Code Section */}
+        <div className="mt-8 mb-8">
+          <QRCodeComponent
+            value={slug}
+            title={`Scan this QR code to send a message to ${profile.name || slug}`}
+            size={180}
+          />
         </div>
 
         <div className="mt-16 border-t border-gray-100 dark:border-gray-800">

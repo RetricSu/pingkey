@@ -3,6 +3,7 @@ import { useAuth } from "../../contexts/auth";
 import { useNotification } from "../../contexts/notification";
 import { createExportFile } from "../../lib/util";
 import { prompt } from "../dialog";
+import { QRScanner } from "../qr-scanner";
 
 interface UserDropdownProps {
   pubkey: string;
@@ -19,6 +20,7 @@ export function UserDropdown({ pubkey, onSignOut }: UserDropdownProps) {
   const { exportPrivateKey } = useAuth();
   const { success, error } = useNotification();
   const [isOpen, setIsOpen] = useState(false);
+  const [showQRScanner, setShowQRScanner] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -85,6 +87,11 @@ export function UserDropdown({ pubkey, onSignOut }: UserDropdownProps) {
     }
   };
 
+  const handleScanQRCode = () => {
+    setIsOpen(false); // Close dropdown first
+    setShowQRScanner(true);
+  };
+
   const handleMenuItemClick = (item: MenuItem) => {
     setIsOpen(false); // Close dropdown
     if (item.href) {
@@ -98,6 +105,10 @@ export function UserDropdown({ pubkey, onSignOut }: UserDropdownProps) {
     {
       label: "Compose",
       href: "/compose",
+    },
+    {
+      label: "Scan QR Code",
+      onClick: handleScanQRCode,
     },
     {
       label: "Mailbox",
@@ -165,6 +176,10 @@ export function UserDropdown({ pubkey, onSignOut }: UserDropdownProps) {
           ))}
         </div>
       </div>
+
+      {showQRScanner && (
+        <QRScanner onClose={() => setShowQRScanner(false)} />
+      )}
     </>
   );
 }
