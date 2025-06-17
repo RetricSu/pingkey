@@ -1,9 +1,25 @@
 // Simple encryption/decryption using Web Crypto API
 export class CryptoUtils {
+  private static checkCryptoAvailability(): void {
+    if (typeof window === 'undefined') {
+      throw new Error('Web Crypto API is not available in server-side context. This feature requires a browser environment.');
+    }
+    
+    if (typeof crypto === 'undefined') {
+      throw new Error('Web Crypto API is not available. This feature requires a secure context (HTTPS) and a modern browser.');
+    }
+    
+    if (!crypto.subtle) {
+      throw new Error('SubtleCrypto API is not available. This feature requires a secure context (HTTPS). Please ensure you are accessing the site via HTTPS.');
+    }
+  }
+
   private static async deriveKey(
     password: string,
     salt: Uint8Array
   ): Promise<CryptoKey> {
+    CryptoUtils.checkCryptoAvailability();
+    
     const encoder = new TextEncoder();
     const keyMaterial = await crypto.subtle.importKey(
       "raw",
@@ -28,6 +44,8 @@ export class CryptoUtils {
   }
 
   static async encrypt(plaintext: string, password: string): Promise<string> {
+    CryptoUtils.checkCryptoAvailability();
+    
     const encoder = new TextEncoder();
     const salt = crypto.getRandomValues(new Uint8Array(16));
     const iv = crypto.getRandomValues(new Uint8Array(12));
@@ -54,6 +72,8 @@ export class CryptoUtils {
     encryptedData: string,
     password: string
   ): Promise<string> {
+    CryptoUtils.checkCryptoAvailability();
+    
     const decoder = new TextDecoder();
     const combined = new Uint8Array(
       atob(encryptedData)

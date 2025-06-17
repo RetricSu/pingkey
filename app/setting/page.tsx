@@ -6,7 +6,12 @@ import { useNostr } from "../contexts/nostr";
 import { useUserProfile } from "../hooks/useUserProfile";
 import { useUserRelayList } from "../hooks/useUserRelayList";
 import { Profile, RelayListItem } from "app/lib/type";
-import { defaultProfile, defaultRelays } from "app/lib/config";
+import {
+  defaultProfile,
+  defaultRelays,
+  LocalStorageKeys,
+} from "app/lib/config";
+import { useLocalStorage } from "app/hooks/useLocalStorage";
 import { withAuth } from "app/components/auth/with-auth";
 import { Loader } from "app/components/loader";
 
@@ -39,6 +44,16 @@ function SettingPage() {
     undefined
   );
 
+  // Custom default relays state
+  const [
+    customDefaultRelays,
+    setCustomDefaultRelays,
+    removeCustomDefaultRelays,
+  ] = useLocalStorage<string[]>(LocalStorageKeys.customDefaultRelaysKey, []);
+  const [isEditingDefaultRelays, setIsEditingDefaultRelays] = useState(false);
+  const [editedDefaultRelays, setEditedDefaultRelays] = useState<string[]>([]);
+  const [newDefaultRelay, setNewDefaultRelay] = useState("");
+
   // Update editedProfile when profile changes
   useEffect(() => {
     if (profile) {
@@ -50,6 +65,13 @@ function SettingPage() {
   useEffect(() => {
     setEditedRelayList(relayList);
   }, [relayList]);
+
+  // Update editedDefaultRelays when customDefaultRelays changes
+  useEffect(() => {
+    const effectiveDefaultRelays =
+      customDefaultRelays.length > 0 ? customDefaultRelays : defaultRelays;
+    setEditedDefaultRelays(effectiveDefaultRelays);
+  }, [customDefaultRelays]);
 
   const handleSave = async () => {
     if (!nostr || !pubkey) return;
@@ -125,11 +147,50 @@ function SettingPage() {
 
   const handleAddDefaultRelays = () => {
     const currentUrls = new Set(editedRelayList.map((relay) => relay.url));
-    const newRelays = defaultRelays
+    const effectiveDefaultRelays =
+      customDefaultRelays.length > 0 ? customDefaultRelays : defaultRelays;
+    const newRelays = effectiveDefaultRelays
       .filter((url) => !currentUrls.has(url))
       .map((url) => ({ url, marker: undefined }));
 
     setEditedRelayList([...editedRelayList, ...newRelays]);
+  };
+
+  // Default relay management handlers
+  const handleSaveDefaultRelays = () => {
+    if (editedDefaultRelays.length === 0) {
+      // If empty, remove custom relays (revert to built-in defaults)
+      removeCustomDefaultRelays();
+    } else {
+      // Save custom default relays
+      setCustomDefaultRelays(editedDefaultRelays);
+    }
+    setIsEditingDefaultRelays(false);
+    setError(null);
+  };
+
+  const handleCancelDefaultRelays = () => {
+    const effectiveDefaultRelays =
+      customDefaultRelays.length > 0 ? customDefaultRelays : defaultRelays;
+    setEditedDefaultRelays(effectiveDefaultRelays);
+    setIsEditingDefaultRelays(false);
+  };
+
+  const handleAddDefaultRelay = () => {
+    if (!newDefaultRelay.trim()) return;
+
+    if (!editedDefaultRelays.includes(newDefaultRelay.trim())) {
+      setEditedDefaultRelays([...editedDefaultRelays, newDefaultRelay.trim()]);
+    }
+    setNewDefaultRelay("");
+  };
+
+  const handleRemoveDefaultRelay = (index: number) => {
+    setEditedDefaultRelays(editedDefaultRelays.filter((_, i) => i !== index));
+  };
+
+  const handleResetToBuiltInDefaults = () => {
+    setEditedDefaultRelays([...defaultRelays]);
   };
 
   if (profileLoading || relayListLoading) {
@@ -294,7 +355,10 @@ function SettingPage() {
                 </button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {defaultRelays.map((relayUrl, index) => {
+                {(customDefaultRelays.length > 0
+                  ? customDefaultRelays
+                  : defaultRelays
+                ).map((relayUrl, index) => {
                   const isAlreadyAdded = editedRelayList.some(
                     (relay) => relay.url === relayUrl
                   );
@@ -452,6 +516,147 @@ function SettingPage() {
                   </div>
                 ))}
               </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Default Relays Configuration Section */}
+      <div className="mt-6 bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-lg p-6">
+        <div className="flex items-center justify-between mb-10">
+          <div>
+            <h2 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+              Boot Node Relay List Configuration
+            </h2>
+            <p className="text-sm text-neutral-600 dark:text-neutral-400">
+              These are the default relays used for finding people's relay lists
+              and general network connectivity.
+            </p>
+          </div>
+          {!isEditingDefaultRelays && (
+            <button
+              onClick={() => setIsEditingDefaultRelays(true)}
+              className="text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
+            >
+              Edit
+            </button>
+          )}
+        </div>
+
+        {isEditingDefaultRelays ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between pb-4 border-b border-neutral-200 dark:border-neutral-800">
+              <div>
+                <h3 className="text-xs font-medium text-neutral-900 dark:text-neutral-100 mb-2">
+                  Configure Default Relays
+                </h3>
+                <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                  {customDefaultRelays.length > 0
+                    ? "You are using custom default relays."
+                    : "You are using the built-in default relays."}
+                </p>
+              </div>
+              <button
+                onClick={handleResetToBuiltInDefaults}
+                className="text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
+              >
+                Reset to Built-in
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              {editedDefaultRelays.length > 0 && (
+                <h3 className="text-xs font-medium text-neutral-900 dark:text-neutral-100 mb-3">
+                  Default Relays
+                </h3>
+              )}
+              {editedDefaultRelays.map((relayUrl, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={relayUrl}
+                    onChange={(e) => {
+                      const newList = [...editedDefaultRelays];
+                      newList[index] = e.target.value;
+                      setEditedDefaultRelays(newList);
+                    }}
+                    className="flex-1 px-3 py-2 text-sm bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded focus:outline-none focus:ring-1 focus:ring-neutral-300 dark:focus:ring-neutral-700 text-neutral-900 dark:text-neutral-100"
+                  />
+                  <button
+                    onClick={() => handleRemoveDefaultRelay(index)}
+                    className="px-2 py-2 text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2 pt-4">
+              <input
+                type="text"
+                value={newDefaultRelay}
+                onChange={(e) => setNewDefaultRelay(e.target.value)}
+                placeholder="New default relay URL"
+                className="flex-1 px-3 py-2 text-sm bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded focus:outline-none focus:ring-1 focus:ring-neutral-300 dark:focus:ring-neutral-700 text-neutral-900 dark:text-neutral-100"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleAddDefaultRelay();
+                  }
+                }}
+              />
+              <button
+                onClick={handleAddDefaultRelay}
+                className="px-4 py-2 text-sm bg-neutral-900 dark:bg-neutral-100 text-white dark:text-black rounded hover:bg-neutral-700 dark:hover:bg-neutral-300 transition-colors"
+              >
+                Add
+              </button>
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <button
+                onClick={handleSaveDefaultRelays}
+                className="px-4 py-2 text-sm bg-neutral-900 dark:bg-neutral-100 text-white dark:text-black rounded hover:bg-neutral-700 dark:hover:bg-neutral-300 transition-colors"
+              >
+                Save Changes
+              </button>
+              <button
+                onClick={handleCancelDefaultRelays}
+                className="px-4 py-2 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              {(customDefaultRelays.length > 0
+                ? customDefaultRelays
+                : defaultRelays
+              ).map((relayUrl, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between py-2 px-3 bg-neutral-50 dark:bg-neutral-900 rounded"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-neutral-900 dark:text-neutral-100">
+                      {relayUrl}
+                    </span>
+                    {customDefaultRelays.length > 0 && (
+                      <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 rounded text-blue-700 dark:text-blue-300">
+                        Custom
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {customDefaultRelays.length === 0 && (
+              <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                Using built-in default relays. Click "Edit Defaults" to
+                customize.
+              </p>
             )}
           </div>
         )}

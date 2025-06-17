@@ -118,11 +118,11 @@ export function UserDropdown({ pubkey, onSignOut }: UserDropdownProps) {
       href: "/compose",
     },
     {
-      label: "Scan QR Code",
+      label: "Scan QRCode",
       onClick: handleScanQRCode,
     },
     {
-      label: "Edit Profile",
+      label: "Settings",
       href: "/setting",
     },
     {

@@ -30,6 +30,7 @@ export const defaultRelays: string[] = [
 
 export const LocalStorageKeys = {
   userInfoCacheKey: "PingKey.UserInfoCache",
+  customDefaultRelaysKey: "PingKey.CustomDefaultRelays",
 };
 
 export const USER_INFO_CACHE_EXPIRED_MS = 10 * 60 * 1000; // 10 minutes
@@ -39,4 +40,28 @@ export const POW_CONFIG = {
   difficulty_mode_level: 8,
   main_thread_mining_timeout_ms: 30000,
   web_worker_mining_timeout_ms: 60000,
+}
+
+/**
+ * Get the effective default relays (custom from localStorage or built-in defaults)
+ */
+export function getEffectiveDefaultRelays(): string[] {
+  // Always return built-in defaults during SSR or when window is not available
+  if (typeof window === "undefined" || typeof localStorage === "undefined") {
+    return defaultRelays;
+  }
+  
+  try {
+    const customRelays = localStorage.getItem(LocalStorageKeys.customDefaultRelaysKey);
+    if (customRelays) {
+      const parsed = JSON.parse(customRelays);
+      if (Array.isArray(parsed) && parsed.length > 0 && parsed.every(relay => typeof relay === 'string')) {
+        return parsed;
+      }
+    }
+  } catch (error) {
+    console.error("Error reading custom default relays from localStorage:", error);
+  }
+  
+  return defaultRelays;
 }

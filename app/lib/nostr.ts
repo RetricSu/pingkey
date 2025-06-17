@@ -12,8 +12,8 @@ import type {
   UnsignedEvent,
 } from "nostr-tools/core";
 import { Filter, nip44 } from "nostr-tools";
-import { Profile, RelayListItem, Recipient, ReplyTo } from "./type";
-import { defaultRelays, POW_CONFIG } from "./config";
+import { Profile, RelayListItem, Recipient } from "./type";
+import { defaultRelays, POW_CONFIG, getEffectiveDefaultRelays } from "./config";
 import { minePow } from "nostr-tools/nip13";
 import { GiftWrap, PrivateDirectMessage } from "nostr-tools/kinds";
 import { createRumor, createSeal } from "nostr-tools/nip59";
@@ -26,9 +26,25 @@ export class Nostr {
   private globalRelays: string[];
   private pool: SimplePool;
 
-  constructor(relays: string[] = defaultRelays) {
+  constructor(relays?: string[]) {
     this.pool = new SimplePool();
-    this.globalRelays = relays;
+    if (relays) {
+      this.globalRelays = relays;
+    } else {
+      // Use default relays as fallback, will be updated when getRelays() is called
+      this.globalRelays = defaultRelays;
+    }
+  }
+
+  private getEffectiveRelays(): string[] {
+    if (typeof window !== "undefined") {
+      try {
+        return getEffectiveDefaultRelays();
+      } catch (error) {
+        console.error("Failed to get effective default relays:", error);
+      }
+    }
+    return this.globalRelays;
   }
 
   generateNewKey(): { secretKey: string; publicKey: string } {
@@ -110,7 +126,8 @@ export class Nostr {
   }
 
   async publishEvent(event: Event): Promise<void> {
-    const promises = this.globalRelays.map((relay) =>
+    const effectiveRelays = this.getEffectiveRelays();
+    const promises = effectiveRelays.map((relay) =>
       this.pool.publish([relay], event)
     );
 
@@ -124,16 +141,17 @@ export class Nostr {
 
   async fetchEvents(
     filters: Filter[],
-    relays: string[] = this.globalRelays,
+    relays?: string[],
     timeoutMs: number = 10000
   ): Promise<Event[]> {
+    const effectiveRelays = relays || this.getEffectiveRelays();
     return new Promise((resolve) => {
       const events: Event[] = [];
       const timeoutId = setTimeout(() => {
         resolve(events);
       }, timeoutMs);
 
-      const sub = this.pool.subscribeMany(relays, filters, {
+      const sub = this.pool.subscribeMany(effectiveRelays, filters, {
         onevent(event) {
           events.push(event);
         },
@@ -159,7 +177,7 @@ export class Nostr {
       },
     ];
 
-    const events = await this.fetchEvents(filters, this.globalRelays, 5000);
+    const events = await this.fetchEvents(filters, this.getEffectiveRelays(), 5000);
 
     if (events.length === 0) {
       return null;
@@ -178,9 +196,10 @@ export class Nostr {
 
   async fetchGiftWrappedNotes(
     receiptPubkey: string,
-    relays: string[] = this.globalRelays,
+    relays?: string[],
     limit: number = 50
   ): Promise<Event[]> {
+    const effectiveRelays = relays || this.getEffectiveRelays();
     const filters: Filter[] = [
       {
         "#p": [receiptPubkey],
@@ -188,7 +207,7 @@ export class Nostr {
         limit: limit,
       },
     ];
-    return await this.fetchEvents(filters, relays);
+    return await this.fetchEvents(filters, effectiveRelays);
   }
 
   async fetchNip65RelayList(authors: string[]): Promise<RelayListItem[]> {
@@ -357,11 +376,11 @@ export class Nostr {
    * Get current relays
    */
   getRelays(): string[] {
-    return [...this.globalRelays];
+    return [...this.getEffectiveRelays()];
   }
 
   destroy(): void {
-    this.pool.close(this.globalRelays);
+    this.pool.close(this.getEffectiveRelays());
   }
 }
 
