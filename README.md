@@ -12,3 +12,4 @@ todo:
 - [x] display collected stamps wall
 - [x] show the key to the anonymous user and tell them to use this key to receive a reply after they leave a message.
 - [ ] Allow to use custom generated stamp
+- [ ] export key with encryption
