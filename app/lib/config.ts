@@ -22,10 +22,11 @@ export const defaultProfile: Profile = {
 };
 
 export const defaultRelays: string[] = [
+  "wss://relay.pingkey.xyz",
   "wss://relay.damus.io",
   "wss://nos.lol",
   "wss://relay.nostr.band",
-  "wss://nostr.wine",
+  "wss://purplepages.org",
 ];
 
 export const LocalStorageKeys = {
