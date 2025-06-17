@@ -3,6 +3,7 @@ import { useAuth } from "../../contexts/auth";
 import { useNotification } from "../../contexts/notification";
 import { createExportFile } from "../../lib/util";
 import { prompt } from "../dialog";
+import { QRScanner } from "../qr-scanner";
 
 interface UserDropdownProps {
   pubkey: string;
@@ -19,19 +20,23 @@ export function UserDropdown({ pubkey, onSignOut }: UserDropdownProps) {
   const { exportPrivateKey } = useAuth();
   const { success, error } = useNotification();
   const [isOpen, setIsOpen] = useState(false);
+  const [showQRScanner, setShowQRScanner] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -85,6 +90,11 @@ export function UserDropdown({ pubkey, onSignOut }: UserDropdownProps) {
     }
   };
 
+  const handleScanQRCode = () => {
+    setIsOpen(false); // Close dropdown first
+    setShowQRScanner(true);
+  };
+
   const handleMenuItemClick = (item: MenuItem) => {
     setIsOpen(false); // Close dropdown
     if (item.href) {
@@ -96,20 +106,24 @@ export function UserDropdown({ pubkey, onSignOut }: UserDropdownProps) {
 
   const menuItems: MenuItem[] = [
     {
+      label: "View My Page",
+      href: `/p/${pubkey}`,
+    },
+    {
+      label: "Check Mailbox",
+      href: "/mailbox",
+    },
+    {
       label: "Compose",
       href: "/compose",
     },
     {
-      label: "Mailbox",
-      href: "/mailbox",
+      label: "Scan QR Code",
+      onClick: handleScanQRCode,
     },
     {
       label: "Edit Profile",
       href: "/setting",
-    },
-    {
-      label: "View My Page",
-      href: `/p/${pubkey}`,
     },
     {
       label: "Export Key",
@@ -124,7 +138,7 @@ export function UserDropdown({ pubkey, onSignOut }: UserDropdownProps) {
   return (
     <>
       <div className="relative group" ref={dropdownRef}>
-        <button 
+        <button
           onClick={() => setIsOpen(!isOpen)}
           className="flex items-center justify-center w-6 h-6 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
         >
@@ -143,11 +157,13 @@ export function UserDropdown({ pubkey, onSignOut }: UserDropdownProps) {
           </svg>
         </button>
 
-        <div className={`absolute right-0 sm:left-1/2 sm:-translate-x-1/2 top-full mt-1 w-48 sm:w-40 bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-md shadow-lg transition-all duration-200 z-50 ${
-          isOpen 
-            ? 'opacity-100 visible' 
-            : 'opacity-0 invisible group-hover:opacity-100 group-hover:visible'
-        }`}>
+        <div
+          className={`absolute right-0 sm:left-1/2 sm:-translate-x-1/2 top-full mt-1 w-48 sm:w-40 bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-md shadow-lg transition-all duration-200 z-50 ${
+            isOpen
+              ? "opacity-100 visible"
+              : "opacity-0 invisible group-hover:opacity-100 group-hover:visible"
+          }`}
+        >
           <div className="p-3 sm:p-2 border-b border-neutral-200 dark:border-neutral-800">
             <div className="text-xs font-mono text-neutral-500 dark:text-neutral-500">
               {pubkey.slice(0, 6)}...{pubkey.slice(-4)}
@@ -165,6 +181,8 @@ export function UserDropdown({ pubkey, onSignOut }: UserDropdownProps) {
           ))}
         </div>
       </div>
+
+      {showQRScanner && <QRScanner onClose={() => setShowQRScanner(false)} />}
     </>
   );
 }
