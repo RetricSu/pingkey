@@ -4,11 +4,10 @@ import { useAuth } from "app/contexts/auth";
 import { useNostr } from "app/contexts/nostr";
 import { useNotification } from "app/contexts/notification";
 import { usePowCreation } from "app/hooks/usePowCreation";
-import { useUserRelayList } from "app/hooks/useUserRelayList";
 import { withAuth } from "app/components/auth/with-auth";
 import { PowMiningIndicator } from "app/components/stamp/pow-mining-indicator";
 import { custom } from "app/components/dialog";
-import { POW_CONFIG } from "app/lib/config";
+import { getEffectiveDefaultRelays, POW_CONFIG } from "app/lib/config";
 import { hexToBytes } from "@noble/hashes/utils";
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -19,7 +18,6 @@ function ComposePage() {
   const { exportPrivateKey } = useAuth();
   const { nostr } = useNostr();
   const { success, error } = useNotification();
-  const { relayList } = useUserRelayList();
   const {
     createPowNote,
     isMining,
@@ -36,6 +34,9 @@ function ComposePage() {
   const [content, setContent] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
+  const [receiverRelays, setReceiverRelays] = useState<string[]>([]);
+  const [isFetchingRelays, setIsFetchingRelays] = useState(false);
+  const [relayError, setRelayError] = useState<string | null>(null);
 
   // URL parameter handling
   useEffect(() => {
@@ -51,6 +52,37 @@ function ComposePage() {
       setContent("In reply to: " + replyToEventId + "\n\n");
     }
   }, [searchParams]);
+
+  // Fetch receiver's relay list when recipient changes
+  useEffect(() => {
+    const fetchReceiverRelays = async () => {
+      if (!recipientPubkey.trim() || !nostr) {
+        setReceiverRelays([]);
+        setRelayError(null);
+        return;
+      }
+
+      setIsFetchingRelays(true);
+      setRelayError(null);
+
+      try {
+        const relayList = await nostr.fetchNip65RelayList([
+          recipientPubkey.trim(),
+        ]);
+        const relayUrls = relayList.map((relay) => relay.url);
+        setReceiverRelays(relayUrls);
+      } catch (err) {
+        console.error("Failed to fetch receiver relays:", err);
+        setRelayError("Failed to fetch receiver's relay list");
+        setReceiverRelays([]);
+      } finally {
+        setIsFetchingRelays(false);
+      }
+    };
+
+    const timeoutId = setTimeout(fetchReceiverRelays, 500); // Debounce
+    return () => clearTimeout(timeoutId);
+  }, [recipientPubkey, nostr]);
 
   const handleSendLetter = async () => {
     if (!recipientPubkey.trim() || !content.trim()) {
@@ -114,7 +146,9 @@ function ComposePage() {
 
       // Send to relays
       const relaysToUse =
-        relayList.length > 0 ? relayList.map((relay) => relay.url) : undefined;
+        receiverRelays.length > 0
+          ? receiverRelays
+          : getEffectiveDefaultRelays();
 
       if (relaysToUse) {
         await nostr.publishEventToRelays(signedEvent, relaysToUse);
@@ -231,6 +265,50 @@ function ComposePage() {
           powDifficulty={powDifficulty}
           onCancel={cancelMining}
         />
+
+        {/* Receiver's Relay List */}
+        {recipientPubkey.trim() && (
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+              Receiver's Relay List
+            </label>
+            <div className="bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-3">
+              {isFetchingRelays ? (
+                <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
+                  <div className="w-4 h-4 border-2 border-neutral-300 dark:border-neutral-600 border-t-neutral-600 dark:border-t-neutral-300 rounded-full animate-spin"></div>
+                  Fetching relay list...
+                </div>
+              ) : relayError ? (
+                <div className="text-sm text-red-600 dark:text-red-400">
+                  {relayError}
+                </div>
+              ) : receiverRelays.length > 0 ? (
+                <div className="space-y-1">
+                  <div className="text-xs text-neutral-600 dark:text-neutral-400 mb-2">
+                    Letter will be sent to {receiverRelays.length} relay
+                    {receiverRelays.length !== 1 ? "s" : ""}:
+                  </div>
+                  <div className="space-y-1 max-h-24 overflow-y-auto">
+                    {receiverRelays.map((relay, index) => (
+                      <div
+                        key={index}
+                        className="text-xs font-mono text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-700 px-2 py-1 rounded border border-neutral-200 dark:border-neutral-600"
+                      >
+                        {relay}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                  No relay list found. Will use default relays:{" "}
+                  {getEffectiveDefaultRelays().length} relay
+                  {getEffectiveDefaultRelays().length !== 1 ? "s" : ""}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* POW Settings and Send */}
         <div className="flex justify-between items-center pt-2">
