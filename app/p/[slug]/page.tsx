@@ -8,6 +8,7 @@ import { defaultProfile } from "app/lib/config";
 import { Profile, RelayListItem } from "app/lib/type";
 import { MessageSender } from "../../components/message-sender";
 import { Loader } from "../../components/loader";
+import { RichAbout } from "../../components/rich-about";
 import { nip19 } from "nostr-tools";
 import QRCode from "react-qr-code";
 
@@ -136,7 +137,7 @@ export default function DynamicPage({ params }: PageProps) {
         <Image
           src={profile.picture || defaultProfile.picture || ""}
           alt={profile.name || "Profile photo"}
-          className="rounded-full bg-gray-100 block lg:mt-5 mt-0 lg:mb-5 mb-10 mx-auto sm:float-right sm:ml-5 sm:mb-5 grayscale hover:grayscale-0"
+          className="rounded-full bg-gray-100 block lg:mt-5 mt-0 lg:mb-5 mb-10 mx-auto sm:float-right sm:ml-5 sm:mb-5"
           unoptimized
           width={160}
           height={160}
@@ -146,7 +147,7 @@ export default function DynamicPage({ params }: PageProps) {
           {profile.name || slug}
         </h1>
         <div className="prose prose-neutral dark:prose-invert whitespace-pre-wrap leading-relaxed">
-          <p>{profile.about} </p>
+          <RichAbout text={profile.about || ""} className="" />
         </div>
 
         {/* Action Buttons Section */}

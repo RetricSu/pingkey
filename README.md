@@ -12,11 +12,11 @@ todo:
 - [x] display collected stamps wall
 - [x] show the key to the anonymous user and tell them to use this key to receive a reply after they leave a message.
 - [x] generate pubkey qrcode and scan it to use as a from address
-- [ ] add a button to share the profile page
-- [ ] Allow to use custom generated stamp
+- [x] add a button to share the profile page
+- [x] display rich info in user about section
 - [ ] export key with encryption
+- [ ] Allow to use custom generated/on-chain stamps
 - [ ] make read letter cache in client side
-- [ ] display rich info in user about section
 - [ ] support embeddable one line script to integrate into html page
 - [ ] support adding attachment files with the letter(useful to transfer files)
 - [ ] support mailing list (seems easy, just treat the list group as a user, the user(controlled by the list admin) publish kind 0 contains all the users's pubkey, the nip65 relay list contains the most in-common relays among the users)
