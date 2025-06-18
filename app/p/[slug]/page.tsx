@@ -244,7 +244,7 @@ export default function DynamicPage({ params }: PageProps) {
               <div className="flex flex-col items-center space-y-3 p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
                 <div className="bg-white p-4 rounded-lg">
                   <QRCode
-                    value={`${window.location.origin}/p/${slug}`}
+                    value={`${slug}`}
                     size={180}
                     style={{
                       height: "auto",

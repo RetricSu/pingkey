@@ -14,9 +14,9 @@ todo:
 - [x] generate pubkey qrcode and scan it to use as a from address
 - [x] add a button to share the profile page
 - [x] display rich info in user about section
-- [ ] export key with encryption
-- [ ] Allow to use custom generated/on-chain stamps
+- [ ] export key with encryption and tip user to saved the key after they sign-up
 - [ ] make read letter cache in client side
+- [ ] Allow to use custom generated/on-chain stamps
 - [ ] support embeddable one line script to integrate into html page
 - [ ] support adding attachment files with the letter(useful to transfer files)
 - [ ] support mailing list (seems easy, just treat the list group as a user, the user(controlled by the list admin) publish kind 0 contains all the users's pubkey, the nip65 relay list contains the most in-common relays among the users)
