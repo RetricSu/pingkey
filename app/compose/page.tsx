@@ -7,7 +7,7 @@ import { usePowCreation } from "app/hooks/usePowCreation";
 import { withAuth } from "app/components/auth/with-auth";
 import { PowMiningIndicator } from "app/components/stamp/pow-mining-indicator";
 import { custom } from "app/components/dialog";
-import { getEffectiveDefaultRelays, POW_CONFIG } from "app/lib/config";
+import { POW_CONFIG } from "app/lib/config";
 import { hexToBytes } from "@noble/hashes/utils";
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -145,15 +145,10 @@ function ComposePage() {
       }
 
       // Send to relays
-      const relaysToUse =
-        receiverRelays.length > 0
-          ? receiverRelays
-          : getEffectiveDefaultRelays();
-
-      if (relaysToUse) {
-        await nostr.publishEventToRelays(signedEvent, relaysToUse);
+      if (receiverRelays.length > 0) {
+        await nostr.publishEventToRelays(signedEvent, receiverRelays);
       } else {
-        await nostr.publishEvent(signedEvent);
+        return error("No receiver's relay list found, can not send letter.");
       }
 
       // Clear form
@@ -301,9 +296,7 @@ function ComposePage() {
                 </div>
               ) : (
                 <div className="text-sm text-neutral-600 dark:text-neutral-400">
-                  No relay list found. Will use default relays:{" "}
-                  {getEffectiveDefaultRelays().length} relay
-                  {getEffectiveDefaultRelays().length !== 1 ? "s" : ""}
+                  No relay list found. Can not send letter.
                 </div>
               )}
             </div>
@@ -338,7 +331,8 @@ function ComposePage() {
               isSending ||
               isMining ||
               !recipientPubkey.trim() ||
-              !content.trim()
+              !content.trim() ||
+              receiverRelays.length === 0
             }
             className="px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >

@@ -258,7 +258,7 @@ export default function DynamicPage({ params }: PageProps) {
                     Scan to message {profile.name || slug}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-500">
-                    {window.location.origin}/p/{slug}
+                    Public Key: {slug}
                   </p>
                 </div>
               </div>

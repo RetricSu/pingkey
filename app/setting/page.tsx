@@ -8,7 +8,7 @@ import { useUserRelayList } from "../hooks/useUserRelayList";
 import { Profile, RelayListItem } from "app/lib/type";
 import {
   defaultProfile,
-  defaultRelays,
+  DEFAULT_BIG_RELAY_URLS,
   LocalStorageKeys,
 } from "app/lib/config";
 import { useLocalStorage } from "app/hooks/useLocalStorage";
@@ -70,7 +70,7 @@ function SettingPage() {
   // Update editedDefaultRelays when customDefaultRelays changes
   useEffect(() => {
     const effectiveDefaultRelays =
-      customDefaultRelays.length > 0 ? customDefaultRelays : defaultRelays;
+      customDefaultRelays.length > 0 ? customDefaultRelays : DEFAULT_BIG_RELAY_URLS;
     setEditedDefaultRelays(effectiveDefaultRelays);
   }, [customDefaultRelays]);
 
@@ -84,7 +84,7 @@ function SettingPage() {
         about: editedProfile.about,
       };
 
-      const result = await nostr.setupProfile(nostrProfile);
+      const result = await nostr.publishProfile(nostrProfile);
 
       if (result) {
         // Refetch the profile to update cache and local state
@@ -149,7 +149,7 @@ function SettingPage() {
   const handleAddDefaultRelays = () => {
     const currentUrls = new Set(editedRelayList.map((relay) => relay.url));
     const effectiveDefaultRelays =
-      customDefaultRelays.length > 0 ? customDefaultRelays : defaultRelays;
+      customDefaultRelays.length > 0 ? customDefaultRelays : DEFAULT_BIG_RELAY_URLS;
     const newRelays = effectiveDefaultRelays
       .filter((url) => !currentUrls.has(url))
       .map((url) => ({ url, marker: undefined }));
@@ -172,7 +172,7 @@ function SettingPage() {
 
   const handleCancelDefaultRelays = () => {
     const effectiveDefaultRelays =
-      customDefaultRelays.length > 0 ? customDefaultRelays : defaultRelays;
+      customDefaultRelays.length > 0 ? customDefaultRelays : DEFAULT_BIG_RELAY_URLS;
     setEditedDefaultRelays(effectiveDefaultRelays);
     setIsEditingDefaultRelays(false);
   };
@@ -191,7 +191,7 @@ function SettingPage() {
   };
 
   const handleResetToBuiltInDefaults = () => {
-    setEditedDefaultRelays([...defaultRelays]);
+    setEditedDefaultRelays([...DEFAULT_BIG_RELAY_URLS]);
   };
 
   if (profileLoading || relayListLoading) {
@@ -358,7 +358,7 @@ function SettingPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {(customDefaultRelays.length > 0
                   ? customDefaultRelays
-                  : defaultRelays
+                  : DEFAULT_BIG_RELAY_URLS
                 ).map((relayUrl, index) => {
                   const isAlreadyAdded = editedRelayList.some(
                     (relay) => relay.url === relayUrl
@@ -665,7 +665,7 @@ function SettingPage() {
             <div className="space-y-2">
               {(customDefaultRelays.length > 0
                 ? customDefaultRelays
-                : defaultRelays
+                : DEFAULT_BIG_RELAY_URLS
               ).map((relayUrl, index) => (
                 <div
                   key={index}

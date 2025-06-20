@@ -44,7 +44,7 @@ export function NostrProvider({ children }: NostrProviderProps) {
       return pubkey;
     });
 
-    nostrInstance.setSignEventCallback(async (eventData) => {
+    nostrInstance.setRequestSignEvent(async (eventData) => {
       try {
         const encryptedPrivateKey = userInfoCache?.encryptedPrivateKey;
         if (!encryptedPrivateKey) {

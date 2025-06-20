@@ -8,7 +8,10 @@ import React, {
   ReactNode,
 } from "react";
 import { CryptoUtils } from "app/lib/crypto";
-import { Nostr } from "../lib/nostr";
+import {
+  generateNewKey as generateNewKeyNostr,
+  getPublicKeyFromPrivateKey,
+} from "../lib/nostr";
 import { useLocalStorage } from "app/hooks/useLocalStorage";
 import { UserInfoCache } from "app/lib/type";
 import { LocalStorageKeys } from "app/lib/config";
@@ -31,7 +34,11 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [userInfoCache, setUserInfoCache, removeUserInfoCache] = useLocalStorage<UserInfoCache | null>(LocalStorageKeys.userInfoCacheKey, null);
+  const [userInfoCache, setUserInfoCache, removeUserInfoCache] =
+    useLocalStorage<UserInfoCache | null>(
+      LocalStorageKeys.userInfoCacheKey,
+      null
+    );
 
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [pubkey, setPubkey] = useState<string | null>(null);
@@ -50,8 +57,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   ): Promise<void> => {
     try {
       // Get public key from private key
-      const nostrInstance = new Nostr();
-      const publicKey = nostrInstance.getPublicKeyFromPrivateKey(privateKey);
+      const publicKey = getPublicKeyFromPrivateKey(privateKey);
       if (!publicKey) {
         throw new Error("Invalid private key");
       }
@@ -111,8 +117,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const generateNewKey = async (
     password: string
   ): Promise<{ secretKey: string; publicKey: string }> => {
-    const nostrInstance = new Nostr();
-    const keyPair = nostrInstance.generateNewKey();
+    const keyPair = generateNewKeyNostr();
 
     // Encrypt and store the new private key
     const encryptedPrivateKey = await CryptoUtils.encrypt(

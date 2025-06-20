@@ -13,90 +13,30 @@ import type {
 } from "nostr-tools/core";
 import { Filter, nip44 } from "nostr-tools";
 import { Profile, RelayListItem, Recipient } from "./type";
-import { defaultRelays, POW_CONFIG, getEffectiveDefaultRelays } from "./config";
+import { DEFAULT_BIG_RELAY_URLS, LocalStorageKeys, POW_CONFIG } from "./config";
 import { minePow } from "nostr-tools/nip13";
 import { GiftWrap, PrivateDirectMessage } from "nostr-tools/kinds";
 import { createRumor, createSeal } from "nostr-tools/nip59";
 
 export class Nostr {
+  private pool: SimplePool;
   public requestPublicKey: (() => Promise<string | null>) | null = null;
-  public signEventCallback:
+  public requestSignEvent:
     | ((eventData: EventTemplate) => Promise<Event>)
     | null = null;
-  private globalRelays: string[];
-  private pool: SimplePool;
 
-  constructor(relays?: string[]) {
+  constructor() {
     this.pool = new SimplePool();
-    if (relays) {
-      this.globalRelays = relays;
-    } else {
-      // Use default relays as fallback, will be updated when getRelays() is called
-      this.globalRelays = defaultRelays;
-    }
   }
 
-  private getEffectiveRelays(): string[] {
-    if (typeof window !== "undefined") {
-      try {
-        return getEffectiveDefaultRelays();
-      } catch (error) {
-        console.error("Failed to get effective default relays:", error);
-      }
-    }
-    return this.globalRelays;
-  }
-
-  generateNewKey(): { secretKey: string; publicKey: string } {
-    const secretKey = generateSecretKey();
-    const publicKey = getPublicKey(secretKey);
-
-    return {
-      secretKey: bytesToHex(secretKey),
-      publicKey: publicKey,
-    };
-  }
-
-  getPublicKeyFromPrivateKey(privateKeyHex: string): string {
-    return getPublicKey(hexToBytes(privateKeyHex));
-  }
-
-  setSignEventCallback(
-    signEventCallback: (eventData: EventTemplate) => Promise<Event>
+  setRequestSignEvent(
+    requestSignEvent: (eventData: EventTemplate) => Promise<Event>
   ): void {
-    this.signEventCallback = signEventCallback;
+    this.requestSignEvent = requestSignEvent;
   }
 
   setRequestPublicKey(requestPublicKey: () => Promise<string | null>): void {
     this.requestPublicKey = requestPublicKey;
-  }
-
-  async setupProfile(profile: Profile): Promise<Event | null> {
-    if (!this.signEventCallback || !this.requestPublicKey) {
-      throw new Error("signEventCallback not set.");
-    }
-
-    const publicKey = await this.requestPublicKey();
-    if (!publicKey) {
-      throw new Error("Public key not set.");
-    }
-
-    const profileEvent = {
-      kind: 0,
-      created_at: Math.floor(Date.now() / 1000),
-      tags: [],
-      content: JSON.stringify(profile),
-      pubkey: publicKey,
-    };
-
-    try {
-      const signedEvent = await this.signEventCallback(profileEvent);
-      await this.publishEvent(signedEvent);
-      return signedEvent;
-    } catch (error) {
-      console.error("Failed to publish profile:", error);
-      return null;
-    }
   }
 
   async nip44Encrypt(
@@ -125,33 +65,80 @@ export class Nostr {
     return nip44.decrypt(payload, conversationKey);
   }
 
-  async publishEvent(event: Event): Promise<void> {
-    const effectiveRelays = this.getEffectiveRelays();
-    const promises = effectiveRelays.map((relay) =>
-      this.pool.publish([relay], event)
-    );
-
-    await Promise.allSettled(promises);
-  }
-
   async publishEventToRelays(event: Event, relays: string[]): Promise<void> {
     const promises = relays.map((relay) => this.pool.publish([relay], event));
     await Promise.allSettled(promises);
   }
 
-  async fetchEvents(
+  async signToPublishEvent(
+    kind: number,
+    content: string,
+    tags: string[][],
+    relays: string[]
+  ): Promise<Event | null> {
+    if (!this.requestSignEvent || !this.requestPublicKey) {
+      throw new Error("requestSignEvent or requestPublicKey not set.");
+    }
+
+    const publicKey = await this.requestPublicKey();
+    if (!publicKey) {
+      throw new Error("Failed to request public key.");
+    }
+
+    const event = {
+      kind,
+      created_at: Math.floor(Date.now() / 1000),
+      tags: tags,
+      content: content,
+      pubkey: publicKey,
+    };
+
+    try {
+      const signedEvent = await this.requestSignEvent(event);
+      await this.publishEventToRelays(signedEvent, relays);
+      return signedEvent;
+    } catch (error) {
+      console.error("Failed to sign and publish event:", error);
+      return null;
+    }
+  }
+
+  async publishProfile(profile: Profile): Promise<Event | null> {
+    return await this.signToPublishEvent(
+      0,
+      JSON.stringify(profile),
+      [],
+      loadBigRelays()
+    );
+  }
+
+  async publishNip65RelayListEvent(relayList: RelayListItem[]) {
+    return await this.signToPublishEvent(
+      10002,
+      "",
+      relayList.map((relay) => {
+        if (relay.marker) {
+          return ["r", relay.url, relay.marker];
+        } else {
+          return ["r", relay.url];
+        }
+      }),
+      loadBigRelays()
+    );
+  }
+
+  async fetchEventFromRelays(
     filters: Filter[],
-    relays?: string[],
+    relays: string[],
     timeoutMs: number = 10000
   ): Promise<Event[]> {
-    const effectiveRelays = relays || this.getEffectiveRelays();
     return new Promise((resolve) => {
       const events: Event[] = [];
       const timeoutId = setTimeout(() => {
         resolve(events);
       }, timeoutMs);
 
-      const sub = this.pool.subscribeMany(effectiveRelays, filters, {
+      const sub = this.pool.subscribeMany(relays, filters, {
         onevent(event) {
           events.push(event);
         },
@@ -177,7 +164,11 @@ export class Nostr {
       },
     ];
 
-    const events = await this.fetchEvents(filters, this.getEffectiveRelays(), 5000);
+    const events = await this.fetchEventFromRelays(
+      filters,
+      loadBigRelays(),
+      5000
+    );
 
     if (events.length === 0) {
       return null;
@@ -194,22 +185,6 @@ export class Nostr {
     }
   }
 
-  async fetchGiftWrappedNotes(
-    receiptPubkey: string,
-    relays?: string[],
-    limit: number = 50
-  ): Promise<Event[]> {
-    const effectiveRelays = relays || this.getEffectiveRelays();
-    const filters: Filter[] = [
-      {
-        "#p": [receiptPubkey],
-        kinds: [1059],
-        limit: limit,
-      },
-    ];
-    return await this.fetchEvents(filters, effectiveRelays);
-  }
-
   async fetchNip65RelayList(authors: string[]): Promise<RelayListItem[]> {
     const filters: Filter[] = [
       {
@@ -217,7 +192,7 @@ export class Nostr {
         authors: authors,
       },
     ];
-    const events = await this.fetchEvents(filters);
+    const events = await this.fetchEventFromRelays(filters, loadBigRelays());
     const eventTags = events.map((event) => event.tags).flat();
     const relayTags = eventTags.filter((tag) => tag[0] === "r");
     return relayTags
@@ -234,6 +209,21 @@ export class Nostr {
         }
       })
       .filter((r) => r !== null) as unknown as RelayListItem[];
+  }
+
+  async fetchGiftWrappedNotes(
+    receiptPubkey: string,
+    relays: string[],
+    limit: number = 50
+  ): Promise<Event[]> {
+    const filters: Filter[] = [
+      {
+        "#p": [receiptPubkey],
+        kinds: [1059],
+        limit: limit,
+      },
+    ];
+    return await this.fetchEventFromRelays(filters, relays);
   }
 
   private async createNip59POWWrapEvent(
@@ -310,81 +300,56 @@ export class Nostr {
     return wrappedEvent;
   }
 
-  async publishNote(
-    kind: number,
-    content: string,
-    tags: string[][] = []
-  ): Promise<Event | null> {
-    if (!this.signEventCallback || !this.requestPublicKey) {
-      throw new Error("signEventCallback or requestPublicKey not set.");
-    }
-
-    const publicKey = await this.requestPublicKey();
-    if (!publicKey) {
-      throw new Error("Public key not set.");
-    }
-
-    const noteEvent = {
-      kind,
-      created_at: Math.floor(Date.now() / 1000),
-      tags: tags,
-      content: content,
-      pubkey: publicKey,
-    };
-
-    try {
-      const signedEvent = await this.signEventCallback(noteEvent);
-      await this.publishEvent(signedEvent);
-      return signedEvent;
-    } catch (error) {
-      console.error("Failed to publish note:", error);
-      return null;
-    }
-  }
-
-  async publishNip65RelayListEvent(relayList: RelayListItem[]) {
-    return await this.publishNote(
-      10002,
-      "",
-      relayList.map((relay) => {
-        if (relay.marker) {
-          return ["r", relay.url, relay.marker];
-        } else {
-          return ["r", relay.url];
-        }
-      })
-    );
-  }
-
-  /**
-   * Add a relay to the pool
-   */
-  addRelay(relayUrl: string): void {
-    if (!this.globalRelays.includes(relayUrl)) {
-      this.globalRelays.push(relayUrl);
-    }
-  }
-
-  /**
-   * Remove a relay from the pool
-   */
-  removeRelay(relayUrl: string): void {
-    this.globalRelays = this.globalRelays.filter((relay) => relay !== relayUrl);
-  }
-
-  /**
-   * Get current relays
-   */
-  getRelays(): string[] {
-    return [...this.getEffectiveRelays()];
-  }
-
   destroy(): void {
-    this.pool.close(this.getEffectiveRelays());
+    this.pool.close(loadBigRelays());
   }
 }
 
 export function getSubjectTitleFromEvent(event: Event): string | null {
   const subject = event.tags.find((tag) => tag[0] === "subject");
   return subject ? subject[1] : null;
+}
+
+export function generateNewKey(): { secretKey: string; publicKey: string } {
+  const secretKey = generateSecretKey();
+  const publicKey = getPublicKey(secretKey);
+
+  return {
+    secretKey: bytesToHex(secretKey),
+    publicKey: publicKey,
+  };
+}
+
+export function getPublicKeyFromPrivateKey(privateKeyHex: string): string {
+  return getPublicKey(hexToBytes(privateKeyHex));
+}
+
+export function loadBigRelays(): string[] {
+  // Always return built-in defaults during SSR or when window is not available
+  if (typeof window === "undefined" || typeof localStorage === "undefined") {
+    return DEFAULT_BIG_RELAY_URLS;
+  }
+
+  try {
+    const customRelays = localStorage.getItem(
+      LocalStorageKeys.customDefaultRelaysKey
+    );
+    if (customRelays) {
+      const parsed = JSON.parse(customRelays);
+      if (
+        Array.isArray(parsed) &&
+        parsed.length > 0 &&
+        parsed.every((relay) => typeof relay === "string")
+      ) {
+        return parsed;
+      }
+    }
+  } catch (error) {
+    console.error(
+      "Error reading custom default relays from localStorage:",
+      error
+    );
+  }
+
+  return DEFAULT_BIG_RELAY_URLS;
 }

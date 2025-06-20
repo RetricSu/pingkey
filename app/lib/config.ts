@@ -21,11 +21,12 @@ export const defaultProfile: Profile = {
     "No profile set yet. Click 'Edit Profile' to set up your Nostr profile.",
 };
 
-export const defaultRelays: string[] = [
+export const DEFAULT_BIG_RELAY_URLS: string[] = [
   "wss://relay.pingkey.xyz",
   "wss://relay.damus.io",
   "wss://nos.lol",
   "wss://relay.nostr.band",
+  "wss://nostr.mom",
   "wss://purplepages.org",
 ];
 
@@ -43,26 +44,3 @@ export const POW_CONFIG = {
   web_worker_mining_timeout_ms: 60000,
 }
 
-/**
- * Get the effective default relays (custom from localStorage or built-in defaults)
- */
-export function getEffectiveDefaultRelays(): string[] {
-  // Always return built-in defaults during SSR or when window is not available
-  if (typeof window === "undefined" || typeof localStorage === "undefined") {
-    return defaultRelays;
-  }
-  
-  try {
-    const customRelays = localStorage.getItem(LocalStorageKeys.customDefaultRelaysKey);
-    if (customRelays) {
-      const parsed = JSON.parse(customRelays);
-      if (Array.isArray(parsed) && parsed.length > 0 && parsed.every(relay => typeof relay === 'string')) {
-        return parsed;
-      }
-    }
-  } catch (error) {
-    console.error("Error reading custom default relays from localStorage:", error);
-  }
-  
-  return defaultRelays;
-}
