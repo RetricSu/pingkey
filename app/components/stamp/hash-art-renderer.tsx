@@ -30,13 +30,6 @@ function HashArtDialog({
   onResolve: (result: any) => void;
   onReject: () => void;
 }) {
-  const [selectedProviderId, setSelectedProviderId] = useState(
-    providerId ||
-      hashArtProviderRegistry.getDefaultProvider()?.id ||
-      "p5-generative"
-  );
-
-  const enabledProviders = hashArtProviderRegistry.getEnabledProviders();
 
   return (
     <div className="p-4 sm:p-6 max-w-full">
@@ -64,26 +57,6 @@ function HashArtDialog({
         </button>
       </div>
 
-      {/* Provider 选择器 */}
-      {enabledProviders.length > 1 && (
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-            Art Style:
-          </label>
-          <select
-            value={selectedProviderId}
-            onChange={(e) => setSelectedProviderId(e.target.value)}
-            className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-400 dark:focus:ring-neutral-500"
-          >
-            {enabledProviders.map(({ provider, config }) => (
-              <option key={provider.id} value={provider.id}>
-                {config.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-
       {/* Art display container with responsive sizing */}
       <div className="flex justify-center mb-6">
         <div className="w-full max-w-md flex justify-center">
@@ -94,7 +67,7 @@ function HashArtDialog({
             height={400}
             className="border border-neutral-200 dark:border-neutral-700 rounded-lg"
             clickable={false}
-            providerId={selectedProviderId}
+            providerId={providerId}
           />
         </div>
       </div>
@@ -110,7 +83,7 @@ function HashArtDialog({
         </p>
         <p className="text-xs text-neutral-500 dark:text-neutral-400">
           Art Provider:{" "}
-          {hashArtProviderRegistry.getProviderConfig(selectedProviderId)
+          {hashArtProviderRegistry.getProviderConfig(providerId!)
             ?.name || "Unknown"}
         </p>
       </div>
