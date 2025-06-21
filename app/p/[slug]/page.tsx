@@ -9,6 +9,7 @@ import { MessageSender } from "../../components/message-sender";
 import { Loader } from "../../components/loader";
 import { RichAbout } from "../../components/profile/rich-about";
 import { ProfileActions } from "../../components/profile/profile-actions";
+import { RelayList } from "../../components/relay-list";
 
 interface PageProps {
   params: Promise<{
@@ -108,19 +109,10 @@ export default function DynamicPage({ params }: PageProps) {
         <ProfileActions slug={slug} profile={profile} relayList={relayList} />
 
         <div className="mt-16">
-          <div className="mt-4 mb-6 pt-4">
-            <h3 className="text-sm font-medium mb-3 text-gray-700 dark:text-gray-300">
-              {profile.name || slug}'s Relays
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs text-gray-500 dark:text-gray-400">
-              {relayList.map((relay, index) => (
-                <div key={index} className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span>{relay.url}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <RelayList 
+            relayList={relayList} 
+            title={`${profile.name || slug}'s Relays`} 
+          />
           <MessageSender
             slug={slug}
             profileName={profile.name}
