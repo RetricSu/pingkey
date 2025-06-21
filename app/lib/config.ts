@@ -33,6 +33,7 @@ export const DEFAULT_BIG_RELAY_URLS: string[] = [
 export const LocalStorageKeys = {
   userInfoCacheKey: "PingKey.UserInfoCache",
   customDefaultRelaysKey: "PingKey.CustomDefaultRelays",
+  decryptedLettersKey: "PingKey.DecryptedLetters",
 };
 
 export const USER_INFO_CACHE_EXPIRED_MS = 10 * 60 * 1000; // 10 minutes
