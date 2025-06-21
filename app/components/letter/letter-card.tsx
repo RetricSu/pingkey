@@ -12,9 +12,14 @@ import { ReadingLetterModal } from "./reading-letter";
 import { getPow } from "nostr-tools/nip13";
 import { prompt } from "../dialog";
 import { getSubjectTitleFromEvent } from "app/lib/nostr";
+import {
+  useDecryptedLettersCache,
+  DecryptedLetter,
+} from "app/hooks/useDecryptedLettersCache";
 
 export function LetterCard({
   letter,
+  onCacheUpdate,
 }: {
   letter: {
     id: string;
@@ -24,18 +29,18 @@ export function LetterCard({
     read: boolean;
     fullNote: Event;
   };
+  onCacheUpdate?: () => void;
 }) {
   const { isSignedIn, exportPrivateKey } = useAuth();
   const { nostr } = useNostr();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [decryptedLetter, setDecryptedLetter] = useState<{
-    from: string;
-    subject?: string | null;
-    content: string;
-    receivedAt: number;
-    deliveryEventId: string;
-    replyToEventId: string;
-  } | null>(null);
+  const [decryptedLetter, setDecryptedLetter] =
+    useState<DecryptedLetter | null>(null);
+
+  // Cache management
+  const { isLetterCached, getCachedLetter, cacheDecryptedLetter } =
+    useDecryptedLettersCache();
+  const isCached = isLetterCached(letter.id);
 
   const decryptNote = async () => {
     if (isSignedIn && nostr) {
@@ -58,15 +63,21 @@ export function LetterCard({
           hexToBytes(privateKey)
         );
 
-        // Set the decrypted content and open modal
-        setDecryptedLetter({
+        // Create decrypted letter object
+        const decryptedLetterContent: DecryptedLetter = {
           from: decryptedNote.pubkey,
           subject: getSubjectTitleFromEvent(decryptedNote as Event),
           content: decryptedNote.content,
           receivedAt: letter.receivedAt,
           deliveryEventId: letter.fullNote.id,
           replyToEventId: decryptedNote.id,
-        });
+        };
+
+        // Cache the decrypted letter
+        cacheDecryptedLetter(letter.id, decryptedLetterContent);
+
+        // Set the decrypted content and open modal
+        setDecryptedLetter(decryptedLetterContent);
         setIsModalOpen(true);
       } catch (error) {
         console.error("Failed to decrypt letter:", error);
@@ -75,9 +86,22 @@ export function LetterCard({
     }
   };
 
+  const readCachedLetter = () => {
+    const cachedContent = getCachedLetter(letter.id);
+    if (cachedContent) {
+      setDecryptedLetter(cachedContent);
+      setIsModalOpen(true);
+    }
+  };
+
   const closeModal = () => {
     setIsModalOpen(false);
     setDecryptedLetter(null);
+
+    // Notify parent that cache was updated (only after modal closes)
+    if (decryptedLetter) {
+      onCacheUpdate?.();
+    }
   };
 
   return (
@@ -125,13 +149,30 @@ export function LetterCard({
         </div>
 
         {/* Action buttons */}
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-center gap-2">
           <button
-            className="cursor-pointer w-full px-3 sm:px-4 py-2 text-xs sm:text-sm border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800/50 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors font-medium"
-            onClick={decryptNote}
+            className="cursor-pointer flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800/50 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors font-medium"
+            onClick={isCached ? readCachedLetter : decryptNote}
           >
-            Decrypt Letter
+            {isCached ? "Read Letter" : "Decrypt Letter"}
           </button>
+          {isCached && (
+            <div className="flex items-center justify-center w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-full">
+              <svg
+                className="w-4 h-4 text-green-600 dark:text-green-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+          )}
         </div>
       </div>
 

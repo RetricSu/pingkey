@@ -5,11 +5,13 @@ import { useNostr } from "app/contexts/nostr";
 import { useCallback, useEffect, useState } from "react";
 import { Event } from "nostr-tools/core";
 import { LetterCard } from "app/components/letter/letter-card";
+import { CachedLetterCard } from "app/components/letter/cached-letter-card";
 import { useUserRelayList } from "app/hooks/useUserRelayList";
 import { withAuth } from "app/components/auth/with-auth";
 import { Loader } from "app/components/loader";
 import { getPow } from "nostr-tools/nip13";
 import { StampWall } from "app/components/stamp/stamp-wall";
+import { useDecryptedLettersCache } from "app/hooks/useDecryptedLettersCache";
 
 type FilterType = "all" | "unread" | "read";
 
@@ -22,6 +24,16 @@ function MailBox() {
   const [powThreshold, setPowThreshold] = useState(16);
   const [showStampWall, setShowStampWall] = useState(false);
   const { relayList, isLoading: isRelayListLoading } = useUserRelayList();
+  
+  // Cache management
+  const { isLetterCached, getCachedLetter, updateLastAccessed, reloadCache, cacheCount } = useDecryptedLettersCache();
+  
+  // Force re-render when cache updates
+  const [refreshKey, setRefreshKey] = useState(0);
+  const refreshMailbox = useCallback(() => {
+    reloadCache(); // Force reload cache from localStorage
+    setRefreshKey(prev => prev + 1);
+  }, [refreshKey, reloadCache]);
 
   const fetchGiftWrappedNotes = useCallback(async () => {
     if (!isSignedIn || !nostr || isRelayListLoading) return;
@@ -120,6 +132,11 @@ function MailBox() {
                 {unreadCount} unread
               </span>
             )}
+            {cacheCount > 0 && (
+              <span className="ml-2 px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-medium rounded-full">
+                {cacheCount} decrypted
+              </span>
+            )}
           </p>
         </div>
 
@@ -211,9 +228,25 @@ function MailBox() {
                 new Date(a.receivedAt).getTime()
               );
             })
-            .map((letter) => (
-              <LetterCard key={letter.id} letter={letter} />
-            ))}
+            .map((letter) => {
+              const cachedContent = getCachedLetter(letter.id);
+              const isCached = isLetterCached(letter.id);
+              
+              return isCached && cachedContent ? (
+                <CachedLetterCard 
+                  key={`${letter.id}-${refreshKey}`} 
+                  letter={letter} 
+                  cachedContent={cachedContent}
+                  onInteraction={() => updateLastAccessed(letter.id)}
+                />
+              ) : (
+                <LetterCard 
+                  key={`${letter.id}-${refreshKey}`} 
+                  letter={letter} 
+                  onCacheUpdate={refreshMailbox}
+                />
+              );
+            })}
         </div>
       ) : (
         <div className="text-center py-16">

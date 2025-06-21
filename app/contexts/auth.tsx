@@ -85,6 +85,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signOut = (): void => {
     // Clear localStorage
     removeUserInfoCache();
+    
+    // Clear decrypted letters cache for the current user
+    if (pubkey) {
+      const decryptedLettersCacheKey = `PingKey.DecryptedLetters_${pubkey}`;
+      try {
+        window.localStorage.removeItem(decryptedLettersCacheKey);
+      } catch (error) {
+        console.error("Failed to clear decrypted letters cache:", error);
+      }
+    }
 
     // Clear state
     setPubkey(null);
