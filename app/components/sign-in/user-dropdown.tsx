@@ -122,12 +122,12 @@ export function UserDropdown({ pubkey, onSignOut }: UserDropdownProps) {
       onClick: handleScanQRCode,
     },
     {
-      label: "Settings",
-      href: "/setting",
-    },
-    {
       label: "Export Key",
       onClick: handleExportKey,
+    },
+    {
+      label: "Settings",
+      href: "/setting",
     },
     {
       label: "Sign out",

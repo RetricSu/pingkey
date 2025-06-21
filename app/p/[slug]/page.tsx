@@ -13,6 +13,7 @@ import { ProfileActions } from "../../components/profile/profile-actions";
 import { RelayList } from "../../components/profile/relay-list";
 import { custom } from "../../components/dialog";
 import { SettingsModal } from "../../components/profile/settings-modal";
+import { useNotification } from "app/contexts/notification";
 
 interface PageProps {
   params: Promise<{
@@ -28,6 +29,7 @@ export default function DynamicPage({ params }: PageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [relayList, setRelayList] = useState<RelayListItem[]>([]);
+  const { success } = useNotification();
 
   // Check if this is the current user's own profile
   const isOwnProfile = isSignedIn && pubkey === slug;
@@ -81,26 +83,21 @@ export default function DynamicPage({ params }: PageProps) {
   const handleOpenSettingsModal = async () => {
     if (!nostr || !pubkey) return;
 
-    const handleSave = async (
-      updatedProfile: Profile,
-      updatedRelayList: RelayListItem[]
-    ) => {
-      // Save profile
+    const handleSaveProfile = async (updatedProfile: Profile) => {
       const result = await nostr.publishProfile(updatedProfile);
       if (!result) {
         throw new Error("Failed to update profile");
       }
+      success("Profile updated successfully");
+      setProfile(updatedProfile);
+    };
 
-      // Save relay list
-      const relayResult = await nostr.publishNip65RelayListEvent(
-        updatedRelayList
-      );
-      if (!relayResult) {
+    const handleSaveRelays = async (updatedRelayList: RelayListItem[]) => {
+      const result = await nostr.publishNip65RelayListEvent(updatedRelayList);
+      if (!result) {
         throw new Error("Failed to update relay list");
       }
-
-      // Update local state
-      setProfile(updatedProfile);
+      success("Relays updated successfully");
       setRelayList(updatedRelayList);
     };
 
@@ -111,7 +108,8 @@ export default function DynamicPage({ params }: PageProps) {
             {...props}
             profile={profile}
             relayList={relayList}
-            onSave={handleSave}
+            onSaveProfile={handleSaveProfile}
+            onSaveRelays={handleSaveRelays}
           />
         ),
         {
@@ -160,9 +158,9 @@ export default function DynamicPage({ params }: PageProps) {
           <RichAbout text={profile.about || ""} className="" />
         </div>
 
-        <ProfileActions 
-          slug={slug} 
-          profile={profile} 
+        <ProfileActions
+          slug={slug}
+          profile={profile}
           relayList={relayList}
           isOwnProfile={isOwnProfile}
           onEditProfile={handleOpenSettingsModal}

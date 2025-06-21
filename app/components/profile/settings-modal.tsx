@@ -8,13 +8,15 @@ import { defaultProfile, DEFAULT_BIG_RELAY_URLS } from "app/lib/config";
 interface SettingsModalProps extends CustomDialogProps {
   profile: Profile;
   relayList: RelayListItem[];
-  onSave: (profile: Profile, relayList: RelayListItem[]) => Promise<void>;
+  onSaveProfile: (profile: Profile) => Promise<void>;
+  onSaveRelays: (relayList: RelayListItem[]) => Promise<void>;
 }
 
 export function SettingsModal({
   profile,
   relayList,
-  onSave,
+  onSaveProfile,
+  onSaveRelays,
   onResolve,
   onReject,
 }: SettingsModalProps) {
@@ -42,8 +44,14 @@ export function SettingsModal({
     try {
       setIsSaving(true);
       setError(null);
-      await onSave(editedProfile, editedRelayList);
-      onResolve(true);
+
+      if (activeTab === "profile") {
+        await onSaveProfile(editedProfile);
+      } else {
+        await onSaveRelays(editedRelayList);
+      }
+
+      // Modal stays open after saving
     } catch (err) {
       setError("Failed to save changes");
       console.error("Error saving settings:", err);
@@ -339,7 +347,11 @@ export function SettingsModal({
           disabled={isSaving}
           className="px-4 py-2 text-sm bg-neutral-900 dark:bg-neutral-100 text-white dark:text-black rounded-lg hover:bg-neutral-700 dark:hover:bg-neutral-300 transition-colors disabled:opacity-50 font-medium"
         >
-          {isSaving ? "Saving..." : "Save Changes"}
+          {isSaving
+            ? "Saving..."
+            : activeTab === "profile"
+            ? "Save Profile"
+            : "Save Relays"}
         </button>
       </div>
     </div>
