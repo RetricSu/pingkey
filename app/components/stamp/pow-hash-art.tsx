@@ -25,7 +25,7 @@ function PowHashArtDialog({
   onReject: () => void;
 }) {
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6 max-w-full">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
           POW Stamp
@@ -50,31 +50,33 @@ function PowHashArtDialog({
         </button>
       </div>
 
-      <div className="flex justify-center mb-4">
-        <PowHashArt
-          hash={hash}
-          leadingZeros={leadingZeros}
-          width={400}
-          height={500}
-          className="border border-neutral-200 dark:border-neutral-700 rounded-lg"
-          clickable={false}
-        />
+      <div className="flex justify-center mb-6">
+        <div className="w-full max-w-md flex justify-center">
+          <PowHashArt
+            hash={hash}
+            leadingZeros={leadingZeros}
+            width={320}
+            height={400}
+            className="border border-neutral-200 dark:border-neutral-700 rounded-lg"
+            clickable={false}
+          />
+        </div>
       </div>
 
-      <div className="text-center space-y-2">
-        <p className="text-xs text-neutral-500 dark:text-neutral-400">
+      <div className="text-center space-y-2 mb-6">
+        <p className="text-xs text-neutral-500 dark:text-neutral-400 font-mono">
           Hash:{" "}
-          {hash ? `${hash.slice(0, 16)}...${hash.slice(-16)}` : "Simulated"}
+          {hash ? `${hash.slice(0, 10)}...${hash.slice(-10)}` : "Simulated"}
         </p>
         <p className="text-xs text-neutral-500 dark:text-neutral-400">
           Pow Difficulty: {hash ? getPow(hash) : "Unknown"}
         </p>
       </div>
 
-      <div className="flex flex-col items-center justify-center gap-2 my-6 text-center text-sm text-neutral-500 dark:text-neutral-400">
-        <p>
-          Every Pow Stamp is a unique piece of art <br /> determined by the hash
-          of the message.
+      <div className="text-center text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">
+        <p className="mb-2">
+          Every Pow Stamp is a unique piece of art<br/>
+          determined by the hash of the message.
         </p>
         <p>The higher the difficulty, the more complex the stamp art.</p>
       </div>
@@ -137,7 +139,7 @@ export function PowHashArt({
           />
         ),
         {
-          maxWidth: "lg",
+          maxWidth: "xl",
           closeOnBackdrop: true,
         }
       );

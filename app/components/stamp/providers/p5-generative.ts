@@ -28,6 +28,11 @@ export class P5GenerativeProvider implements HashArtProvider {
           try {
             const canvas = p.createCanvas(width, height);
             canvas.parent(container);
+            // Center the canvas within its container
+            const canvasElement = canvas.canvas;
+            canvasElement.style.display = 'block';
+            canvasElement.style.margin = '0 auto';
+            
             p.noLoop();
             p.rectMode(p.CENTER);
             p.angleMode(p.DEGREES);

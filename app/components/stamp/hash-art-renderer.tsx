@@ -39,7 +39,7 @@ function HashArtDialog({
   const enabledProviders = hashArtProviderRegistry.getEnabledProviders();
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6 max-w-full">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
           POW Stamp
@@ -66,14 +66,14 @@ function HashArtDialog({
 
       {/* Provider 选择器 */}
       {enabledProviders.length > 1 && (
-        <div className="mb-4">
+        <div className="mb-6">
           <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
             Art Style:
           </label>
           <select
             value={selectedProviderId}
             onChange={(e) => setSelectedProviderId(e.target.value)}
-            className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 text-sm"
+            className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-400 dark:focus:ring-neutral-500"
           >
             {enabledProviders.map(({ provider, config }) => (
               <option key={provider.id} value={provider.id}>
@@ -84,22 +84,26 @@ function HashArtDialog({
         </div>
       )}
 
-      <div className="flex justify-center mb-4">
-        <HashArtRenderer
-          hash={hash}
-          leadingZeros={leadingZeros}
-          width={400}
-          height={500}
-          className="border border-neutral-200 dark:border-neutral-700 rounded-lg"
-          clickable={false}
-          providerId={selectedProviderId}
-        />
+      {/* Art display container with responsive sizing */}
+      <div className="flex justify-center mb-6">
+        <div className="w-full max-w-md flex justify-center">
+          <HashArtRenderer
+            hash={hash}
+            leadingZeros={leadingZeros}
+            width={320}
+            height={400}
+            className="border border-neutral-200 dark:border-neutral-700 rounded-lg"
+            clickable={false}
+            providerId={selectedProviderId}
+          />
+        </div>
       </div>
 
-      <div className="text-center space-y-2">
-        <p className="text-xs text-neutral-500 dark:text-neutral-400">
+      {/* Metadata */}
+      <div className="text-center space-y-2 mb-6">
+        <p className="text-xs text-neutral-500 dark:text-neutral-400 font-mono">
           Hash:{" "}
-          {hash ? `${hash.slice(0, 16)}...${hash.slice(-16)}` : "Simulated"}
+          {hash ? `${hash.slice(0, 10)}...${hash.slice(-10)}` : "Simulated"}
         </p>
         <p className="text-xs text-neutral-500 dark:text-neutral-400">
           Pow Difficulty: {hash ? getPow(hash) : "Unknown"}
@@ -111,10 +115,11 @@ function HashArtDialog({
         </p>
       </div>
 
-      <div className="flex flex-col items-center justify-center gap-2 my-6 text-center text-sm text-neutral-500 dark:text-neutral-400">
-        <p>
-          Every Pow Stamp is a unique piece of art <br /> determined by the hash
-          of the message.
+      {/* Description */}
+      <div className="text-center text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">
+        <p className="mb-2">
+          Every Pow Stamp is a unique piece of art<br/>
+          determined by the hash of the message.
         </p>
         <p>The higher the difficulty, the more complex the stamp art.</p>
       </div>
@@ -162,7 +167,7 @@ export function HashArtRenderer({
           />
         ),
         {
-          maxWidth: "lg",
+          maxWidth: "xl",
           closeOnBackdrop: true,
         }
       );
@@ -284,7 +289,7 @@ export function HashArtRenderer({
   return (
     <div
       ref={containerRef}
-      className={`hash-art-renderer ${className} ${
+      className={`hash-art-renderer ${className} flex items-center justify-center ${
         clickable ? "cursor-pointer hover:opacity-80 transition-opacity" : ""
       } ${isLoading ? "bg-neutral-100 dark:bg-neutral-800" : ""}`}
       style={{ width, height }}
