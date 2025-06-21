@@ -1,18 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { useAuth } from "../contexts/auth";
-import { useNostr } from "../contexts/nostr";
-import { useNotification } from "../contexts/notification";
+import { useAuth } from "../../contexts/auth";
+import { useNostr } from "../../contexts/nostr";
+import { useNotification } from "../../contexts/notification";
 import { generateSecretKey } from "nostr-tools/pure";
 import { bytesToHex, hexToBytes } from "@noble/hashes/utils";
-import { RelayListItem } from "../lib/type";
-import { custom, CustomDialogProps } from "./dialog";
-import { usePowCreation } from "../hooks/usePowCreation";
-import { PowMiningIndicator } from "./stamp/pow-mining-indicator";
+import { RelayListItem } from "../../lib/type";
+import { custom, CustomDialogProps } from "../dialog";
+import { usePowCreation } from "../../hooks/usePowCreation";
+import { PowMiningIndicator } from "../stamp/pow-mining-indicator";
 import { POW_CONFIG } from "app/lib/config";
-import { buildGeneratedStampDialog } from "./stamp/mint-stamp";
-import { prompt } from "./dialog";
+import { buildGeneratedStampDialog } from "../stamp/mint-stamp";
+import { prompt } from "../dialog";
 
 interface MessageSenderProps {
   slug: string;

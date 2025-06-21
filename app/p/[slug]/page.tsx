@@ -6,7 +6,7 @@ import { useNostr } from "../../contexts/nostr";
 import { useAuth } from "../../contexts/auth";
 import { defaultProfile } from "app/lib/config";
 import { Profile, RelayListItem } from "app/lib/type";
-import { MessageSender } from "../../components/message-sender";
+import { MessageSender } from "../../components/profile/message-sender";
 import { Loader } from "../../components/loader";
 import { RichAbout } from "../../components/profile/rich-about";
 import { ProfileActions } from "../../components/profile/profile-actions";

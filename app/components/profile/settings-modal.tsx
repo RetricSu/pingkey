@@ -82,16 +82,16 @@ export function SettingsModal({
     <div className="p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-          Edit Profile & Settings
+        <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+          Edit Profile & Relays
         </h2>
         <button
           onClick={onReject}
-          className="text-neutral-400 dark:text-neutral-600 hover:text-neutral-600 dark:hover:text-neutral-400 transition-colors"
+          className="p-2 text-neutral-400 dark:text-neutral-600 hover:text-neutral-600 dark:hover:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
         >
           <svg
-            width="20"
-            height="20"
+            width="16"
+            height="16"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -109,7 +109,7 @@ export function SettingsModal({
       <div className="flex border-b border-neutral-200 dark:border-neutral-800 mb-6">
         <button
           onClick={() => setActiveTab("profile")}
-          className={`px-4 py-2 font-medium text-sm transition-colors ${
+          className={`px-4 py-3 font-medium text-sm transition-colors ${
             activeTab === "profile"
               ? "text-neutral-900 dark:text-neutral-100 border-b-2 border-neutral-900 dark:border-neutral-100"
               : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
@@ -119,7 +119,7 @@ export function SettingsModal({
         </button>
         <button
           onClick={() => setActiveTab("relays")}
-          className={`px-4 py-2 font-medium text-sm transition-colors ${
+          className={`px-4 py-3 font-medium text-sm transition-colors ${
             activeTab === "relays"
               ? "text-neutral-900 dark:text-neutral-100 border-b-2 border-neutral-900 dark:border-neutral-100"
               : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
@@ -137,9 +137,9 @@ export function SettingsModal({
       )}
 
       {/* Tab Content */}
-      <div className="min-h-[400px] max-h-[500px] overflow-y-auto">
+      <div className="min-h-[420px] max-h-[500px] overflow-y-auto">
         {activeTab === "profile" && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
               <label
                 htmlFor="name"
@@ -154,7 +154,7 @@ export function SettingsModal({
                 onChange={(e) =>
                   setEditedProfile({ ...editedProfile, name: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 dark:focus:ring-neutral-400 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100"
+                className="w-full px-3 py-2 text-sm border border-neutral-200 dark:border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-400 dark:focus:ring-neutral-500 focus:border-transparent bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 transition-all"
                 placeholder="Enter your name"
               />
             </div>
@@ -176,7 +176,7 @@ export function SettingsModal({
                     picture: e.target.value,
                   })
                 }
-                className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 dark:focus:ring-neutral-400 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100"
+                className="w-full px-3 py-2 text-sm border border-neutral-200 dark:border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-400 dark:focus:ring-neutral-500 focus:border-transparent bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 transition-all"
                 placeholder="https://example.com/avatar.jpg"
               />
             </div>
@@ -195,14 +195,14 @@ export function SettingsModal({
                   setEditedProfile({ ...editedProfile, about: e.target.value })
                 }
                 rows={6}
-                className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-500 dark:focus:ring-neutral-400 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100"
+                className="w-full px-3 py-2 text-sm border border-neutral-200 dark:border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-400 dark:focus:ring-neutral-500 focus:border-transparent bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 transition-all resize-none"
                 placeholder="Tell us about yourself..."
               />
             </div>
 
             {/* Profile Preview */}
-            <div className="mt-6 p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800">
-              <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
+            <div className="mt-8 p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800">
+              <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-4">
                 Preview
               </h3>
               <div className="flex items-start gap-4">
@@ -221,7 +221,7 @@ export function SettingsModal({
                     {editedProfile.name || "Anonymous"}
                   </h4>
                   {editedProfile.about && (
-                    <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1 whitespace-pre-wrap">
+                    <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-2 whitespace-pre-wrap leading-relaxed">
                       {editedProfile.about}
                     </p>
                   )}
@@ -232,7 +232,7 @@ export function SettingsModal({
         )}
 
         {activeTab === "relays" && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {/* Add Default Relays Button */}
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
@@ -240,18 +240,18 @@ export function SettingsModal({
               </h3>
               <button
                 onClick={handleAddDefaultRelays}
-                className="text-sm px-3 py-1 bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+                className="text-sm px-3 py-2 bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors font-medium"
               >
                 Add Default Relays
               </button>
             </div>
 
             {/* Current Relays */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               {editedRelayList.map((relay, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-2 p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800"
+                  className="flex items-center gap-3 p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800"
                 >
                   <input
                     type="text"
@@ -261,7 +261,7 @@ export function SettingsModal({
                       newList[index].url = e.target.value;
                       setEditedRelayList(newList);
                     }}
-                    className="flex-1 px-2 py-1 text-sm border border-neutral-300 dark:border-neutral-700 rounded focus:outline-none focus:ring-1 focus:ring-neutral-500 dark:focus:ring-neutral-400 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
+                    className="flex-1 px-3 py-2 text-sm border border-neutral-200 dark:border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-400 dark:focus:ring-neutral-500 focus:border-transparent bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 transition-all"
                   />
                   <select
                     value={relay.marker || ""}
@@ -273,7 +273,7 @@ export function SettingsModal({
                         | undefined;
                       setEditedRelayList(newList);
                     }}
-                    className="px-2 py-1 text-sm border border-neutral-300 dark:border-neutral-700 rounded focus:outline-none focus:ring-1 focus:ring-neutral-500 dark:focus:ring-neutral-400 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
+                    className="px-3 py-2 text-sm border border-neutral-200 dark:border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-400 dark:focus:ring-neutral-500 focus:border-transparent bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 transition-all"
                   >
                     <option value="">Both</option>
                     <option value="r">Read</option>
@@ -281,7 +281,7 @@ export function SettingsModal({
                   </select>
                   <button
                     onClick={() => handleRemoveRelay(index)}
-                    className="px-2 py-1 text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors"
+                    className="px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors font-medium"
                   >
                     Remove
                   </button>
@@ -290,13 +290,13 @@ export function SettingsModal({
             </div>
 
             {/* Add New Relay */}
-            <div className="flex items-center gap-2 p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800">
+            <div className="flex items-center gap-3 p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800">
               <input
                 type="text"
                 value={newRelayUrl}
                 onChange={(e) => setNewRelayUrl(e.target.value)}
                 placeholder="wss://relay.example.com"
-                className="flex-1 px-2 py-1 text-sm border border-neutral-300 dark:border-neutral-700 rounded focus:outline-none focus:ring-1 focus:ring-neutral-500 dark:focus:ring-neutral-400 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
+                className="flex-1 px-3 py-2 text-sm border border-neutral-200 dark:border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-400 dark:focus:ring-neutral-500 focus:border-transparent bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 transition-all"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     handleAddRelay();
@@ -308,7 +308,7 @@ export function SettingsModal({
                 onChange={(e) =>
                   setNewRelayMarker(e.target.value as "r" | "w" | undefined)
                 }
-                className="px-2 py-1 text-sm border border-neutral-300 dark:border-neutral-700 rounded focus:outline-none focus:ring-1 focus:ring-neutral-500 dark:focus:ring-neutral-400 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
+                className="px-3 py-2 text-sm border border-neutral-200 dark:border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-400 dark:focus:ring-neutral-500 focus:border-transparent bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 transition-all"
               >
                 <option value="">Both</option>
                 <option value="r">Read</option>
@@ -316,7 +316,7 @@ export function SettingsModal({
               </select>
               <button
                 onClick={handleAddRelay}
-                className="px-3 py-1 text-sm bg-neutral-900 dark:bg-neutral-100 text-white dark:text-black rounded hover:bg-neutral-700 dark:hover:bg-neutral-300 transition-colors"
+                className="px-4 py-2 text-sm bg-neutral-900 dark:bg-neutral-100 text-white dark:text-black rounded-lg hover:bg-neutral-700 dark:hover:bg-neutral-300 transition-colors font-medium"
               >
                 Add
               </button>
@@ -326,18 +326,18 @@ export function SettingsModal({
       </div>
 
       {/* Footer */}
-      <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-neutral-200 dark:border-neutral-800">
+      <div className="flex justify-end gap-3 mt-8 pt-4 border-t border-neutral-200 dark:border-neutral-800">
         <button
           onClick={onReject}
           disabled={isSaving}
-          className="px-4 py-2 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors disabled:opacity-50"
+          className="px-4 py-2 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors disabled:opacity-50 font-medium"
         >
           Cancel
         </button>
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className="px-4 py-2 text-sm bg-neutral-900 dark:bg-neutral-100 text-white dark:text-black rounded hover:bg-neutral-700 dark:hover:bg-neutral-300 transition-colors disabled:opacity-50"
+          className="px-4 py-2 text-sm bg-neutral-900 dark:bg-neutral-100 text-white dark:text-black rounded-lg hover:bg-neutral-700 dark:hover:bg-neutral-300 transition-colors disabled:opacity-50 font-medium"
         >
           {isSaving ? "Saving..." : "Save Changes"}
         </button>
