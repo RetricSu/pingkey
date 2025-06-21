@@ -1,5 +1,5 @@
 import React from "react";
-import { PowHashArt } from "./pow-hash-art";
+import { HashArtRenderer } from "./hash-art-renderer";
 import { getPow } from "nostr-tools/nip13";
 
 interface StampWallProps {
@@ -87,7 +87,7 @@ export const StampWall: React.FC<StampWallProps> = ({
                   {/* Art container */}
                   <div className="p-2 h-full flex items-center justify-center">
                     <div className="w-full h-full bg-neutral-100 dark:bg-neutral-700 rounded-sm flex items-center justify-center overflow-hidden">
-                      <PowHashArt
+                      <HashArtRenderer
                         hash={eventId}
                         width={Math.min(stampSize.width - 20, 100)}
                         height={Math.min(stampSize.height - 30, 120)}

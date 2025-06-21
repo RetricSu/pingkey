@@ -1,6 +1,6 @@
 import dynamic from "next/dynamic";
 
-const PowHashArt = dynamic(() => import("./pow-hash-art").then(mod => ({ default: mod.PowHashArt })), {
+const HashArtRenderer = dynamic(() => import("./hash-art-renderer"), {
   ssr: false,
   loading: () => (
     <div className="w-full h-full bg-neutral-200 dark:bg-neutral-600 rounded-sm animate-pulse flex items-center justify-center">
@@ -22,9 +22,10 @@ const PowHashArt = dynamic(() => import("./pow-hash-art").then(mod => ({ default
 interface StampProps {
   hash?: string;
   showArt?: boolean;
+  providerId?: string;
 }
 
-export function Stamp({ hash, showArt = false }: StampProps) {
+export function Stamp({ hash, showArt = false, providerId }: StampProps) {
   const countLeadingZeros = (hash: string) => {
     let count = 0;
     for (let i = 0; i < hash.length; i++) {
@@ -91,13 +92,14 @@ export function Stamp({ hash, showArt = false }: StampProps) {
           <div className="p-1 h-full flex items-center justify-center">
             <div className="w-8 h-10 bg-neutral-100 dark:bg-neutral-700 rounded-sm flex items-center justify-center overflow-hidden">
               {showArt ? (
-                <PowHashArt
+                <HashArtRenderer
                   hash={hash}
                   leadingZeros={leadingZeros}
                   width={32}
                   height={40}
                   className="rounded-sm"
                   clickable={true}
+                  providerId={providerId}
                 />
               ) : (
                 <svg
