@@ -1,18 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { useAuth } from "../contexts/auth";
-import { useNostr } from "../contexts/nostr";
-import { useNotification } from "../contexts/notification";
+import { useAuth } from "../../contexts/auth";
+import { useNostr } from "../../contexts/nostr";
+import { useNotification } from "../../contexts/notification";
 import { generateSecretKey } from "nostr-tools/pure";
 import { bytesToHex, hexToBytes } from "@noble/hashes/utils";
-import { RelayListItem } from "../lib/type";
-import { custom, CustomDialogProps } from "./dialog";
-import { usePowCreation } from "../hooks/usePowCreation";
-import { PowMiningIndicator } from "./stamp/pow-mining-indicator";
+import { RelayListItem } from "../../lib/type";
+import { custom, CustomDialogProps } from "../dialog";
+import { usePowCreation } from "../../hooks/usePowCreation";
+import { PowMiningIndicator } from "../stamp/pow-mining-indicator";
 import { POW_CONFIG } from "app/lib/config";
-import { buildGeneratedStampDialog } from "./stamp/mint-stamp";
-import { prompt } from "./dialog";
+import { buildGeneratedStampDialog } from "../stamp/mint-stamp";
+import { prompt } from "../dialog";
 
 interface MessageSenderProps {
   slug: string;
@@ -200,7 +200,7 @@ export function MessageSender({
 
           <button
             onClick={handleSendMessage}
-            disabled={isSending || isMining || !message.trim()}
+            disabled={isSending || isMining || !message.trim() || relayList.length === 0}
             className="px-6 py-2 bg-gray-900 dark:bg-gray-100 text-sm text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isMining

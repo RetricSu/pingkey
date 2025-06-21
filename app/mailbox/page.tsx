@@ -34,9 +34,6 @@ function MailBox() {
           relayList.map((relay) => relay.url)
         );
         setGiftWrappedNotes(notes);
-      } else {
-        const notes = await nostr.fetchGiftWrappedNotes(pubkey!);
-        setGiftWrappedNotes(notes);
       }
     } catch (error) {
       console.error("Error fetching gift wrapped notes:", error);
