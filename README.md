@@ -15,7 +15,7 @@ todo:
 - [x] add a button to share the profile page
 - [x] display rich info in user about section
 - [ ] export key with encryption and tip user to saved the key after they sign-up
-- [ ] make read letter cache in client side
+- [x] make read letter cache in client side
 - [ ] Allow to use custom generated/on-chain stamps
 - [ ] support embeddable one line script to integrate into html page
 - [ ] support adding attachment files with the letter(useful to transfer files)
