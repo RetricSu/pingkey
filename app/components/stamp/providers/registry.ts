@@ -1,6 +1,7 @@
 import { HashArtProvider, ArtProviderConfig } from './types';
-import { P5GenerativeProvider } from './p5-generative';
-import { CanvasMinimalProvider } from './canvas-minimal';
+import { P5GenerativeProvider } from './opts/p5-generative';
+import { CanvasMinimalProvider } from './opts/canvas-minimal';
+import { P5MandalaProvider } from './opts/p5-mandala';
 
 export class HashArtProviderRegistry {
   private providers = new Map<string, HashArtProvider>();
@@ -24,6 +25,14 @@ export class HashArtProviderRegistry {
       id: 'canvas-minimal',
       name: 'Canvas Minimal',
       description: 'Clean minimal geometric art',
+      default: false,
+      enabled: true
+    });
+    
+    this.registerProvider(new P5MandalaProvider(), {
+      id: 'p5-mandala',
+      name: 'P5.js Mandala Art',
+      description: 'Sacred geometry mandalas with increasing symmetry',
       default: false,
       enabled: true
     });

@@ -1,4 +1,4 @@
-import { HashArtProvider, HashArtRenderParams } from './types';
+import { HashArtProvider, HashArtRenderParams } from '../types';
 
 export class P5GenerativeProvider implements HashArtProvider {
   id = 'p5-generative';

@@ -1,4 +1,4 @@
-import { HashArtProvider, HashArtRenderParams } from "./types";
+import { HashArtProvider, HashArtRenderParams } from "../types";
 
 export class CanvasMinimalProvider implements HashArtProvider {
   id = "canvas-minimal";
