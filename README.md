@@ -20,3 +20,11 @@ todo:
 - [ ] support embeddable one line script to integrate into html page
 - [ ] support adding attachment files with the letter(useful to transfer files)
 - [ ] support mailing list (seems easy, just treat the list group as a user, the user(controlled by the list admin) publish kind 0 contains all the users's pubkey, the nip65 relay list contains the most in-common relays among the users)
+
+[![Contact via PingKey](
+  https://img.shields.io/badge/Contact-via-PingKey-9ccbff
+    ?style=flat
+    &labelColor=222
+    &logo=data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgNDAgNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHJlY3QgeD0iMSIgeT0iMSIgd2lkdGg9IjM4IiBoZWlnaHQ9IjM4IiByeD0iNCIgZmlsbD0iI2ZmZmZmZiIvPgogIDxyZWN0IHg9IjEiIHk9IjEiIHdpZHRoPSIzOCIgaGVpZ2h0PSIzOCIgcng9IjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzlDQ0JGRiIgc3Ryb2tlLWRhc2hhcnJheT0iMiAyIi8+CiAgPGNpcmNsZSBjeD0iMTQiIGN5PSIxNSIgcj0iMyIgZmlsbD0iIzExMSIvPgogIDxjaXJjbGUgY3g9IjI2IiBjeT0iMTUiIHI9IjMiIGZpbGw9IiMxMTEiLz4KICA8cGF0aCBkPSJNMTIgMjUgcTggNiAxNiAwIiBzdHJva2U9IiMxMTEiIHN0cm9rZS13aWR0aD0iMiIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo=
+    &logoWidth=20
+)](https://pingkey.xyz)
