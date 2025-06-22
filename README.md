@@ -2,6 +2,8 @@
 
 Not a chat. Just a worry-free way to let people reach you, without any signup, no account, no login.
 
+[![Encrypt Contact via PingKey](https://img.shields.io/badge/Leave%20a%20encrypted%20message%20via-PingKey-9ccbff?style=flat&labelColor=222&logo=data:image/svg%2bxml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgNDAgNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3QgeD0iMSIgeT0iMSIgd2lkdGg9IjM4IiBoZWlnaHQ9IjM4IiByeD0iNCIgZmlsbD0iI2ZmZmZmZiIvPjxyZWN0IHg9IjEiIHk9IjEiIHdpZHRoPSIzOCIgaGVpZ2h0PSIzOCIgcng9IjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzlDQ0JGRiIgc3Ryb2tlLWRhc2hhcnJheT0iMiAyIi8+PGNpcmNsZSBjeD0iMTQiIGN5PSIxNSIgcj0iMyIgZmlsbD0iIzExMSIvPjxjaXJjbGUgY3g9IjI2IiBjeT0iMTUiIHI9IjMiIGZpbGw9IiMxMTEiLz48cGF0aCBkPSJNMTIgMjUgcTggNiAxNiAwIiBzdHJva2U9IiMxMTEiIHN0cm9rZS13aWR0aD0iMiIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+&logoWidth=20)](https://pingkey.xyz/p/87b915fff950d6683f449edb8d283c04ac789c506daf49dbdbd97b344e5db383)
+
 todo:
 
 - [x] fix the no-relay-list re-rendering bug in mailbox page
@@ -20,11 +22,3 @@ todo:
 - [ ] support embeddable one line script to integrate into html page
 - [ ] support adding attachment files with the letter(useful to transfer files)
 - [ ] support mailing list (seems easy, just treat the list group as a user, the user(controlled by the list admin) publish kind 0 contains all the users's pubkey, the nip65 relay list contains the most in-common relays among the users)
-
-[![Contact via PingKey](
-  https://img.shields.io/badge/Contact-via-PingKey-9ccbff
-    ?style=flat
-    &labelColor=222
-    &logo=data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgNDAgNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHJlY3QgeD0iMSIgeT0iMSIgd2lkdGg9IjM4IiBoZWlnaHQ9IjM4IiByeD0iNCIgZmlsbD0iI2ZmZmZmZiIvPgogIDxyZWN0IHg9IjEiIHk9IjEiIHdpZHRoPSIzOCIgaGVpZ2h0PSIzOCIgcng9IjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzlDQ0JGRiIgc3Ryb2tlLWRhc2hhcnJheT0iMiAyIi8+CiAgPGNpcmNsZSBjeD0iMTQiIGN5PSIxNSIgcj0iMyIgZmlsbD0iIzExMSIvPgogIDxjaXJjbGUgY3g9IjI2IiBjeT0iMTUiIHI9IjMiIGZpbGw9IiMxMTEiLz4KICA8cGF0aCBkPSJNMTIgMjUgcTggNiAxNiAwIiBzdHJva2U9IiMxMTEiIHN0cm9rZS13aWR0aD0iMiIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo=
-    &logoWidth=20
-)](https://pingkey.xyz)
