@@ -5,6 +5,7 @@ import { getPow } from "nostr-tools/nip13";
 import { Stamp } from "../stamp/stamp";
 import { DecryptedLetter } from "app/hooks/useDecryptedLettersCache";
 import { Event } from "nostr-tools/core";
+import { useState, useRef, useEffect } from "react";
 
 interface CachedLetterCardProps {
   letter: {
@@ -24,6 +25,21 @@ export function CachedLetterCard({
   cachedContent,
   onInteraction,
 }: CachedLetterCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [showExpandButton, setShowExpandButton] = useState(false);
+  const contentRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    if (contentRef.current) {
+      // Check if content is longer than 4 lines (approximately)
+      const lineHeight = parseInt(
+        getComputedStyle(contentRef.current).lineHeight
+      );
+      const maxHeight = lineHeight * 4; // 4 lines
+      setShowExpandButton(contentRef.current.scrollHeight > maxHeight);
+    }
+  }, [cachedContent.content]);
+
   return (
     <div className="group relative bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-3 sm:p-6 transition-all duration-200 hover:shadow-md hover:border-neutral-300 dark:hover:border-neutral-700 overflow-hidden">
       {/* Floating Stamp in top-left corner */}
@@ -61,9 +77,29 @@ export function CachedLetterCard({
         {/* Decrypted content */}
         <div className="ml-6 sm:ml-8 bg-neutral-50/50 dark:bg-neutral-800/20 rounded-lg p-3 sm:p-4 border border-neutral-100 dark:border-neutral-800/50 overflow-hidden">
           <div className="prose prose-sm dark:prose-invert max-w-none">
-            <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed whitespace-pre-wrap text-sm break-words overflow-wrap-anywhere">
+            <p
+              ref={contentRef}
+              className="text-neutral-700 dark:text-neutral-300 leading-relaxed whitespace-pre-wrap text-sm break-words overflow-wrap-anywhere transition-all duration-300"
+              style={{
+                display:
+                  !isExpanded && showExpandButton ? "-webkit-box" : "block",
+                WebkitLineClamp: !isExpanded && showExpandButton ? 4 : "unset",
+                WebkitBoxOrient:
+                  !isExpanded && showExpandButton ? "vertical" : "unset",
+                overflow:
+                  !isExpanded && showExpandButton ? "hidden" : "visible",
+              }}
+            >
               {cachedContent.content}
             </p>
+            {showExpandButton && (
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="mt-2 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium transition-colors"
+              >
+                {isExpanded ? "收起" : "展开"}
+              </button>
+            )}
           </div>
         </div>
 
