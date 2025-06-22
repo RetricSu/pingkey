@@ -24,15 +24,21 @@ function MailBox() {
   const [powThreshold, setPowThreshold] = useState(16);
   const [showStampWall, setShowStampWall] = useState(false);
   const { relayList, isLoading: isRelayListLoading } = useUserRelayList();
-  
+
   // Cache management
-  const { isLetterCached, getCachedLetter, updateLastAccessed, reloadCache, cacheCount } = useDecryptedLettersCache();
-  
+  const {
+    isLetterCached,
+    getCachedLetter,
+    updateLastAccessed,
+    reloadCache,
+    cacheCount,
+  } = useDecryptedLettersCache();
+
   // Force re-render when cache updates
   const [refreshKey, setRefreshKey] = useState(0);
   const refreshMailbox = useCallback(() => {
     reloadCache(); // Force reload cache from localStorage
-    setRefreshKey(prev => prev + 1);
+    setRefreshKey((prev) => prev + 1);
   }, [refreshKey, reloadCache]);
 
   const fetchGiftWrappedNotes = useCallback(async () => {
@@ -127,11 +133,6 @@ function MailBox() {
             {totalCount === 0
               ? "No letters yet"
               : `${totalCount} total letters`}
-            {unreadCount > 0 && (
-              <span className="ml-2 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-medium rounded-full">
-                {unreadCount} unread
-              </span>
-            )}
             {cacheCount > 0 && (
               <span className="ml-2 px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-medium rounded-full">
                 {cacheCount} decrypted
@@ -231,18 +232,18 @@ function MailBox() {
             .map((letter) => {
               const cachedContent = getCachedLetter(letter.id);
               const isCached = isLetterCached(letter.id);
-              
+
               return isCached && cachedContent ? (
-                <CachedLetterCard 
-                  key={`${letter.id}-${refreshKey}`} 
-                  letter={letter} 
+                <CachedLetterCard
+                  key={`${letter.id}-${refreshKey}`}
+                  letter={letter}
                   cachedContent={cachedContent}
                   onInteraction={() => updateLastAccessed(letter.id)}
                 />
               ) : (
-                <LetterCard 
-                  key={`${letter.id}-${refreshKey}`} 
-                  letter={letter} 
+                <LetterCard
+                  key={`${letter.id}-${refreshKey}`}
+                  letter={letter}
                   onCacheUpdate={refreshMailbox}
                 />
               );
