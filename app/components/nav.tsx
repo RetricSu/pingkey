@@ -4,8 +4,7 @@ import { SignIn } from "./sign-in";
 
 const navItems = {
   "/": { name: "Home" },
-  "/blog": { name: "Blog" },
-  "/mailbox": { name: "Mailbox" },
+  "/blog/getting-started": { name: "Get Started" },
 };
 
 export function Navbar() {

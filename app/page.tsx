@@ -1,14 +1,7 @@
-"use client";
-
 import Link from "next/link";
-import { useAuth } from "./contexts/auth";
-import { useUserProfile } from "./hooks/useUserProfile";
 import Image from "next/image";
 
 export default function Page() {
-  const { isSignedIn } = useAuth();
-  const { profile } = useUserProfile();
-
   return (
     <section className="max-w-2xl mx-auto">
       {/* Hero Section */}
@@ -131,6 +124,15 @@ export default function Page() {
               </p>
             </div>
           </div>
+        </div>
+
+        <div className="mb-16 flex justify-center">
+          <Link
+            href="/signin"
+            className="inline-block px-8 py-4 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors duration-200 shadow-lg hover:shadow-xl font-medium text-lg"
+          >
+            Create Your PingKey
+          </Link>
         </div>
       </div>
     </section>
