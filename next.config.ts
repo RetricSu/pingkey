@@ -2,6 +2,13 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Enable experimental features for better caching
+  experimental: {
+    staleTimes: {
+      dynamic: 30, // 30 seconds for dynamic routes
+      static: 180, // 3 minutes for static routes
+    },
+  },
   webpack: (config, { isServer }) => {
     // Handle QR scanner dependencies
     if (!isServer) {
