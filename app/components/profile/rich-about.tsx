@@ -252,7 +252,6 @@ export function RichAbout({ text, className = "" }: RichAboutProps) {
   };
 
   const parsedElements = parseText(text);
-  console.log(parsedElements);
 
   return <div className={className}>{parsedElements.map(renderElement)}</div>;
 }

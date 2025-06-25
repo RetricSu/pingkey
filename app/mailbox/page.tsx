@@ -132,12 +132,7 @@ function MailBox() {
           <p className="text-neutral-600 dark:text-neutral-400 text-sm">
             {totalCount === 0
               ? "No letters yet"
-              : `${totalCount} total letters`}
-            {cacheCount > 0 && (
-              <span className="ml-2 px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-medium rounded-full">
-                {cacheCount} decrypted
-              </span>
-            )}
+              : `${cacheCount} / ${totalCount}`}
           </p>
         </div>
 
