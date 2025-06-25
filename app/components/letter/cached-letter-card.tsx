@@ -82,15 +82,13 @@ export function CachedLetterCard({
           <div className="prose prose-sm dark:prose-invert max-w-none overflow-hidden">
             <p
               ref={contentRef}
-              className="text-neutral-700 dark:text-neutral-300 leading-relaxed whitespace-pre-wrap text-sm break-words overflow-wrap-anywhere transition-all duration-300"
+              className={`text-neutral-700 dark:text-neutral-300 leading-relaxed whitespace-pre-wrap text-sm break-all overflow-wrap-anywhere transition-all duration-300 ${
+                !isExpanded && showExpandButton ? "line-clamp-4" : ""
+              }`}
               style={{
-                display:
-                  !isExpanded && showExpandButton ? "-webkit-box" : "block",
-                WebkitLineClamp: !isExpanded && showExpandButton ? 4 : "unset",
-                WebkitBoxOrient:
-                  !isExpanded && showExpandButton ? "vertical" : "unset",
-                overflow:
-                  !isExpanded && showExpandButton ? "hidden" : "visible",
+                wordBreak: "break-all",
+                overflowWrap: "anywhere",
+                hyphens: "auto",
               }}
             >
               {cachedContent.content}
