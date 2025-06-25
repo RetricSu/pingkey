@@ -32,18 +32,26 @@ export function ClientProfile({
   const [profile, setProfile] = useState<Profile>(initialProfile);
   const [relayList, setRelayList] = useState<RelayListItem[]>(initialRelayList);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isFetchingFresh, setIsFetchingFresh] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const { success } = useNotification();
 
   // Check if this is the current user's own profile
   const isOwnProfile = isSignedIn && pubkey === slug;
 
-  // Refresh data from client if server data is stale or missing
+  // Always check for fresh data from client, but don't show loading if we have server data
   useEffect(() => {
-    if (!nostr || hasServerData) return;
+    if (!nostr) return;
 
     async function refreshData() {
-      setIsRefreshing(true);
+      // Only show loading spinner if we don't have server data
+      if (!hasServerData) {
+        setIsRefreshing(true);
+      } else {
+        // Show subtle indicator when fetching fresh data in background
+        setIsFetchingFresh(true);
+      }
+
       try {
         const [nostrProfile, relays] = await Promise.all([
           nostr?.fetchProfile(slug),
@@ -51,26 +59,50 @@ export function ClientProfile({
         ]);
 
         if (nostrProfile) {
-          setProfile({
+          const freshProfile = {
             name: nostrProfile.name || defaultProfile.name,
             picture: nostrProfile.picture || defaultProfile.picture,
             about: nostrProfile.about || defaultProfile.about,
             nip05: nostrProfile.nip05,
             lud16: nostrProfile.lud16,
             website: nostrProfile.website,
+          };
+
+          // Only update if data actually changed (to avoid unnecessary re-renders)
+          setProfile(prev => {
+            if (JSON.stringify(prev) !== JSON.stringify(freshProfile)) {
+              console.log('🔄 Updated profile with fresh data from client');
+              return freshProfile;
+            }
+            return prev;
           });
         }
         
-        setRelayList(relays || []);
+        // Update relay list if different
+        setRelayList(prev => {
+          const freshRelays = relays || [];
+          if (JSON.stringify(prev) !== JSON.stringify(freshRelays)) {
+            console.log('🔄 Updated relay list with fresh data from client');
+            return freshRelays;
+          }
+          return prev;
+        });
+
       } catch (err) {
-        setProfileError("Failed to fetch profile");
-        console.error("Error fetching profile:", err);
+        // Only set error if we don't have server data to fall back to
+        if (!hasServerData) {
+          setProfileError("Failed to fetch profile");
+        }
+        console.error("Error fetching fresh profile data:", err);
       } finally {
         setIsRefreshing(false);
+        setIsFetchingFresh(false);
       }
     }
 
-    refreshData();
+    // Small delay to let server data render first, then fetch fresh data
+    const timeoutId = setTimeout(refreshData, hasServerData ? 100 : 0);
+    return () => clearTimeout(timeoutId);
   }, [nostr, slug, hasServerData]);
 
   const handleOpenSettingsModal = async () => {
@@ -133,6 +165,16 @@ export function ClientProfile({
           <div className="text-sm text-blue-600 dark:text-blue-400 flex items-center gap-2">
             <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 dark:border-blue-400" />
             Refreshing profile data...
+          </div>
+        </div>
+      )}
+
+      {/* Subtle indicator when fetching fresh data in background */}
+      {isFetchingFresh && (
+        <div className="fixed top-4 right-4 z-50 bg-green-50 dark:bg-green-950/50 border border-green-200 dark:border-green-800 rounded-lg px-3 py-2 shadow-lg">
+          <div className="text-sm text-green-600 dark:text-green-400 flex items-center gap-2">
+            <div className="animate-pulse rounded-full h-2 w-2 bg-green-500" />
+            Checking for updates...
           </div>
         </div>
       )}
