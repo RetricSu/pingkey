@@ -14,6 +14,7 @@ import { POW_CONFIG } from "app/lib/config";
 import { buildGeneratedStampDialog } from "../stamp/mint-stamp";
 import { prompt } from "../dialog";
 import { useUserProfile } from "app/hooks/useUserProfile";
+import { PowAdjustment } from "../pow-adjustment";
 
 interface MessageSenderProps {
   slug: string;
@@ -190,31 +191,18 @@ export function MessageSender({
 
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
         <div className="flex items-center gap-3">
-          <div className="flex items-center bg-gray-50 dark:bg-gray-800 rounded-lg px-3 py-2 border border-gray-200 dark:border-gray-700">
-            <span className="text-xs font-medium text-gray-600 dark:text-gray-400 mr-2">
-              POW
-            </span>
-            <input
-              id="pow-difficulty"
-              type="number"
-              min="1"
-              max="64"
-              value={powDifficulty}
-              onChange={(e) =>
-                setPowDifficulty(
-                  parseInt(e.target.value) || POW_CONFIG.default_difficulty
-                )
-              }
-              className="w-12 bg-transparent text-sm text-gray-900 dark:text-gray-100 focus:outline-none text-center font-mono"
-            />
-          </div>
+          <PowAdjustment
+            powDifficulty={powDifficulty}
+            setPowDifficulty={setPowDifficulty}
+            disabled={isSending || isMining}
+          />
 
           <button
             onClick={handleSendMessage}
             disabled={
               isSending || isMining || !message.trim() || relayList.length === 0
             }
-            className="px-6 py-2 bg-gray-900 dark:bg-gray-100 text-sm text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-3 bg-gray-900 dark:bg-gray-100 text-sm text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isMining
               ? "Mining POW..."
