@@ -3,6 +3,9 @@ import { getBlogPosts } from "app/lib/posts";
 import { metaData } from "app/lib/config";
 import { NextResponse } from "next/server";
 
+// Revalidate every hour (3600 seconds)
+export const revalidate = 3600;
+
 export async function generateStaticParams() {
   return [
     { format: "rss.xml" },
@@ -78,6 +81,9 @@ export async function GET(
   return new NextResponse(response.content, {
     headers: {
       "Content-Type": response.contentType,
+      "Cache-Control": "public, max-age=3600, s-maxage=7200", // Cache for 1 hour, CDN for 2 hours
+      "CDN-Cache-Control": "public, max-age=7200", // Cache on CDN for 2 hours
+      "Vercel-CDN-Cache-Control": "public, max-age=7200", // Vercel-specific CDN caching
     },
   });
 }

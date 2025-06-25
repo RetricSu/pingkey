@@ -1,19 +1,9 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import Image from "next/image";
-import { useNostr } from "../../contexts/nostr";
-import { useAuth } from "../../contexts/auth";
+import { getCachedNostrProfile, getCachedRelayList } from "../../lib/nostr-server";
 import { defaultProfile } from "app/lib/config";
 import { Profile, RelayListItem } from "app/lib/type";
-import { MessageSender } from "../../components/profile/message-sender";
+import { ClientProfile } from "./client-profile";
+import { Suspense } from "react";
 import { Loader } from "../../components/loader";
-import { RichAbout } from "../../components/profile/rich-about";
-import { ProfileActions } from "../../components/profile/profile-actions";
-import { RelayList } from "../../components/profile/relay-list";
-import { custom } from "../../components/dialog";
-import { SettingsModal } from "../../components/profile/settings-modal";
-import { useNotification } from "app/contexts/notification";
 
 interface PageProps {
   params: Promise<{
@@ -21,163 +11,55 @@ interface PageProps {
   }>;
 }
 
-export default function DynamicPage({ params }: PageProps) {
-  const { nostr } = useNostr();
-  const { isSignedIn, pubkey } = useAuth();
-  const [slug, setSlug] = useState<string>("");
-  const [profile, setProfile] = useState<Profile>(defaultProfile);
-  const [isLoading, setIsLoading] = useState(true);
-  const [profileError, setProfileError] = useState<string | null>(null);
-  const [relayList, setRelayList] = useState<RelayListItem[]>([]);
-  const { success } = useNotification();
+// This is now a Server Component that pre-fetches data
+export default async function ProfilePage({ params }: PageProps) {
+  const { slug } = await params;
 
-  // Check if this is the current user's own profile
-  const isOwnProfile = isSignedIn && pubkey === slug;
+  // Pre-fetch data server-side for better initial load
+  const [initialProfile, initialRelayList] = await Promise.allSettled([
+    getCachedNostrProfile(slug),
+    getCachedRelayList([slug]),
+  ]);
 
-  // Resolve async params
-  useEffect(() => {
-    async function resolveParams() {
-      const resolvedParams = await params;
-      setSlug(resolvedParams.slug);
-    }
-    resolveParams();
-  }, [params]);
-
-  useEffect(() => {
-    if (!slug) return; // Don't run until slug is resolved
-
-    async function fetchProfile() {
-      if (!nostr) return;
-
-      try {
-        const nostrProfile = await nostr.fetchProfile(slug);
-        if (nostrProfile) {
-          setProfile({
-            name: nostrProfile.name || defaultProfile.name,
-            picture: nostrProfile.picture || defaultProfile.picture,
-            about: nostrProfile.about || defaultProfile.about,
-          });
+  const serverProfile: Profile = 
+    initialProfile.status === "fulfilled" && initialProfile.value 
+      ? {
+          name: initialProfile.value.name || defaultProfile.name,
+          picture: initialProfile.value.picture || defaultProfile.picture,
+          about: initialProfile.value.about || defaultProfile.about,
+          nip05: initialProfile.value.nip05,
+          lud16: initialProfile.value.lud16,
+          website: initialProfile.value.website,
         }
-      } catch (err) {
-        setProfileError("Failed to fetch profile");
-        console.error("Error fetching profile:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    async function fetchRelayList() {
-      if (!nostr) return;
+      : defaultProfile;
 
-      try {
-        const relays = await nostr.fetchNip65RelayList([slug]);
-        setRelayList(relays);
-      } catch (err) {
-        console.error("Error fetching relay list:", err);
-      }
-    }
+  const serverRelayList: RelayListItem[] = 
+    initialRelayList.status === "fulfilled" 
+      ? initialRelayList.value 
+      : [];
 
-    fetchProfile();
-    fetchRelayList();
-  }, [nostr, slug]);
-
-  const handleOpenSettingsModal = async () => {
-    if (!nostr || !pubkey) return;
-
-    const handleSaveProfile = async (updatedProfile: Profile) => {
-      const result = await nostr.publishProfile(updatedProfile);
-      if (!result) {
-        throw new Error("Failed to update profile");
-      }
-      success("Profile updated successfully");
-      setProfile(updatedProfile);
-    };
-
-    const handleSaveRelays = async (updatedRelayList: RelayListItem[]) => {
-      const result = await nostr.publishNip65RelayListEvent(updatedRelayList);
-      if (!result) {
-        throw new Error("Failed to update relay list");
-      }
-      success("Relays updated successfully");
-      setRelayList(updatedRelayList);
-    };
-
-    try {
-      await custom(
-        (props) => (
-          <SettingsModal
-            {...props}
-            profile={profile}
-            relayList={relayList}
-            onSaveProfile={handleSaveProfile}
-            onSaveRelays={handleSaveRelays}
-          />
-        ),
-        {
-          maxWidth: "2xl",
-          closeOnBackdrop: false,
-        }
-      );
-    } catch (error) {
-      // User closed the modal, no action needed
-    }
-  };
-
-  if (isLoading) {
-    return <Loader message="Loading profile..." />;
-  }
-
-  if (profileError) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-sm text-red-600 dark:text-red-400">
-          {profileError}
-        </div>
-      </div>
-    );
-  }
+  const hasServerData = initialProfile.status === "fulfilled" && initialProfile.value !== null;
 
   return (
     <div>
-      <section>
-        <div className="mb-8">
-          <Image
-            src={profile.picture || defaultProfile.picture || ""}
-            alt={profile.name || "Profile photo"}
-            className="rounded-full bg-gray-100 block lg:mt-5 mt-0 lg:mb-5 mb-10 mx-auto sm:float-right sm:ml-5 sm:mb-5"
-            unoptimized
-            width={160}
-            height={160}
-            priority
-          />
-          <h1 className="mb-8 text-2xl font-medium capitalize md:text-left text-center">
-            {profile.name || slug}
-          </h1>
-        </div>
-
-        <div className="prose prose-neutral dark:prose-invert whitespace-pre-wrap leading-relaxed">
-          <RichAbout text={profile.about || ""} className="" />
-        </div>
-
-        <ProfileActions
+      <Suspense fallback={<Loader message="Loading profile..." />}>
+        <ClientProfile 
           slug={slug}
-          profile={profile}
-          relayList={relayList}
-          isOwnProfile={isOwnProfile}
-          onEditProfile={handleOpenSettingsModal}
+          initialProfile={serverProfile}
+          initialRelayList={serverRelayList}
+          hasServerData={hasServerData}
         />
-
-        <div className="mt-16">
-          <RelayList
-            relayList={relayList}
-            title={`${profile.name || slug}'s Relays`}
-          />
-          <MessageSender
-            slug={slug}
-            profileName={profile.name}
-            relayList={relayList}
-          />
-        </div>
-      </section>
+      </Suspense>
     </div>
   );
 }
+
+// Generate static params for known profiles if needed
+export async function generateStaticParams() {
+  // You could pre-generate for known popular profiles
+  // For now, we'll let them be generated on-demand
+  return [];
+}
+
+// Enable ISR (Incremental Static Regeneration)
+export const revalidate = 300; // Revalidate every 5 minutes

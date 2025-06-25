@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { cache } from "react";
 
 type Metadata = {
   title: string;
@@ -50,9 +51,9 @@ function getMDXData(dir: string) {
   });
 }
 
-export function getBlogPosts() {
+export const getBlogPosts = cache(() => {
   return getMDXData(path.join(process.cwd(), "content"));
-}
+});
 
 export function formatDate(date: number | string, includeRelative = false) {
   let currentDate = new Date();
