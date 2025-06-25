@@ -51,10 +51,6 @@ export function CachedLetterCard({
       <div className="flex items-start justify-between mb-4 sm:mb-6 ml-6 sm:ml-8">
         <div className="flex items-center gap-2 sm:gap-3">
           <div className="flex items-center gap-2 sm:gap-3 text-xs text-neutral-500 dark:text-neutral-400">
-            <span className="text-xs font-medium">
-              From {cachedContent.from.slice(0, 8)}...
-              {cachedContent.from.slice(-4)}
-            </span>
             <span>POW: {getPow(letter.fullNote.id)}</span>
           </div>
         </div>
@@ -65,11 +61,14 @@ export function CachedLetterCard({
 
       {/* Letter content */}
       <div className="space-y-4">
+        <div className="ml-6 sm:ml-8 text-xs font-medium">
+          From {cachedContent.from}
+        </div>
         {/* Subject if available */}
         {cachedContent.subject && (
           <div className="ml-6 sm:ml-8">
             <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 mb-2 break-words">
-              Subject: {cachedContent.subject}
+              {cachedContent.subject}
             </h3>
           </div>
         )}
