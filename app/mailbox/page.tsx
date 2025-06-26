@@ -174,24 +174,6 @@ function MailBox() {
             </button>
           )}
         </div>
-
-        <div className="flex items-center justify-start sm:justify-end text-xs">
-          <label
-            htmlFor="powThreshold"
-            className="mr-2 text-neutral-600 dark:text-neutral-400"
-          >
-            Filter POW {">= "}
-          </label>
-          <input
-            id="powThreshold"
-            type="number"
-            min="1"
-            max="64"
-            value={powThreshold}
-            onChange={(e) => setPowThreshold(parseInt(e.target.value) || 16)}
-            className="w-16 px-2 py-1 text-xs border border-neutral-300 dark:border-neutral-600 rounded bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-1 focus:ring-neutral-400 dark:focus:ring-neutral-500"
-          />
-        </div>
       </div>
 
       {/* Content - Letters or Stamp Wall */}
