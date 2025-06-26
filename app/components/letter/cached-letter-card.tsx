@@ -62,7 +62,7 @@ export function CachedLetterCard({
 
       {/* Letter content */}
       <div className="space-y-4">
-        <div className="ml-6 sm:ml-8 text-xs font-medium">
+        <div className="text-xs font-medium mt-0 sm:mt-10">
           <CopyButton value={cachedContent.from}>
             From {cachedContent.from.slice(0, 8)}...
             {cachedContent.from.slice(-4)}
@@ -70,7 +70,7 @@ export function CachedLetterCard({
         </div>
         {/* Subject if available */}
         {cachedContent.subject && (
-          <div className="ml-6 sm:ml-8">
+          <div className="">
             <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 mb-2 break-words">
               {cachedContent.subject}
             </h3>
@@ -78,7 +78,7 @@ export function CachedLetterCard({
         )}
 
         {/* Decrypted content */}
-        <div className="ml-6 sm:ml-8 bg-neutral-50/50 dark:bg-neutral-800/20 rounded-lg p-3 sm:p-4 border border-neutral-100 dark:border-neutral-800/50">
+        <div className="bg-neutral-50/50 dark:bg-neutral-800/20 rounded-lg p-3 sm:p-4 border border-neutral-100 dark:border-neutral-800/50">
           <div className="prose prose-sm dark:prose-invert max-w-none overflow-hidden">
             <p
               ref={contentRef}
@@ -105,7 +105,7 @@ export function CachedLetterCard({
         </div>
 
         {/* Footer with metadata */}
-        <div className="ml-6 sm:ml-8 pt-3">
+        <div className=" pt-3">
           <div className="flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400">
             <button
               onClick={() => {
