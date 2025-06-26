@@ -110,11 +110,11 @@ function MailBox() {
 
   const getButtonClassName = (filterType: FilterType) => {
     const baseClasses =
-      "px-3 py-1.5 text-sm font-medium rounded-md transition-colors";
+      "px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200";
     const activeClasses =
-      "text-neutral-900 dark:text-neutral-100 bg-neutral-100 dark:bg-neutral-800";
+      "text-neutral-900 dark:text-neutral-100 bg-neutral-100 dark:bg-neutral-800 shadow-sm";
     const inactiveClasses =
-      "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100";
+      "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-800/50";
 
     // When stamp wall is showing, no filter buttons should appear active
     const isActive = !showStampWall && currentFilter === filterType;
@@ -122,36 +122,47 @@ function MailBox() {
   };
 
   return (
-    <section className="space-y-8">
+    <section className="max-w-2xl mx-auto space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
-            Mailbox
-          </h1>
-          <p className="text-neutral-600 dark:text-neutral-400 text-sm">
-            {totalCount === 0
-              ? "No letters yet"
-              : `${cacheCount} / ${totalCount}`}
-          </p>
-        </div>
+      <div className="text-center space-y-2">
+        <h1 className="text-2xl font-light tracking-tight text-neutral-900 dark:text-neutral-100">
+          Mailbox
+        </h1>
+        <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
+          {totalCount === 0
+            ? "Your encrypted letters will appear here"
+            : `${cacheCount} decrypted of ${totalCount} letters`}
+        </p>
+      </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-3">
-          <button
-            className="cursor-pointer px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-sm font-medium rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors"
-            onClick={() => {
-              window.location.href = "/compose";
-            }}
+      {/* Actions */}
+      <div className="flex justify-center">
+        <button
+          className="inline-flex items-center gap-2 px-6 py-3 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 font-medium rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors duration-200 shadow-lg hover:shadow-xl"
+          onClick={() => {
+            window.location.href = "/compose";
+          }}
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
           >
-            Compose
-          </button>
-        </div>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+          Compose Letter
+        </button>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 pb-4 border-b border-neutral-200 dark:border-neutral-800">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="border-b border-neutral-200 dark:border-neutral-700 pb-6">
+        <div className="flex flex-wrap justify-center gap-2">
           <button
             className={getButtonClassName("all")}
             onClick={() => {
@@ -159,18 +170,18 @@ function MailBox() {
               setShowStampWall(false);
             }}
           >
-            Received ({totalCount})
+            All Letters ({totalCount})
           </button>
           {stampEventIds.length > 0 && (
             <button
-              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
                 showStampWall
-                  ? "text-neutral-900 dark:text-neutral-100 bg-neutral-100 dark:bg-neutral-800"
-                  : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
+                  ? "text-neutral-900 dark:text-neutral-100 bg-neutral-100 dark:bg-neutral-800 shadow-sm"
+                  : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-800/50"
               }`}
               onClick={() => setShowStampWall(!showStampWall)}
             >
-              Collected Stamps ({stampEventIds.length})
+              Stamp Collection ({stampEventIds.length})
             </button>
           )}
         </div>
@@ -178,13 +189,13 @@ function MailBox() {
 
       {/* Content - Letters or Stamp Wall */}
       {showStampWall ? (
-        <div>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
-              POW Stamp Collection
+        <div className="space-y-8">
+          <div className="text-center space-y-2">
+            <h2 className="text-xl font-light tracking-tight text-neutral-900 dark:text-neutral-100">
+              Your POW Stamp Collection
             </h2>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">
-              {stampEventIds.length} stamps collected
+            <p className="text-neutral-600 dark:text-neutral-400">
+              {stampEventIds.length} unique stamps collected from your letters
             </p>
           </div>
           <StampWall
@@ -194,7 +205,7 @@ function MailBox() {
           />
         </div>
       ) : filteredLetters.length > 0 ? (
-        <div className="grid gap-4">
+        <div className="space-y-6">
           {filteredLetters
             .sort((a, b) => {
               // Sort unread first, then by date
@@ -227,10 +238,10 @@ function MailBox() {
             })}
         </div>
       ) : (
-        <div className="text-center py-16">
-          <div className="w-16 h-16 mx-auto mb-4 bg-neutral-100 dark:bg-neutral-800 rounded-full flex items-center justify-center">
+        <div className="text-center py-16 space-y-6">
+          <div className="w-24 h-24 mx-auto bg-neutral-100 dark:bg-neutral-800 rounded-full flex items-center justify-center">
             <svg
-              className="w-8 h-8 text-neutral-400"
+              className="w-12 h-12 text-neutral-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -238,27 +249,34 @@ function MailBox() {
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={2}
+                strokeWidth={1.5}
                 d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
               />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-2">
-            {currentFilter === "all"
-              ? `No letters with POW ≥ ${powThreshold}`
-              : currentFilter === "unread"
-              ? "No unread letters"
-              : "No read letters"}
-          </h3>
-          <p className="text-neutral-500 dark:text-neutral-400 mb-6">
-            {currentFilter === "all"
-              ? `No letters found with POW difficulty ${powThreshold} or higher. Try lowering the POW threshold.`
-              : currentFilter === "unread"
-              ? "All your letters have been read!"
-              : "No letters have been read yet."}
-          </p>
+          <div className="space-y-3">
+            <h3 className="text-lg font-light text-neutral-900 dark:text-neutral-100">
+              {currentFilter === "all"
+                ? `No letters with POW ≥ ${powThreshold}`
+                : currentFilter === "unread"
+                ? "No unread letters"
+                : "No read letters"}
+            </h3>
+            <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed max-w-md mx-auto">
+              {currentFilter === "all"
+                ? `Letters with POW difficulty ${powThreshold} or higher will appear here. Try lowering the POW threshold to see more letters.`
+                : currentFilter === "unread"
+                ? "All your letters have been read! New encrypted letters will appear here."
+                : "Letters you've read will appear here once you start decrypting them."}
+            </p>
+          </div>
           {currentFilter === "all" && (
-            <button className="px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-sm font-medium rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors">
+            <button
+              className="inline-block px-6 py-3 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 font-medium rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors duration-200 shadow-lg hover:shadow-xl"
+              onClick={() => {
+                window.location.href = "/p/" + pubkey;
+              }}
+            >
               Share your profile
             </button>
           )}
