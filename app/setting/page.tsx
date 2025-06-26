@@ -11,6 +11,7 @@ import { alert, confirm } from "app/components/dialog";
 import { useDecryptedLettersCache } from "app/hooks/useDecryptedLettersCache";
 import { useNotification } from "app/contexts/notification";
 import { withAuth } from "app/components/auth/with-auth";
+import { ConnectWeb5 } from "app/components/connect-web5";
 
 function SettingPage() {
   const [
@@ -101,6 +102,9 @@ Are you sure you want to continue?`,
 
   return (
     <div className="space-y-6">
+      {/* Web5 DID Connection Section */}
+      <ConnectWeb5 />
+
       {/* Cache Management Section */}
       <div className="bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-lg p-6">
         <div className="flex items-center justify-between mb-6">
