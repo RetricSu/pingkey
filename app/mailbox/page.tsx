@@ -122,7 +122,7 @@ function MailBox() {
   };
 
   return (
-    <section className="max-w-2xl mx-auto space-y-8">
+    <section className="space-y-8">
       {/* Header */}
       <div className="text-center space-y-2">
         <h1 className="text-2xl font-light tracking-tight text-neutral-900 dark:text-neutral-100">
