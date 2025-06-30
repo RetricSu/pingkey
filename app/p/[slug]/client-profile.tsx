@@ -210,6 +210,8 @@ export function ClientProfile({
         <RelayList
           relayList={relayList}
           title={`${profile.name || slug}'s Relays`}
+          enableConnectivityCheck={true}
+          checkOnMount={true}
         />
         <MessageSender
           slug={slug}

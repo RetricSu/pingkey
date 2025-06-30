@@ -65,9 +65,18 @@ export class Nostr {
     return nip44.decrypt(payload, conversationKey);
   }
 
-  async publishEventToRelays(event: Event, relays: string[]): Promise<void> {
-    const promises = relays.map((relay) => this.pool.publish([relay], event));
-    await Promise.allSettled(promises);
+  async publishEventToRelays(
+    event: Event,
+    relays: string[]
+  ): Promise<{ relay: string; result: string | null }[]> {
+    const r = await this.pool.publish(relays, event);
+    const res = await Promise.all(r);
+    return relays.map((r, index) => {
+      return {
+        relay: r,
+        result: res[index],
+      };
+    });
   }
 
   async signToPublishEvent(
@@ -302,6 +311,77 @@ export class Nostr {
 
   destroy(): void {
     this.pool.close(loadBigRelays());
+  }
+
+  /**
+   * Check connectivity to a single relay with a short timeout
+   */
+  async checkRelayConnectivity(relayUrl: string, timeoutMs: number = 5000): Promise<boolean> {
+    return new Promise((resolve) => {
+      let ws: WebSocket;
+      let resolved = false;
+      
+      const cleanup = () => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.close();
+        }
+      };
+
+      const resolveOnce = (result: boolean) => {
+        if (!resolved) {
+          resolved = true;
+          cleanup();
+          resolve(result);
+        }
+      };
+
+      // Set timeout
+      const timeout = setTimeout(() => {
+        resolveOnce(false);
+      }, timeoutMs);
+
+      try {
+        ws = new WebSocket(relayUrl);
+        
+        ws.onopen = () => {
+          clearTimeout(timeout);
+          resolveOnce(true);
+        };
+
+        ws.onerror = () => {
+          clearTimeout(timeout);
+          resolveOnce(false);
+        };
+
+        ws.onclose = () => {
+          clearTimeout(timeout);
+          // If we get here without onopen firing, it's a failed connection
+          if (!resolved) {
+            resolveOnce(false);
+          }
+        };
+      } catch (error) {
+        clearTimeout(timeout);
+        resolveOnce(false);
+      }
+    });
+  }
+
+  /**
+   * Check connectivity to multiple relays in parallel
+   */
+  async checkMultipleRelayConnectivity(
+    relayUrls: string[], 
+    timeoutMs: number = 5000
+  ): Promise<Map<string, boolean>> {
+    const results = await Promise.all(
+      relayUrls.map(async (url) => {
+        const isConnected = await this.checkRelayConnectivity(url, timeoutMs);
+        return [url, isConnected] as [string, boolean];
+      })
+    );
+    
+    return new Map(results);
   }
 }
 
