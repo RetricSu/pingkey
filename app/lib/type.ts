@@ -10,6 +10,8 @@ export interface Profile {
 export interface RelayListItem {
   url: string;
   marker?: "r" | "w";
+  isConnected?: boolean;
+  isChecking?: boolean;
 }
 
 export interface UserInfoCache {
