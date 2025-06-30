@@ -65,9 +65,18 @@ export class Nostr {
     return nip44.decrypt(payload, conversationKey);
   }
 
-  async publishEventToRelays(event: Event, relays: string[]): Promise<void> {
-    const promises = relays.map((relay) => this.pool.publish([relay], event));
-    await Promise.allSettled(promises);
+  async publishEventToRelays(
+    event: Event,
+    relays: string[]
+  ): Promise<{ relay: string; result: string | null }[]> {
+    const r = await this.pool.publish(relays, event);
+    const res = await Promise.all(r);
+    return relays.map((r, index) => {
+      return {
+        relay: r,
+        result: res[index],
+      };
+    });
   }
 
   async signToPublishEvent(

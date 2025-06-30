@@ -10,7 +10,6 @@ import { RelayListItem } from "../../lib/type";
 import { custom, CustomDialogProps } from "../dialog";
 import { usePowCreation } from "../../hooks/usePowCreation";
 import { PowMiningIndicator } from "../stamp/pow-mining-indicator";
-import { POW_CONFIG } from "app/lib/config";
 import { buildGeneratedStampDialog } from "../stamp/mint-stamp";
 import { prompt } from "../dialog";
 import { useUserProfile } from "app/hooks/useUserProfile";
@@ -96,12 +95,12 @@ export function MessageSender({
         return error("You cancelled the message");
       }
 
-      await nostr.publishEventToRelays(
+      const res = await nostr.publishEventToRelays(
         signedEvent,
         relayList.map((relay) => relay.url)
       );
 
-      setMessage("");
+      setMessage(res.map((r) => r.relay + ": " + r.result).join("\n"));
 
       // Show key information to anonymous users
       if (!isSignedIn && anonymousUserPrivateKey) {
