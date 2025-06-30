@@ -70,11 +70,17 @@ export class Nostr {
     relays: string[]
   ): Promise<{ relay: string; result: string | null }[]> {
     const r = await this.pool.publish(relays, event);
-    const res = await Promise.all(r);
+    const res = await Promise.allSettled(r);
+
     return relays.map((r, index) => {
       return {
         relay: r,
-        result: res[index],
+        result:
+          res[index].status === "fulfilled"
+            ? res[index].value
+            : res[index].status === "rejected"
+            ? res[index].reason.toString()
+            : null,
       };
     });
   }
@@ -316,11 +322,14 @@ export class Nostr {
   /**
    * Check connectivity to a single relay with a short timeout
    */
-  async checkRelayConnectivity(relayUrl: string, timeoutMs: number = 5000): Promise<boolean> {
+  async checkRelayConnectivity(
+    relayUrl: string,
+    timeoutMs: number = 5000
+  ): Promise<boolean> {
     return new Promise((resolve) => {
       let ws: WebSocket;
       let resolved = false;
-      
+
       const cleanup = () => {
         if (ws && ws.readyState === WebSocket.OPEN) {
           ws.close();
@@ -342,7 +351,7 @@ export class Nostr {
 
       try {
         ws = new WebSocket(relayUrl);
-        
+
         ws.onopen = () => {
           clearTimeout(timeout);
           resolveOnce(true);
@@ -371,7 +380,7 @@ export class Nostr {
    * Check connectivity to multiple relays in parallel
    */
   async checkMultipleRelayConnectivity(
-    relayUrls: string[], 
+    relayUrls: string[],
     timeoutMs: number = 5000
   ): Promise<Map<string, boolean>> {
     const results = await Promise.all(
@@ -380,7 +389,7 @@ export class Nostr {
         return [url, isConnected] as [string, boolean];
       })
     );
-    
+
     return new Map(results);
   }
 }
