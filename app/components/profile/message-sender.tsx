@@ -29,7 +29,7 @@ export function MessageSender({
   const { profile: signedInProfile } = useUserProfile();
   const { isSignedIn, pubkey, exportPrivateKey } = useAuth();
   const { nostr } = useNostr();
-  const { success, error } = useNotification();
+  const { success, error, info } = useNotification();
   const {
     createPowNote,
     isMining,
@@ -40,12 +40,10 @@ export function MessageSender({
 
   const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
-  const [sendError, setSendError] = useState<string | null>(null);
 
   const handleSendMessage = async () => {
     if (!message.trim()) return;
     setIsSending(true);
-    setSendError(null);
 
     try {
       let senderPrivkey: Uint8Array | null = null;
@@ -100,7 +98,8 @@ export function MessageSender({
         relayList.map((relay) => relay.url)
       );
 
-      setMessage(res.map((r) => r.relay + ": " + r.result).join("\n"));
+      info(res.map((r) => r.relay + ": " + r.result + "\n").join(""));
+      setMessage("");
 
       // Show key information to anonymous users
       if (!isSignedIn && anonymousUserPrivateKey) {
@@ -157,10 +156,8 @@ export function MessageSender({
       if (err.message === "cancelled") {
         return; // User cancelled, just exit silently
       }
-      console.error("Failed to send message:", err);
-      setSendError(
-        err instanceof Error ? err.message : "Failed to send message"
-      );
+      console.error(`Failed to send message: ${err.message}`);
+      error(`Failed to send message: ${err.message}`);
     } finally {
       setIsSending(false);
     }
@@ -168,12 +165,6 @@ export function MessageSender({
 
   return (
     <div className="space-y-4">
-      {sendError && (
-        <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-sm text-red-600 dark:text-red-400">
-          {sendError}
-        </div>
-      )}
-
       <textarea
         value={message}
         onChange={(e) => setMessage(e.target.value)}
