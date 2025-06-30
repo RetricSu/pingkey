@@ -7,17 +7,17 @@ import { usePowCreation } from "app/hooks/usePowCreation";
 import { withAuth } from "app/components/auth/with-auth";
 import { PowMiningIndicator } from "app/components/stamp/pow-mining-indicator";
 import { custom } from "app/components/dialog";
-import { POW_CONFIG } from "app/lib/config";
 import { hexToBytes } from "@noble/hashes/utils";
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { prompt } from "app/components/dialog";
 import { buildGeneratedStampDialog } from "app/components/stamp/mint-stamp";
+import { PowAdjustment } from "app/components/pow-adjustment";
 
 function ComposePage() {
   const { exportPrivateKey } = useAuth();
   const { nostr } = useNostr();
-  const { success, error } = useNotification();
+  const { success, error, info } = useNotification();
   const {
     createPowNote,
     isMining,
@@ -146,7 +146,11 @@ function ComposePage() {
 
       // Send to relays
       if (receiverRelays.length > 0) {
-        await nostr.publishEventToRelays(signedEvent, receiverRelays);
+        const res = await nostr.publishEventToRelays(
+          signedEvent,
+          receiverRelays
+        );
+        info("Result", res.map((r) => `${r.relay}: ${r.result}`).join("\n"));
       } else {
         return error("No receiver's relay list found, can not send letter.");
       }
@@ -305,25 +309,11 @@ function ComposePage() {
 
         {/* POW Settings and Send */}
         <div className="flex justify-between items-center pt-2">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center bg-neutral-50 dark:bg-neutral-800 rounded-lg px-3 py-2 border border-neutral-200 dark:border-neutral-700">
-              <span className="text-xs font-medium text-neutral-600 dark:text-neutral-400 mr-2">
-                POW Difficulty
-              </span>
-              <input
-                type="number"
-                min="1"
-                max="64"
-                value={powDifficulty}
-                onChange={(e) =>
-                  setPowDifficulty(
-                    parseInt(e.target.value) || POW_CONFIG.default_difficulty
-                  )
-                }
-                className="w-12 bg-transparent text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none text-center font-mono"
-              />
-            </div>
-          </div>
+          <PowAdjustment
+            powDifficulty={powDifficulty}
+            setPowDifficulty={setPowDifficulty}
+            disabled={isSending || isMining}
+          />
 
           <button
             onClick={handleSendLetter}
