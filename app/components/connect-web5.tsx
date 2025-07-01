@@ -1,10 +1,7 @@
 import { alert } from "app/components/dialog";
 import { ccc, Connector } from "@ckb-ccc/connector-react";
 
-
 export function ConnectWeb5() {
-
-  const {wallet, isOpen, open, close} = ccc.useCcc();
   return (
     <div className="bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-lg p-6">
       <div className="flex items-center justify-between mb-6">
@@ -80,7 +77,6 @@ export function ConnectWeb5() {
           >
             Connect
           </button>
-          <Connector />
         </div>
 
         <div className="text-xs text-neutral-600 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-900 rounded-lg p-3 border border-neutral-200 dark:border-neutral-800">
