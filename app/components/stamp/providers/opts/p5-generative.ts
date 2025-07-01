@@ -112,17 +112,38 @@ export class P5GenerativeProvider implements HashArtProvider {
       return value;
     };
 
+    // Use normalized coordinates based on a fixed reference size (100x120)
+    // This ensures the same hash always generates the same relative layout
+    const REFERENCE_WIDTH = 100;
+    const REFERENCE_HEIGHT = 120;
+    
     const baseHue = getHashValue(360);
     const currentSaturation = p.map(zeros, 0, 8, 10, 100);
     const currentBrightness = p.map(zeros, 0, 8, 30, 95);
 
     p.colorMode(p.HSB, 360, 100, 100, 100);
 
-    // Define the drawing area
+    // Define the drawing area using actual canvas dimensions
     const drawAreaWidth = width * 0.9;
     const drawAreaHeight = height * 0.9;
     const offsetX = (width - drawAreaWidth) / 2;
     const offsetY = (height - drawAreaHeight) / 2;
+
+    // Helper function to get normalized position that scales with canvas size
+    const getNormalizedX = (): number => {
+      const normalizedValue = getHashValue(REFERENCE_WIDTH * 0.9);
+      return (normalizedValue / (REFERENCE_WIDTH * 0.9)) * drawAreaWidth;
+    };
+
+    const getNormalizedY = (): number => {
+      const normalizedValue = getHashValue(REFERENCE_HEIGHT * 0.9);
+      return (normalizedValue / (REFERENCE_HEIGHT * 0.9)) * drawAreaHeight;
+    };
+
+    const getNormalizedSize = (factor: number): number => {
+      const normalizedValue = getHashValue(REFERENCE_WIDTH * factor);
+      return (normalizedValue / (REFERENCE_WIDTH * factor)) * drawAreaWidth * factor;
+    };
 
     p.push();
     p.translate(offsetX, offsetY);
@@ -137,25 +158,25 @@ export class P5GenerativeProvider implements HashArtProvider {
     // Art generation based on leading zeros
     if (zeros === 0) {
       // Minimalist sketch
-      this.drawMinimalist(p, getHashValue, baseHue, currentSaturation, currentBrightness, drawAreaWidth, drawAreaHeight, drawBackground);
+      this.drawMinimalist(p, getHashValue, getNormalizedX, getNormalizedY, getNormalizedSize, baseHue, currentSaturation, currentBrightness, drawAreaWidth, drawAreaHeight, drawBackground);
     } else if (zeros <= 2) {
       // Geometric abstract
-      this.drawGeometric(p, getHashValue, baseHue, currentSaturation, currentBrightness, drawAreaWidth, drawAreaHeight, drawBackground);
+      this.drawGeometric(p, getHashValue, getNormalizedX, getNormalizedY, getNormalizedSize, baseHue, currentSaturation, currentBrightness, drawAreaWidth, drawAreaHeight, drawBackground);
     } else if (zeros <= 4) {
       // Layered landscape
-      this.drawLandscape(p, getHashValue, baseHue, currentSaturation, currentBrightness, drawAreaWidth, drawAreaHeight);
+      this.drawLandscape(p, getHashValue, getNormalizedX, getNormalizedY, getNormalizedSize, baseHue, currentSaturation, currentBrightness, drawAreaWidth, drawAreaHeight);
     } else if (zeros <= 6) {
       // Dynamic cityscape
-      this.drawCityscape(p, getHashValue, baseHue, currentSaturation, currentBrightness, drawAreaWidth, drawAreaHeight);
+      this.drawCityscape(p, getHashValue, getNormalizedX, getNormalizedY, getNormalizedSize, baseHue, currentSaturation, currentBrightness, drawAreaWidth, drawAreaHeight);
     } else {
       // Vibrant crystalline
-      this.drawCrystalline(p, getHashValue, baseHue, currentSaturation, currentBrightness, drawAreaWidth, drawAreaHeight);
+      this.drawCrystalline(p, getHashValue, getNormalizedX, getNormalizedY, getNormalizedSize, baseHue, currentSaturation, currentBrightness, drawAreaWidth, drawAreaHeight);
     }
 
     p.pop();
   }
 
-  private drawMinimalist(p: any, getHashValue: Function, baseHue: number, currentSaturation: number, currentBrightness: number, drawAreaWidth: number, drawAreaHeight: number, drawBackground: Function): void {
+  private drawMinimalist(p: any, getHashValue: Function, getNormalizedX: Function, getNormalizedY: Function, getNormalizedSize: Function, baseHue: number, currentSaturation: number, currentBrightness: number, drawAreaWidth: number, drawAreaHeight: number, drawBackground: Function): void {
     drawBackground(baseHue, currentSaturation * 0.5, currentBrightness * 0.8, 100);
 
     p.stroke(baseHue, 5, 40, 80);
@@ -165,10 +186,10 @@ export class P5GenerativeProvider implements HashArtProvider {
     // Simple abstract lines
     for (let i = 0; i < 3 + getHashValue(3); i++) {
       p.line(
-        getHashValue(drawAreaWidth),
-        getHashValue(drawAreaHeight),
-        getHashValue(drawAreaWidth),
-        getHashValue(drawAreaHeight)
+        getNormalizedX(),
+        getNormalizedY(),
+        getNormalizedX(),
+        getNormalizedY()
       );
     }
 
@@ -178,7 +199,7 @@ export class P5GenerativeProvider implements HashArtProvider {
     p.ellipse(drawAreaWidth / 2, drawAreaHeight / 2, drawAreaWidth * 0.6, drawAreaHeight * 0.6);
   }
 
-  private drawGeometric(p: any, getHashValue: Function, baseHue: number, currentSaturation: number, currentBrightness: number, drawAreaWidth: number, drawAreaHeight: number, drawBackground: Function): void {
+  private drawGeometric(p: any, getHashValue: Function, getNormalizedX: Function, getNormalizedY: Function, getNormalizedSize: Function, baseHue: number, currentSaturation: number, currentBrightness: number, drawAreaWidth: number, drawAreaHeight: number, drawBackground: Function): void {
     drawBackground(baseHue, currentSaturation * 0.7, currentBrightness * 0.9, 100);
 
     p.noStroke();
@@ -190,19 +211,19 @@ export class P5GenerativeProvider implements HashArtProvider {
 
       p.fill(shapeHue, shapeSat, shapeBright, 90);
       p.push();
-      p.translate(getHashValue(drawAreaWidth), getHashValue(drawAreaHeight));
+      p.translate(getNormalizedX(), getNormalizedY());
       p.rotate(getHashValue(360));
 
       if (getHashValue(1) === 0) {
-        p.rect(0, 0, getHashValue(drawAreaWidth * 0.2) + 10, getHashValue(drawAreaHeight * 0.2) + 10, 2);
+        p.rect(0, 0, getNormalizedSize(0.2) + 10, getNormalizedSize(0.2) + 10, 2);
       } else {
-        p.ellipse(0, 0, getHashValue(drawAreaWidth * 0.2) + 10, getHashValue(drawAreaHeight * 0.2) + 10);
+        p.ellipse(0, 0, getNormalizedSize(0.2) + 10, getNormalizedSize(0.2) + 10);
       }
       p.pop();
     }
   }
 
-  private drawLandscape(p: any, getHashValue: Function, baseHue: number, currentSaturation: number, currentBrightness: number, drawAreaWidth: number, drawAreaHeight: number): void {
+  private drawLandscape(p: any, getHashValue: Function, getNormalizedX: Function, getNormalizedY: Function, getNormalizedSize: Function, baseHue: number, currentSaturation: number, currentBrightness: number, drawAreaWidth: number, drawAreaHeight: number): void {
     p.noStroke();
     // Sky gradient
     for (let i = 0; i < drawAreaHeight; i++) {
@@ -230,8 +251,10 @@ export class P5GenerativeProvider implements HashArtProvider {
 
       for (let i = 0; i < 6; i++) {
         const x = p.map(i, 0, 5, 0, drawAreaWidth);
+        // Use normalized height calculation to ensure consistent curves across canvas sizes
+        const normalizedHeightValue = getHashValue(100);
         const y = p.map(
-          getHashValue(100),
+          normalizedHeightValue,
           0,
           100,
           drawAreaHeight * (0.5 + k * 0.1),
@@ -244,7 +267,7 @@ export class P5GenerativeProvider implements HashArtProvider {
     }
   }
 
-  private drawCityscape(p: any, getHashValue: Function, baseHue: number, currentSaturation: number, currentBrightness: number, drawAreaWidth: number, drawAreaHeight: number): void {
+  private drawCityscape(p: any, getHashValue: Function, getNormalizedX: Function, getNormalizedY: Function, getNormalizedSize: Function, baseHue: number, currentSaturation: number, currentBrightness: number, drawAreaWidth: number, drawAreaHeight: number): void {
     p.noStroke();
     // Background gradient
     for (let i = 0; i < drawAreaHeight; i++) {
@@ -266,9 +289,9 @@ export class P5GenerativeProvider implements HashArtProvider {
     for (let i = 0; i < numBuildings; i++) {
       const buildingHue = (baseHue + getHashValue(180) + i * 20) % 360;
       p.fill(buildingHue, currentSaturation, currentBrightness, 80);
-      const buildingWidth = getHashValue(drawAreaWidth * 0.15) + 8;
-      const buildingHeight = getHashValue(drawAreaHeight * 0.5) + 20;
-      const buildingX = getHashValue(drawAreaWidth);
+      const buildingWidth = getNormalizedSize(0.15) + 8;
+      const buildingHeight = getNormalizedSize(0.5) + 20;
+      const buildingX = getNormalizedX();
       const buildingY = drawAreaHeight - buildingHeight / 2;
 
       p.rect(buildingX, buildingY, buildingWidth, buildingHeight, 2);
@@ -282,11 +305,11 @@ export class P5GenerativeProvider implements HashArtProvider {
     // Light points
     p.fill(255, 200, 0, 60);
     for (let i = 0; i < 15; i++) {
-      p.ellipse(getHashValue(drawAreaWidth), getHashValue(drawAreaHeight * 0.7), 2, 2);
+      p.ellipse(getNormalizedX(), getNormalizedY(), 2, 2);
     }
   }
 
-  private drawCrystalline(p: any, getHashValue: Function, baseHue: number, currentSaturation: number, currentBrightness: number, drawAreaWidth: number, drawAreaHeight: number): void {
+  private drawCrystalline(p: any, getHashValue: Function, getNormalizedX: Function, getNormalizedY: Function, getNormalizedSize: Function, baseHue: number, currentSaturation: number, currentBrightness: number, drawAreaWidth: number, drawAreaHeight: number): void {
     p.noStroke();
     // Complex gradient
     for (let i = 0; i < drawAreaHeight; i++) {
@@ -319,11 +342,11 @@ export class P5GenerativeProvider implements HashArtProvider {
           getHashValue(100),
           0,
           100,
-          drawAreaWidth * (0.1 + k * 0.03),
-          drawAreaWidth * (0.3 + k * 0.03)
+          getNormalizedSize(0.1 + k * 0.03),
+          getNormalizedSize(0.3 + k * 0.03)
         );
-        const x = p.cos(angle) * radius + getHashValue(drawAreaWidth);
-        const y = p.sin(angle) * radius + getHashValue(drawAreaHeight);
+        const x = p.cos(angle) * radius + getNormalizedX();
+        const y = p.sin(angle) * radius + getNormalizedY();
         p.vertex(x, y);
       }
       p.endShape(p.CLOSE);
@@ -339,7 +362,7 @@ export class P5GenerativeProvider implements HashArtProvider {
     p.fill(255, 255, 200, 70);
     for (let i = 0; i < 25; i++) {
       const starSize = 1 + getHashValue(2);
-      p.rect(getHashValue(drawAreaWidth), getHashValue(drawAreaHeight), starSize, starSize, 0.5);
+      p.rect(getNormalizedX(), getNormalizedY(), starSize, starSize, 0.5);
     }
   }
 } 
