@@ -73,14 +73,18 @@ export class Nostr {
     const res = await Promise.allSettled(r);
 
     return relays.map((r, index) => {
+      let result = "unknown";
+      if (res[index].status === "fulfilled") {
+        result = res[index].value.length === 0 ? "fulfilled" : res[index].value;
+      } else if (res[index].status === "rejected") {
+        result =
+          res[index].reason.toString().length === 0
+            ? "rejected"
+            : res[index].reason.toString();
+      }
       return {
         relay: r,
-        result:
-          res[index].status === "fulfilled"
-            ? res[index].value
-            : res[index].status === "rejected"
-            ? res[index].reason.toString()
-            : null,
+        result,
       };
     });
   }

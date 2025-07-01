@@ -83,6 +83,7 @@ export function MessageSender({
         recipient,
         message,
         difficulty: powDifficulty,
+        extraTags: [["subject", "ping"]],
       });
 
       // Show stamp dialog with the event ID
@@ -98,7 +99,7 @@ export function MessageSender({
         relayList.map((relay) => relay.url)
       );
 
-      info(res.map((r) => r.relay + ": " + r.result + "\n").join(""));
+      info("Sent Result", res.map((r) => r.relay + ": " + r.result + "\n").join(""));
       setMessage("");
 
       // Show key information to anonymous users
@@ -168,7 +169,7 @@ export function MessageSender({
       <textarea
         value={message}
         onChange={(e) => setMessage(e.target.value)}
-        placeholder={`Leaving a message to ${profileName}. A minimal stamp forged from Proof of Work(POW) is required.`}
+        placeholder={`Leaving a message to ${profileName} via his/her relays. A minimal stamp forged from Proof of Work(POW) is required.`}
         className="text-sm w-full h-32 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
         rows={6}
       />
@@ -194,11 +195,7 @@ export function MessageSender({
             }
             className="px-6 py-3 bg-gray-900 dark:bg-gray-100 text-sm text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isMining
-              ? "Mining POW..."
-              : isSending
-              ? "Sending..."
-              : "Send Letter"}
+            {isMining ? "Mining POW..." : isSending ? "Sending..." : "Send"}
           </button>
         </div>
 

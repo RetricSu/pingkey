@@ -159,7 +159,7 @@ function NotificationItem({ notification, onRemove }: NotificationItemProps) {
             {notification.title}
           </div>
           {notification.message && (
-            <div className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+            <div className="mt-1 text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
               {notification.message}
             </div>
           )}

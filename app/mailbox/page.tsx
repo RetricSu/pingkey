@@ -24,6 +24,7 @@ function MailBox() {
   const [isLoading, setIsLoading] = useState(true);
   const [powThreshold, setPowThreshold] = useState(16);
   const [showStampWall, setShowStampWall] = useState(false);
+  const [showRelays, setShowRelays] = useState(false);
   const { relayList, isLoading: isRelayListLoading } = useUserRelayList();
 
   // Cache management
@@ -110,8 +111,9 @@ function MailBox() {
     const inactiveClasses =
       "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-800/50";
 
-    // When stamp wall is showing, no filter buttons should appear active
-    const isActive = !showStampWall && currentFilter === filterType;
+    // When stamp wall or relays are showing, no filter buttons should appear active
+    const isActive =
+      !showStampWall && !showRelays && currentFilter === filterType;
     return `${baseClasses} ${isActive ? activeClasses : inactiveClasses}`;
   };
 
@@ -162,9 +164,24 @@ function MailBox() {
             onClick={() => {
               setCurrentFilter("all");
               setShowStampWall(false);
+              setShowRelays(false);
             }}
           >
             All Letters ({totalCount})
+          </button>
+          <button
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+              showRelays
+                ? "text-neutral-900 dark:text-neutral-100 bg-neutral-100 dark:bg-neutral-800 shadow-sm"
+                : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-800/50"
+            }`}
+            onClick={() => {
+              setShowRelays(!showRelays);
+              setShowStampWall(false);
+              setCurrentFilter("all");
+            }}
+          >
+            Your Relays ({relayList.length})
           </button>
           {stampEventIds.length > 0 && (
             <button
@@ -173,7 +190,11 @@ function MailBox() {
                   ? "text-neutral-900 dark:text-neutral-100 bg-neutral-100 dark:bg-neutral-800 shadow-sm"
                   : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-800/50"
               }`}
-              onClick={() => setShowStampWall(!showStampWall)}
+              onClick={() => {
+                setShowStampWall(!showStampWall);
+                setShowRelays(false);
+                setCurrentFilter("all");
+              }}
             >
               Stamp Collection ({stampEventIds.length})
             </button>
@@ -181,24 +202,31 @@ function MailBox() {
         </div>
       </div>
 
-      {/* Relay List Section */}
-      <div className="my-2">
-        <RelayList
-          relayList={relayList}
-          title=""
-          className="mt-0 mb-0 pt-0"
-          enableConnectivityCheck={true}
-          checkOnMount={true}
-        />
-      </div>
-
       {/* Show loader while fetching relay list or notes */}
       {isLoading || isRelayListLoading ? (
         <Loader message="Loading your letters..." />
       ) : null}
 
-      {/* Content - Letters or Stamp Wall */}
-      {showStampWall ? (
+      {/* Content - Relays, Letters, or Stamp Wall */}
+      {showRelays ? (
+        <div className="space-y-8">
+          <div className="text-center space-y-2">
+            <h2 className="text-xl font-light tracking-tight text-neutral-900 dark:text-neutral-100">
+              Your Relays
+            </h2>
+            <p className="text-neutral-600 dark:text-neutral-400">
+              {relayList.length} relays configured for receiving letters
+            </p>
+          </div>
+          <RelayList
+            relayList={relayList}
+            title=""
+            className="mt-0 mb-0 pt-0"
+            enableConnectivityCheck={true}
+            checkOnMount={true}
+          />
+        </div>
+      ) : showStampWall ? (
         <div className="space-y-8">
           <div className="text-center space-y-2">
             <h2 className="text-xl font-light tracking-tight text-neutral-900 dark:text-neutral-100">

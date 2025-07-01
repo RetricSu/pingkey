@@ -65,7 +65,7 @@ export function RelayList({
         </h3>
         <div className="text-xs text-gray-500 dark:text-gray-400">
           <div className="flex items-center space-x-2">
-            <span>No relays found, can not send letter.</span>
+            <span>No relays found.</span>
           </div>
         </div>
       </div>
