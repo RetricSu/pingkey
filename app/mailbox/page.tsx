@@ -13,6 +13,8 @@ import { getPow } from "nostr-tools/nip13";
 import { StampWall } from "app/components/stamp/stamp-wall";
 import { useDecryptedLettersCache } from "app/hooks/useDecryptedLettersCache";
 import { RelayList } from "app/components/profile/relay-list";
+import { useLocalStorage } from "app/hooks/useLocalStorage";
+import { LocalStorageKeys, POW_CONFIG } from "app/lib/config";
 
 type FilterType = "all" | "unread" | "read";
 
@@ -22,7 +24,10 @@ function MailBox() {
   const [giftWrappedNotes, setGiftWrappedNotes] = useState<Event[]>([]);
   const [currentFilter, setCurrentFilter] = useState<FilterType>("all");
   const [isLoading, setIsLoading] = useState(true);
-  const [powThreshold, setPowThreshold] = useState(16);
+  const [powThreshold] = useLocalStorage<number>(
+    LocalStorageKeys.powThresholdKey,
+    POW_CONFIG.default_difficulty
+  );
   const [showStampWall, setShowStampWall] = useState(false);
   const [showRelays, setShowRelays] = useState(false);
   const { relayList, isLoading: isRelayListLoading } = useUserRelayList();

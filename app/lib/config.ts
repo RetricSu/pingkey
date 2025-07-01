@@ -34,6 +34,7 @@ export const LocalStorageKeys = {
   userInfoCacheKey: "PingKey.UserInfoCache",
   customDefaultRelaysKey: "PingKey.CustomDefaultRelays",
   decryptedLettersKey: "PingKey.DecryptedLetters",
+  powThresholdKey: "PingKey.PowThreshold",
 };
 
 export const USER_INFO_CACHE_EXPIRED_MS = 10 * 60 * 1000; // 10 minutes

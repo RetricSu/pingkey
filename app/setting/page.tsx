@@ -1,7 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { DEFAULT_BIG_RELAY_URLS, LocalStorageKeys } from "app/lib/config";
+import {
+  DEFAULT_BIG_RELAY_URLS,
+  LocalStorageKeys,
+  POW_CONFIG,
+} from "app/lib/config";
 import { useLocalStorage } from "app/hooks/useLocalStorage";
 import { alert, confirm } from "app/components/dialog";
 import { useDecryptedLettersCache } from "app/hooks/useDecryptedLettersCache";
@@ -14,6 +18,11 @@ function SettingPage() {
     setCustomDefaultRelays,
     removeCustomDefaultRelays,
   ] = useLocalStorage<string[]>(LocalStorageKeys.customDefaultRelaysKey, []);
+
+  const [powThreshold, setPowThreshold] = useLocalStorage<number>(
+    LocalStorageKeys.powThresholdKey,
+    POW_CONFIG.default_difficulty
+  );
 
   const [isEditingDefaultRelays, setIsEditingDefaultRelays] = useState(false);
   const [editedDefaultRelays, setEditedDefaultRelays] = useState<string[]>([]);
@@ -80,7 +89,10 @@ Are you sure you want to continue?`,
     if (confirmed) {
       try {
         clearCache();
-        success("Cache Cleared", "All decrypted letters have been removed from cache.");
+        success(
+          "Cache Cleared",
+          "All decrypted letters have been removed from cache."
+        );
       } catch (err) {
         error("Clear Failed", "Failed to clear cache. Please try again.");
       }
@@ -145,13 +157,16 @@ Are you sure you want to continue?`,
               </div>
               <div>
                 <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                  {cacheCount === 0 ? "No cached letters" : `${cacheCount} cached letter${cacheCount === 1 ? '' : 's'}`}
+                  {cacheCount === 0
+                    ? "No cached letters"
+                    : `${cacheCount} cached letter${
+                        cacheCount === 1 ? "" : "s"
+                      }`}
                 </p>
                 <p className="text-xs text-neutral-600 dark:text-neutral-400">
-                  {cacheCount === 0 
+                  {cacheCount === 0
                     ? "Decrypt letters to cache them for quick access"
-                    : "Letters you've decrypted are stored for instant reading"
-                  }
+                    : "Letters you've decrypted are stored for instant reading"}
                 </p>
               </div>
             </div>
@@ -167,15 +182,188 @@ Are you sure you want to continue?`,
 
           {cacheCount > 0 && (
             <div className="text-xs text-neutral-600 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-900 rounded-lg p-3 border border-neutral-200 dark:border-neutral-800">
-              <p className="mb-2"><strong>What happens when you clear the cache?</strong></p>
+              <p className="mb-2">
+                <strong>What happens when you clear the cache?</strong>
+              </p>
               <ul className="space-y-1 ml-4 list-disc">
-                <li>All decrypted letter content will be removed from your device</li>
-                <li>You'll need to enter your password again to decrypt letters</li>
-                <li>This doesn't delete the actual letters - they remain encrypted on relays</li>
+                <li>
+                  All decrypted letter content will be removed from your device
+                </li>
+                <li>
+                  You'll need to enter your password again to decrypt letters
+                </li>
+                <li>
+                  This doesn't delete the actual letters - they remain encrypted
+                  on relays
+                </li>
                 <li>Cache is automatically cleared when you sign out</li>
               </ul>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* POW Threshold Configuration Section */}
+      <div className="bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-lg p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center align-middle gap-2">
+            <h2 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
+              Proof of Work Threshold
+              <button
+                onClick={() =>
+                  alert(
+                    "POW Threshold",
+                    "This setting controls the minimum proof-of-work difficulty required for letters to appear in your mailbox. Higher values filter out more spam but may hide some legitimate letters. Default is 16 bits."
+                  )
+                }
+                className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
+                title="More information"
+              >
+                <svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                  <path d="M12 17h.01" />
+                </svg>
+              </button>
+            </h2>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex items-center justify-between py-3 px-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+                <svg
+                  className="w-4 h-4 text-blue-600 dark:text-blue-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                  Current POW Threshold: {powThreshold} bits
+                </p>
+                <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                  {powThreshold === POW_CONFIG.default_difficulty
+                    ? "Using default threshold"
+                    : powThreshold < POW_CONFIG.default_difficulty
+                    ? "Lower threshold - may see more spam"
+                    : "Higher threshold - better spam protection"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <label className="block">
+              <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-2 block">
+                Minimum POW Difficulty (bits)
+              </span>
+              <div className="flex items-center gap-3">
+                <input
+                  type="range"
+                  min="0"
+                  max="32"
+                  step="1"
+                  value={powThreshold}
+                  onChange={(e) => setPowThreshold(parseInt(e.target.value))}
+                  className="flex-1 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer"
+                  style={{
+                    background: `linear-gradient(to right, rgb(59 130 246) 0%, rgb(59 130 246) ${
+                      (powThreshold / 32) * 100
+                    }%, rgb(229 231 235) ${
+                      (powThreshold / 32) * 100
+                    }%, rgb(229 231 235) 100%)`,
+                  }}
+                />
+                <input
+                  type="number"
+                  min="0"
+                  max="32"
+                  value={powThreshold}
+                  onChange={(e) =>
+                    setPowThreshold(
+                      Math.max(0, Math.min(32, parseInt(e.target.value) || 0))
+                    )
+                  }
+                  className="w-16 px-2 py-1 text-sm bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded focus:outline-none focus:ring-1 focus:ring-neutral-300 dark:focus:ring-neutral-700 text-neutral-900 dark:text-neutral-100"
+                />
+              </div>
+            </label>
+
+            <div className="grid grid-cols-3 gap-2 text-xs">
+              <button
+                onClick={() => setPowThreshold(0)}
+                className={`px-3 py-2 rounded transition-colors ${
+                  powThreshold === 0
+                    ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                    : "bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
+                }`}
+              >
+                No Filter (0)
+              </button>
+              <button
+                onClick={() => setPowThreshold(POW_CONFIG.default_difficulty)}
+                className={`px-3 py-2 rounded transition-colors ${
+                  powThreshold === POW_CONFIG.default_difficulty
+                    ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                    : "bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
+                }`}
+              >
+                Default ({POW_CONFIG.default_difficulty})
+              </button>
+              <button
+                onClick={() => setPowThreshold(24)}
+                className={`px-3 py-2 rounded transition-colors ${
+                  powThreshold === 24
+                    ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                    : "bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
+                }`}
+              >
+                High (24)
+              </button>
+            </div>
+          </div>
+
+          <div className="text-xs text-neutral-600 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-900 rounded-lg p-3 border border-neutral-200 dark:border-neutral-800">
+            <p className="mb-2">
+              <strong>How POW Threshold Works:</strong>
+            </p>
+            <ul className="space-y-1 ml-4 list-disc">
+              <li>
+                <strong>0 bits:</strong> No filtering - all letters appear
+              </li>
+              <li>
+                <strong>8-15 bits:</strong> Light filtering - blocks obvious
+                spam
+              </li>
+              <li>
+                <strong>16 bits:</strong> Default - good balance of security and
+                accessibility
+              </li>
+              <li>
+                <strong>20+ bits:</strong> Aggressive filtering - only very
+                dedicated senders
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
 
