@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { custom } from "../dialog";
 import { getPow } from "nostr-tools/nip13";
 import { hashArtProviderRegistry } from "./providers";
@@ -8,7 +8,6 @@ import type { HashArtProvider } from "./providers";
 
 interface HashArtRendererProps {
   hash?: string;
-  leadingZeros?: number;
   width?: number;
   height?: number;
   className?: string;
@@ -19,18 +18,15 @@ interface HashArtRendererProps {
 // 扩展对话框组件，支持 provider 选择
 function HashArtDialog({
   hash,
-  leadingZeros,
   providerId,
   onResolve,
   onReject,
 }: {
   hash?: string;
-  leadingZeros?: number;
   providerId?: string;
   onResolve: (result: any) => void;
   onReject: () => void;
 }) {
-
   return (
     <div className="p-4 sm:p-6 max-w-full">
       <div className="flex items-center justify-between mb-4">
@@ -62,7 +58,6 @@ function HashArtDialog({
         <div className="w-full max-w-md flex justify-center">
           <HashArtRenderer
             hash={hash}
-            leadingZeros={leadingZeros}
             width={320}
             height={400}
             className="border border-neutral-200 dark:border-neutral-700 rounded-lg"
@@ -83,15 +78,16 @@ function HashArtDialog({
         </p>
         <p className="text-xs text-neutral-500 dark:text-neutral-400">
           Art Provider:{" "}
-          {hashArtProviderRegistry.getProviderConfig(providerId!)
-            ?.name || "Unknown"}
+          {hashArtProviderRegistry.getProviderConfig(providerId!)?.name ||
+            "Unknown"}
         </p>
       </div>
 
       {/* Description */}
       <div className="text-center text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">
         <p className="mb-2">
-          Every Pow Stamp is a unique piece of art<br/>
+          Every Pow Stamp is a unique piece of art
+          <br />
           determined by the hash of the message.
         </p>
         <p>The higher the difficulty, the more complex the stamp art.</p>
@@ -102,7 +98,6 @@ function HashArtDialog({
 
 export function HashArtRenderer({
   hash,
-  leadingZeros = 0,
   width = 100,
   height = 120,
   className = "",
@@ -116,6 +111,11 @@ export function HashArtRenderer({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const isMountedRef = useRef(false); // 跟踪组件是否已卸载
+
+  const leadingZeros = useMemo(() => {
+    if (!hash) return 0;
+    return getPow(hash);
+  }, [hash]);
 
   // 确定使用的 provider ID
   const getResolvedProviderId = (): string => {
@@ -132,12 +132,7 @@ export function HashArtRenderer({
     try {
       await custom(
         (props) => (
-          <HashArtDialog
-            hash={hash}
-            leadingZeros={leadingZeros}
-            providerId={resolvedProviderId}
-            {...props}
-          />
+          <HashArtDialog hash={hash} providerId={providerId} {...props} />
         ),
         {
           maxWidth: "xl",

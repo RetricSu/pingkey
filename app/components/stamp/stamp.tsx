@@ -26,19 +26,6 @@ interface StampProps {
 }
 
 export function Stamp({ hash, showArt = false, providerId }: StampProps) {
-  const countLeadingZeros = (hash: string) => {
-    let count = 0;
-    for (let i = 0; i < hash.length; i++) {
-      if (hash[i] === "0") {
-        count++;
-      } else {
-        break;
-      }
-    }
-    return count;
-  };
-
-  const leadingZeros = hash ? countLeadingZeros(hash) : 0;
   return (
     <div className="relative transform rotate-1 hover:rotate-0 transition-transform duration-300">
       <div className="relative w-12 h-16 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 border-2 border-blue-300 dark:border-blue-700 rounded-sm shadow-sm">
@@ -94,7 +81,6 @@ export function Stamp({ hash, showArt = false, providerId }: StampProps) {
               {showArt ? (
                 <HashArtRenderer
                   hash={hash}
-                  leadingZeros={leadingZeros}
                   width={32}
                   height={40}
                   className="rounded-sm"
