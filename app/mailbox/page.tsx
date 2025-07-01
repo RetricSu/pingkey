@@ -12,6 +12,7 @@ import { Loader } from "app/components/loader";
 import { getPow } from "nostr-tools/nip13";
 import { StampWall } from "app/components/stamp/stamp-wall";
 import { useDecryptedLettersCache } from "app/hooks/useDecryptedLettersCache";
+import { RelayList } from "app/components/profile/relay-list";
 
 type FilterType = "all" | "unread" | "read";
 
@@ -64,11 +65,6 @@ function MailBox() {
     fetchGiftWrappedNotes();
   }, [fetchGiftWrappedNotes]);
 
-  // Show loader while fetching relay list or notes
-  if (isLoading || isRelayListLoading) {
-    return <Loader message="Loading your letters..." />;
-  }
-
   const sampleLetters = giftWrappedNotes.map((note) => ({
     id: note.id,
     from: note.pubkey,
@@ -99,9 +95,7 @@ function MailBox() {
   const lettersWithPow = sampleLetters.filter(
     (letter) => letter.powDifficulty >= powThreshold
   );
-  const unreadCount = lettersWithPow.filter((letter) => !letter.read).length;
   const totalCount = lettersWithPow.length;
-  const readCount = totalCount - unreadCount;
 
   // Get event IDs for stamp wall (only letters with POW > 0)
   const stampEventIds = sampleLetters
@@ -186,6 +180,22 @@ function MailBox() {
           )}
         </div>
       </div>
+
+      {/* Relay List Section */}
+      <div className="my-2">
+        <RelayList
+          relayList={relayList}
+          title=""
+          className="mt-0 mb-0 pt-0"
+          enableConnectivityCheck={true}
+          checkOnMount={true}
+        />
+      </div>
+
+      {/* Show loader while fetching relay list or notes */}
+      {isLoading || isRelayListLoading ? (
+        <Loader message="Loading your letters..." />
+      ) : null}
 
       {/* Content - Letters or Stamp Wall */}
       {showStampWall ? (
