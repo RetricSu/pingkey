@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Profile, RelayListItem } from "app/lib/type";
 import { CustomDialogProps } from "../dialog";
-import { defaultProfile, DEFAULT_BIG_RELAY_URLS } from "app/lib/config";
+import { DEFAULT_BIG_RELAY_URLS } from "app/lib/config";
 import { Avatar } from "../avatar";
 
 interface SettingsModalProps extends CustomDialogProps {
@@ -151,6 +151,24 @@ export function SettingsModal({
       <div className="min-h-[420px] max-h-[500px] overflow-y-auto">
         {activeTab === "profile" && (
           <div className="space-y-6">
+            {/* Avatar Section */}
+            <div>
+              <div className="flex items-center gap-4">
+                <Avatar
+                  publicKey={publicKey}
+                  pictureUrl={editedProfile.picture}
+                  alt="Current profile"
+                  size={80}
+                />
+                <div className="flex-1">
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                    Avatar upload is coming soon! Your current avatar is
+                    generated from your public key.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div>
               <label
                 htmlFor="name"
@@ -170,8 +188,6 @@ export function SettingsModal({
               />
             </div>
 
-
-
             <div>
               <label
                 htmlFor="about"
@@ -185,35 +201,10 @@ export function SettingsModal({
                 onChange={(e) =>
                   setEditedProfile({ ...editedProfile, about: e.target.value })
                 }
-                rows={6}
+                rows={12}
                 className="w-full px-3 py-2 text-sm border border-neutral-200 dark:border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-400 dark:focus:ring-neutral-500 focus:border-transparent bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 transition-all resize-none"
                 placeholder="Tell us about yourself..."
               />
-            </div>
-
-            {/* Profile Preview */}
-            <div className="mt-8 p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800">
-              <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-4">
-                Preview
-              </h3>
-              <div className="flex items-start gap-4">
-                <Avatar
-                  publicKey={publicKey}
-                  pictureUrl={editedProfile.picture}
-                  alt="Profile preview"
-                  size={64}
-                />
-                <div className="flex-1">
-                  <h4 className="font-medium text-neutral-900 dark:text-neutral-100">
-                    {editedProfile.name || "Anonymous"}
-                  </h4>
-                  {editedProfile.about && (
-                    <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-2 whitespace-pre-wrap leading-relaxed">
-                      {editedProfile.about}
-                    </p>
-                  )}
-                </div>
-              </div>
             </div>
           </div>
         )}
