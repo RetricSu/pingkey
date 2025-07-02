@@ -23,9 +23,28 @@ interface StampProps {
   hash?: string;
   showArt?: boolean;
   providerId?: string;
+  showPostmark?: boolean;
+  postmarkText?: string;
+  showDate?: boolean;
+  date?: Date | string;
+  postmarkPosition?:
+    | "top-right"
+    | "top-left"
+    | "bottom-right"
+    | "bottom-left"
+    | "center";
 }
 
-export function Stamp({ hash, showArt = false, providerId }: StampProps) {
+export function Stamp({
+  hash,
+  showArt = false,
+  providerId,
+  showPostmark = false,
+  postmarkText = "HELLO PROFILE",
+  showDate = false,
+  date,
+  postmarkPosition = "top-right",
+}: StampProps) {
   return (
     <div className="relative transform rotate-1 hover:rotate-0 transition-transform duration-300">
       <div className="relative w-12 h-16 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 border-2 border-blue-300 dark:border-blue-700 rounded-sm shadow-sm">
@@ -86,6 +105,11 @@ export function Stamp({ hash, showArt = false, providerId }: StampProps) {
                   className="rounded-sm"
                   clickable={true}
                   providerId={providerId}
+                  showPostmark={showPostmark}
+                  postmarkText={postmarkText}
+                  showDate={showDate}
+                  date={date}
+                  postmarkPosition={postmarkPosition}
                 />
               ) : (
                 <svg
