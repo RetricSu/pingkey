@@ -45,7 +45,15 @@ export function CachedLetterCard({
     <div className="group relative bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-3 sm:p-6 transition-all duration-200 hover:shadow-md hover:border-neutral-300 dark:hover:border-neutral-700">
       {/* Floating Stamp in top-left corner */}
       <div className="absolute -top-2 -left-2 z-10">
-        <Stamp hash={letter.fullNote.id} showArt={true} />
+        <Stamp 
+          hash={letter.fullNote.id} 
+          showArt={true}
+          showPostmark={true}
+          postmarkText="PINGKEY POW MAIL OFFICE"
+          showDate={true}
+          date={new Date(letter.receivedAt)}
+          postmarkPosition="top-right"
+        />
       </div>
 
       {/* Header with timestamp and POW info */}
