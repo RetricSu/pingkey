@@ -52,7 +52,7 @@ export function SignInForm({ onCancel, onSuccess }: SignInFormProps) {
     setError("");
 
     try {
-      const keyPair = await generateNewKey(password);
+      await generateNewKey(password);
       success(
         "New key generated!",
         `Please use the dropdown menu with Export Key to backup your privatekey now!\n\n`
@@ -126,7 +126,7 @@ export function SignInForm({ onCancel, onSuccess }: SignInFormProps) {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Password to encrypt your key"
+                  placeholder="Choose a password to protect your key"
                   className="w-full px-3 py-2 text-xs bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded focus:outline-none focus:ring-1 focus:ring-neutral-300 dark:focus:ring-neutral-700 text-neutral-900 dark:text-neutral-100"
                   required
                 />
@@ -192,7 +192,7 @@ export function SignInForm({ onCancel, onSuccess }: SignInFormProps) {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter password to encrypt your new key"
+                  placeholder="Choose a password to protect your new key"
                   className="w-full px-3 py-2 text-xs bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded focus:outline-none focus:ring-1 focus:ring-neutral-300 dark:focus:ring-neutral-700 text-neutral-900 dark:text-neutral-100"
                   required
                 />
@@ -201,8 +201,8 @@ export function SignInForm({ onCancel, onSuccess }: SignInFormProps) {
               <div className="p-3 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded text-xs text-neutral-600 dark:text-neutral-400">
                 <p className="font-medium mb-1">Important:</p>
                 <p>
-                  Your private key will be generated and displayed once. Make
-                  sure to save it in a secure location!
+                  Your private key will be removed once you log out. Make sure
+                  to export it in a secure location!
                 </p>
               </div>
 
