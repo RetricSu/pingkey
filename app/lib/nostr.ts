@@ -214,6 +214,10 @@ export class Nostr {
     const events = await this.fetchEventFromRelays(filters, loadBigRelays());
     // only save the latest event
     const latestEvent = events.sort((a, b) => b.created_at - a.created_at)[0];
+    if (!latestEvent) {
+      return [];
+    }
+    
     const eventTags = latestEvent.tags;
     const relayTags = eventTags.filter((tag) => tag[0] === "r");
     return relayTags

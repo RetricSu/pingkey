@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import { useNostr } from "../../contexts/nostr";
 import { useAuth } from "../../contexts/auth";
 import { defaultProfile } from "app/lib/config";
@@ -13,6 +12,7 @@ import { RelayList } from "../../components/profile/relay-list";
 import { custom } from "../../components/dialog";
 import { SettingsModal } from "../../components/profile/settings-modal";
 import { useNotification } from "app/contexts/notification";
+import { Avatar } from "../../components/avatar";
 
 interface ClientProfileProps {
   slug: string;
@@ -61,7 +61,7 @@ export function ClientProfile({
         if (nostrProfile) {
           const freshProfile = {
             name: nostrProfile.name || defaultProfile.name,
-            picture: nostrProfile.picture || defaultProfile.picture,
+            picture: nostrProfile.picture || null,
             about: nostrProfile.about || defaultProfile.about,
             nip05: nostrProfile.nip05,
             lud16: nostrProfile.lud16,
@@ -133,6 +133,7 @@ export function ClientProfile({
             {...props}
             profile={profile}
             relayList={relayList}
+            publicKey={slug}
             onSaveProfile={handleSaveProfile}
             onSaveRelays={handleSaveRelays}
           />
@@ -180,14 +181,12 @@ export function ClientProfile({
       )}
 
       <div className="mb-8">
-        <Image
-          src={profile.picture || defaultProfile.picture || ""}
+        <Avatar
+          publicKey={slug}
+          pictureUrl={profile.picture}
           alt={profile.name || "Profile photo"}
-          className="rounded-full bg-gray-100 block lg:mt-5 mt-0 lg:mb-5 mb-10 mx-auto sm:float-right sm:ml-5 sm:mb-5"
-          unoptimized
-          width={160}
-          height={160}
-          priority
+          size={160}
+          className="bg-gray-100 block lg:mt-5 mt-0 lg:mb-5 mb-10 mx-auto sm:float-right sm:ml-5 sm:mb-5"
         />
         <h1 className="mb-8 text-2xl font-medium capitalize md:text-left text-center">
           {profile.name || slug}

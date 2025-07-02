@@ -48,3 +48,22 @@ Store this in a secure location and never share it.`;
 
   return { fileName: `nostr-private-key-${timestamp}.txt`, fileContent };
 }
+
+// Generate identicon avatar from public key
+export function generateIdenticon(publicKey: string, size: number = 64): string {
+  // Import identicon dynamically to avoid SSR issues
+  if (typeof window === 'undefined') {
+    // Return empty string on server side, will be replaced on client
+    return '';
+  }
+  
+  try {
+    const Identicon = require('identicon.js');
+    const hash = publicKey.slice(0, 15); // Use first 15 chars of pubkey as hash
+    const data = new Identicon(hash, size).toString();
+    return `data:image/png;base64,${data}`;
+  } catch (error) {
+    console.error('Error generating identicon:', error);
+    return '';
+  }
+}

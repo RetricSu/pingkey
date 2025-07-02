@@ -16,9 +16,9 @@ export const socialLinks = {
 
 export const defaultProfile: Profile = {
   name: "Anonymous",
-  picture: "https://api.dicebear.com/7.x/avataaars/svg?seed=Anonymous",
+  picture: null, // Uses identicon generated from public key instead of external URLs
   about:
-    "No profile set yet. Click 'Edit Profile' to set up your Nostr profile.",
+    "No profile set yet.",
 };
 
 export const DEFAULT_BIG_RELAY_URLS: string[] = [
