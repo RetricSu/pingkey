@@ -4,10 +4,12 @@ import { useState, useEffect } from "react";
 import { Profile, RelayListItem } from "app/lib/type";
 import { CustomDialogProps } from "../dialog";
 import { defaultProfile, DEFAULT_BIG_RELAY_URLS } from "app/lib/config";
+import { Avatar } from "../avatar";
 
 interface SettingsModalProps extends CustomDialogProps {
   profile: Profile;
   relayList: RelayListItem[];
+  publicKey: string; // Add publicKey as a prop
   onSaveProfile: (profile: Profile) => Promise<void>;
   onSaveRelays: (relayList: RelayListItem[]) => Promise<void>;
 }
@@ -15,6 +17,7 @@ interface SettingsModalProps extends CustomDialogProps {
 export function SettingsModal({
   profile,
   relayList,
+  publicKey,
   onSaveProfile,
   onSaveRelays,
   onResolve,
@@ -167,27 +170,7 @@ export function SettingsModal({
               />
             </div>
 
-            <div>
-              <label
-                htmlFor="picture"
-                className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2"
-              >
-                Profile Picture URL
-              </label>
-              <input
-                id="picture"
-                type="url"
-                value={editedProfile.picture || ""}
-                onChange={(e) =>
-                  setEditedProfile({
-                    ...editedProfile,
-                    picture: e.target.value,
-                  })
-                }
-                className="w-full px-3 py-2 text-sm border border-neutral-200 dark:border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-400 dark:focus:ring-neutral-500 focus:border-transparent bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 transition-all"
-                placeholder="https://example.com/avatar.jpg"
-              />
-            </div>
+
 
             <div>
               <label
@@ -214,16 +197,12 @@ export function SettingsModal({
                 Preview
               </h3>
               <div className="flex items-start gap-4">
-                {editedProfile.picture && (
-                  <img
-                    src={editedProfile.picture}
-                    alt="Profile preview"
-                    className="w-16 h-16 rounded-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = defaultProfile.picture || "";
-                    }}
-                  />
-                )}
+                <Avatar
+                  publicKey={publicKey}
+                  pictureUrl={editedProfile.picture}
+                  alt="Profile preview"
+                  size={64}
+                />
                 <div className="flex-1">
                   <h4 className="font-medium text-neutral-900 dark:text-neutral-100">
                     {editedProfile.name || "Anonymous"}

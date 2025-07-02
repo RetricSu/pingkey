@@ -69,7 +69,7 @@ export function useUserProfile(targetPubkey?: string): UseUserProfileReturn {
       if (nostrProfile) {
         const profileData: Profile = {
           name: nostrProfile.name || defaultProfile.name,
-          picture: nostrProfile.picture || defaultProfile.picture,
+          picture: nostrProfile.picture || null,
           about: nostrProfile.about || defaultProfile.about,
           nip05: nostrProfile.nip05,
           lud16: nostrProfile.lud16,

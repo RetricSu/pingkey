@@ -25,7 +25,7 @@ export default async function ProfilePage({ params }: PageProps) {
     initialProfile.status === "fulfilled" && initialProfile.value 
       ? {
           name: initialProfile.value.name || defaultProfile.name,
-          picture: initialProfile.value.picture || defaultProfile.picture,
+          picture: initialProfile.value.picture || null,
           about: initialProfile.value.about || defaultProfile.about,
           nip05: initialProfile.value.nip05,
           lud16: initialProfile.value.lud16,

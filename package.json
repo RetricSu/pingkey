@@ -13,6 +13,7 @@
     "@vercel/speed-insights": "^1.2.0",
     "@yudiel/react-qr-scanner": "^2.3.1",
     "feed": "^5.1.0",
+    "identicon.js": "^2.3.3",
     "katex": "^0.16.22",
     "next": "^15.3.3",
     "next-mdx-remote": "^5.0.0",

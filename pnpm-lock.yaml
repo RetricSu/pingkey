@@ -26,6 +26,9 @@ importers:
       feed:
         specifier: ^5.1.0
         version: 5.1.0
+      identicon.js:
+        specifier: ^2.3.3
+        version: 2.3.3
       katex:
         specifier: ^0.16.22
         version: 0.16.22
@@ -963,6 +966,9 @@ packages:
 
   i18next@19.9.2:
     resolution: {integrity: sha512-0i6cuo6ER6usEOtKajUUDj92zlG+KArFia0857xxiEHAQcUwh/RtOQocui1LPJwunSYT574Pk64aNva1kwtxZg==}
+
+  identicon.js@2.3.3:
+    resolution: {integrity: sha512-/qgOkXKZ7YbeCYbawJ9uQQ3XJ3uBg9VDpvHjabCAPp6aRMhjLaFAxG90+1TxzrhKaj6AYpVGrx6UXQfQA41UEA==}
 
   inline-style-parser@0.2.4:
     resolution: {integrity: sha512-0aO8FkhNZlj/ZIbNi7Lxxr12obT7cL1moPfE4tg1LkX7LlLfC6DeX4l2ZEud1ukP9jNQyNnfzQVqwbwmAATY4Q==}
@@ -2566,6 +2572,8 @@ snapshots:
   i18next@19.9.2:
     dependencies:
       '@babel/runtime': 7.27.6
+
+  identicon.js@2.3.3: {}
 
   inline-style-parser@0.2.4: {}
 
