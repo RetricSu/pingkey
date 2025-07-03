@@ -45,11 +45,16 @@ const ConnectWallet: React.FC<ConnectWalletProps> = ({ className }) => {
         className="cursor-pointer rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
         onClick={open}
       >
-        <div className="rounded-full mr-2">
-          {wallet && <img src={wallet.icon} alt="avatar" className="w-6 h-6" />}
-        </div>
         <div>
-          <h2 className="text-sm font-semibold">{balance} CKB</h2>
+          <div className="flex items-center gap-2">
+            <div className="rounded-full mr-2">
+              {wallet && (
+                <img src={wallet.icon} alt="avatar" className="w-6 h-6" />
+              )}
+            </div>
+            <h2 className="text-sm font-semibold">{balance} CKB</h2>
+          </div>
+
           <p className="text-xs flex items-center gap-2">
             {address ? `${address.slice(0, 10)}...${address.slice(-6)}` : ""}
           </p>

@@ -3,8 +3,12 @@
 import React from "react";
 import { ccc } from "@ckb-ccc/connector-react";
 import { CSSProperties } from "react";
+import { useSuppressDevWarnings } from "../hooks/useSuppressDevWarnings";
 
 export function CCCProvider({ children }: { children: React.ReactNode }) {
+  // 抑制开发模式下的CCC自定义元素重复注册警告
+  useSuppressDevWarnings();
+
   const defaultClient = React.useMemo(() => {
     return process.env.REACT_APP_IS_MAINNET === "true"
       ? new ccc.ClientPublicMainnet()
