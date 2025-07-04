@@ -8,7 +8,8 @@ import { DIDDocument, DIDSDK } from "app/lib/did-sdk";
 export default function Web5ConnectPage() {
   const { wallet, open, signerInfo} = ccc.useCcc();
 
-  const [did, setDid] = useState<DIDDocument | null>(null);
+  const [didIdentifier, setDidIdentifier] = useState<string | null>(null);
+  const [didDocument, setDidDocument] = useState<DIDDocument | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,11 +23,13 @@ export default function Web5ConnectPage() {
       const sdk = new DIDSDK(signerInfo.signer as Signer);
       sdk.findDIDCells().then((cells) => {
         if (cells.length > 0) {
-          const did = sdk.deserializeDIDDocument(cells[0].outputData);
-          setDid(did);
+          const did = sdk.parseDIDCell(cells[0]);
+          console.log(did);
+          setDidDocument(did.didWeb5Data);
+          setDidIdentifier(did.didIdentifier);
         }
         setIsLoading(false);
-      })
+      });
     }
   }, [signerInfo]);
 
@@ -45,8 +48,9 @@ export default function Web5ConnectPage() {
         // Refresh the DID cells after creation
         sdk.findDIDCells().then((cells) => {
           if (cells.length > 0) {
-            const did = sdk.deserializeDIDDocument(cells[0].outputData);
-            setDid(did);
+            const did = sdk.parseDIDCell(cells[0]);
+            setDidDocument(did.didWeb5Data);
+            setDidIdentifier(did.didIdentifier);
           }
         });
       }, 3000);
@@ -85,18 +89,19 @@ export default function Web5ConnectPage() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
               <p className="mt-2 text-gray-600 dark:text-gray-300">Loading DID...</p>
             </div>
-          ) : did ? (
+          ) : didDocument ? (
             <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-6">
               <h2 className="text-xl font-semibold mb-4 text-green-800 dark:text-green-200">
                 ✅ DID Found
               </h2>
+              <h3>{didIdentifier}</h3>
               <div className="space-y-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Nostr Public Key:
                   </label>
                   <code className="block mt-1 p-2 bg-gray-100 dark:bg-gray-800 rounded text-sm font-mono break-all">
-                    {did.verificationMethods.nostr}
+                    {didDocument.verificationMethods.nostr}
                   </code>
                 </div>
                 <div>
@@ -104,7 +109,7 @@ export default function Web5ConnectPage() {
                     Relay URL:
                   </label>
                   <code className="block mt-1 p-2 bg-gray-100 dark:bg-gray-800 rounded text-sm font-mono break-all">
-                    {did.services.nostr_relays.endpoints}
+                    {didDocument.services.nostr_relays.endpoints}
                   </code>
                 </div>
               </div>

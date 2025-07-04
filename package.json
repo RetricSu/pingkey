@@ -15,6 +15,7 @@
     "@vercel/analytics": "^1.5.0",
     "@vercel/speed-insights": "^1.2.0",
     "@yudiel/react-qr-scanner": "^2.3.1",
+    "base32": "^0.0.7",
     "feed": "^5.1.0",
     "identicon.js": "^2.3.3",
     "katex": "^0.16.22",
