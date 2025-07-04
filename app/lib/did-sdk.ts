@@ -140,13 +140,17 @@ export class DIDSDK {
     if (identifier.startsWith("0x")) {
       identifier = identifier.slice(2);
     }
-    const id = base32.encode(identifier);
+    // Convert hex string to bytes before base32 encoding
+    const bytes = Buffer.from(identifier, 'hex');
+    const id = base32.encode(bytes).toLowerCase();
     return `did:web5:${id}`;
   }
 
   decodeWeb5DIDString(did: string) {
     const id = did.split(":")[2];
-    const args = base32.decode(id) as string;
+    // Decode base32 to bytes, then convert bytes to hex string
+    const bytes = base32.decode(id);
+    const args = Buffer.from(bytes).toString('hex');
     return ("0x" + args) as Hex;
   }
 }
