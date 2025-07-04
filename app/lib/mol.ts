@@ -1,13 +1,15 @@
 import {
   mol,
-  HexLike,
   hexFrom,
+  numFrom,
+  ccc,
+} from "@ckb-ccc/core";
+import type {
+  HexLike,
   Hex,
   NumLike,
-  numFrom,
   Num,
   BytesLike,
-  ccc,
   Bytes,
 } from "@ckb-ccc/core";
 // the 1.9.0 version of @ckb-ccc/core complaints about type errors, so we use 1.8.1
