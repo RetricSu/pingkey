@@ -84,7 +84,7 @@ export class DIDSDK {
   }
 
   serializeDIDDocument(nostrPublicKey: string, relayUrl: string) {
-    const doc = {
+    const doc: DIDDocument = {
       verificationMethods: {
         nostr: nostrPublicKey,
       },
@@ -105,4 +105,23 @@ export class DIDSDK {
     });
     return hexFrom(didWeb5Data.toBytes());
   }
+
+  deserializeDIDDocument(outputData: Hex) {
+    const didWeb5Data = molecule.DidWeb5Data.decode(outputData);
+    const docs: DIDDocument = cbor.decode(didWeb5Data.value.document);
+    return docs;
+  }
+}
+
+export interface DIDDocument {
+  verificationMethods: {
+    nostr: string;
+  };
+  alsoKnownAs: string[];
+  services: {
+    nostr_relays: {
+      type: "NostrRelays";
+      endpoints: string;
+    };
+  };
 }
