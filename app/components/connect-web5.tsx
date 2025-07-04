@@ -1,5 +1,5 @@
 import { alert } from "app/components/dialog";
-import ConnectWallet from "./wallet/connect-wallet";
+import Link from "next/link";
 
 export function ConnectWeb5() {
   return (
@@ -65,7 +65,12 @@ export function ConnectWeb5() {
               </p>
             </div>
           </div>
-          <ConnectWallet className="px-4 py-2 text-sm text-white dark:text-black bg-blue-600 dark:bg-blue-400 hover:bg-blue-700 dark:hover:bg-blue-300 rounded transition-colors" />
+          <Link
+            href="/web5-connect"
+            className="px-4 py-2 text-sm text-white dark:text-black bg-blue-600 dark:bg-blue-400 hover:bg-blue-700 dark:hover:bg-blue-300 rounded transition-colors"
+          >
+            Connect Web5
+          </Link>
         </div>
 
         <div className="text-xs text-neutral-600 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-900 rounded-lg p-3 border border-neutral-200 dark:border-neutral-800">

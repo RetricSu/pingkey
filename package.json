@@ -8,6 +8,8 @@
   },
   "dependencies": {
     "@ckb-ccc/connector-react": "^1.0.18",
+    "@ckb-ccc/core": "1.8.1",
+    "@ipld/dag-cbor": "^9.2.4",
     "@noble/hashes": "^1.8.0",
     "@types/p5": "^1.7.6",
     "@vercel/analytics": "^1.5.0",

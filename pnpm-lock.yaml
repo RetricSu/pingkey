@@ -11,6 +11,12 @@ importers:
       '@ckb-ccc/connector-react':
         specifier: ^1.0.18
         version: 1.0.18(@types/react@19.1.7)(react@19.1.0)(typescript@5.8.3)(zod@3.25.64)
+      '@ckb-ccc/core':
+        specifier: 1.8.1
+        version: 1.8.1(typescript@5.8.3)(zod@3.25.64)
+      '@ipld/dag-cbor':
+        specifier: ^9.2.4
+        version: 9.2.4
       '@noble/hashes':
         specifier: ^1.8.0
         version: 1.8.0
@@ -147,6 +153,9 @@ packages:
 
   '@ckb-ccc/connector@1.0.18':
     resolution: {integrity: sha512-zo923w2aFUSjepAIKituvsFxRB75NYVNzwLTIqCD1gcE5Pt5Cmg0U+p/4o5OweqKjL2lLLnsL+NDm4YhTwA/dA==}
+
+  '@ckb-ccc/core@1.8.1':
+    resolution: {integrity: sha512-xdiFORZ/qb9Q0cdvppnaF1BHz8KksT342AVdv3pDR+A3IwGk6HAPqRqmX/5VLg3LSf/se9nlJQry1sGdbu/iyA==}
 
   '@ckb-ccc/core@1.9.0':
     resolution: {integrity: sha512-znKLUJ9rTThtkyUKykZXfNM+Pj1GqCrlhYwl3LZ2EZSPQnQLTD6OquWoEaXLQppgGQ3+GYGjl6ZZDJhu796mHA==}
@@ -308,6 +317,10 @@ packages:
     engines: {node: ^18.17.0 || ^20.3.0 || >=21.0.0}
     cpu: [x64]
     os: [win32]
+
+  '@ipld/dag-cbor@9.2.4':
+    resolution: {integrity: sha512-GbDWYl2fdJgkYtIJN0HY9oO0o50d1nB4EQb7uYWKUd2ztxCjxiEW3PjwGG0nqUpN1G4Cug6LX8NzbA7fKT+zfA==}
+    engines: {node: '>=16.0.0', npm: '>=7.0.0'}
 
   '@isaacs/fs-minipass@4.0.1':
     resolution: {integrity: sha512-wgm9Ehl2jpeqP3zw/7mo3kRHFp5MEDhqAdwy1fTGkHAwnkGOVsgpvQhL8B5n1qlb01jV3n/bI0ZfZp5lWA1k4w==}
@@ -882,6 +895,10 @@ packages:
   caniuse-lite@1.0.30001721:
     resolution: {integrity: sha512-cOuvmUVtKrtEaoKiO0rSc29jcjwMwX5tOHDy4MgVFEWiUXj4uBMJkwI8MDySkgXidpMiHUcviogAvFi4pA2hDQ==}
 
+  cborg@4.2.12:
+    resolution: {integrity: sha512-z126yLoavS75cdTuiKu61RC3Y3trqtDAgQRa5Q0dpHn1RmqhIedptWXKnk0lQ5yo/GmcV9myvIkzFgZ8GnqSog==}
+    hasBin: true
+
   ccount@2.0.1:
     resolution: {integrity: sha512-eyrF0jiFpY+3drT6383f1qhkbGsLSifNAjA61IUjZjmLCWjItY6LB9ft9YhoDgwfmclB2zhu51Lc7+95b8NRAg==}
 
@@ -1255,6 +1272,7 @@ packages:
 
   identicon.js@2.3.3:
     resolution: {integrity: sha512-/qgOkXKZ7YbeCYbawJ9uQQ3XJ3uBg9VDpvHjabCAPp6aRMhjLaFAxG90+1TxzrhKaj6AYpVGrx6UXQfQA41UEA==}
+
   ieee754@1.2.1:
     resolution: {integrity: sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==}
 
@@ -1589,6 +1607,9 @@ packages:
 
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
+
+  multiformats@13.3.7:
+    resolution: {integrity: sha512-meL9DERHj+fFVWoOX9fXqfcYcSpUfSYJPcFvDPKrxitICbwAoWR+Ut4j5NO9zAT917HUHLQmqzQbAsGNHlDcxQ==}
 
   nan@2.22.2:
     resolution: {integrity: sha512-DANghxFkS1plDdRsX0X9pm0Z6SJNN6gBdtXfanwoZ8hooC5gosGFSBGRYHUVPz1asKA/kMRqDRdHrluZ61SpBQ==}
@@ -2212,6 +2233,28 @@ snapshots:
       - utf-8-validate
       - zod
 
+  '@ckb-ccc/core@1.8.1(typescript@5.8.3)(zod@3.25.64)':
+    dependencies:
+      '@joyid/ckb': 1.1.2(typescript@5.8.3)(zod@3.25.64)
+      '@noble/ciphers': 0.5.3
+      '@noble/curves': 1.9.2
+      '@noble/hashes': 1.8.0
+      abort-controller: 3.0.0
+      bech32: 2.0.0
+      bitcoinjs-message: 2.2.0
+      bs58check: 4.0.0
+      buffer: 6.0.3
+      cross-fetch: 4.1.0
+      ethers: 6.14.4
+      isomorphic-ws: 5.0.0(ws@8.18.2)
+      ws: 8.18.2
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - typescript
+      - utf-8-validate
+      - zod
+
   '@ckb-ccc/core@1.9.0(typescript@5.8.3)(zod@3.25.64)':
     dependencies:
       '@joyid/ckb': 1.1.2(typescript@5.8.3)(zod@3.25.64)
@@ -2453,6 +2496,11 @@ snapshots:
 
   '@img/sharp-win32-x64@0.34.2':
     optional: true
+
+  '@ipld/dag-cbor@9.2.4':
+    dependencies:
+      cborg: 4.2.12
+      multiformats: 13.3.7
 
   '@isaacs/fs-minipass@4.0.1':
     dependencies:
@@ -3040,6 +3088,8 @@ snapshots:
 
   caniuse-lite@1.0.30001721: {}
 
+  cborg@4.2.12: {}
+
   ccount@2.0.1: {}
 
   character-entities-html4@2.1.0: {}
@@ -3493,6 +3543,7 @@ snapshots:
       '@babel/runtime': 7.27.6
 
   identicon.js@2.3.3: {}
+
   ieee754@1.2.1: {}
 
   inherits@2.0.4: {}
@@ -3992,6 +4043,8 @@ snapshots:
   ms@2.0.0: {}
 
   ms@2.1.3: {}
+
+  multiformats@13.3.7: {}
 
   nan@2.22.2: {}
 
