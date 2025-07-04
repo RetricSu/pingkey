@@ -28,7 +28,7 @@ export class DIDSDK {
       scriptType: "lock",
       scriptSearchMode: "exact",
       filter: {
-        scriptLenRange: [32 + 1 + 20, 32 + 1 + 20],
+        scriptLenRange: [32 + 1 + 20, 32 + 1 + 21],
         outputData: "0x00000000",
         outputDataSearchMode: "prefix",
       },
@@ -91,17 +91,15 @@ export class DIDSDK {
       },
     };
 
-    const didWeb5Data = molecule.DidWeb5Data.from({
-      value: {
-        document: cbor.encode(doc),
-        localId: null,
-      },
+    const didWeb5Data = new molecule.DidWeb5Data({
+      document: cbor.encode(doc),
+      localId: null,
     });
-    console.log(didWeb5Data);
     return hexFrom(didWeb5Data.toBytes());
   }
 
   deserializeDIDDocument(outputData: Hex) {
+    console.log(outputData, molecule.DidWeb5Data.decode(outputData));
     const didWeb5Data = molecule.DidWeb5Data.decode(outputData);
     const docs: DIDDocument = cbor.decode(didWeb5Data.value.document);
     return docs;

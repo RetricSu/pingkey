@@ -26,10 +26,7 @@ export default function Web5ConnectPage() {
           setDid(did);
         }
         setIsLoading(false);
-      }).catch((err) => {
-        setError("Failed to load DID: " + err.message);
-        setIsLoading(false);
-      });
+      })
     }
   }, [signerInfo]);
 
