@@ -73,13 +73,7 @@ export class DIDSDK {
   }
 
   hashDIDCellArgs(cellInputLike: CellInputLike, outputIndex: number) {
-    const cellInput = CellInput.from(cellInputLike);
-    const hash = hashCkb(
-      Since.from(cellInput.since ?? 0).toBytes(),
-      cellInput.previousOutput.txHash,
-      numLeToBytes(cellInput.previousOutput.index, 8),
-      numLeToBytes(outputIndex, 8)
-    );
+    const hash = ccc.hashTypeId(cellInputLike, outputIndex);
     return hash.slice(0, 42) as Hex; // first 20 bytes
   }
 
@@ -103,6 +97,7 @@ export class DIDSDK {
         localId: null,
       },
     });
+    console.log(didWeb5Data);
     return hexFrom(didWeb5Data.toBytes());
   }
 

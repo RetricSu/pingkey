@@ -3,19 +3,17 @@
 import React, { useEffect, useState } from "react";
 import { ccc, Signer } from "@ckb-ccc/connector-react";
 import ConnectWallet from "../components/wallet/connect-wallet";
-import { useSuppressDevWarnings } from "app/hooks/useSuppressDevWarnings";
 import { DIDDocument, DIDSDK } from "app/lib/did-sdk";
 
 export default function Web5ConnectPage() {
   const { wallet, open, signerInfo} = ccc.useCcc();
-  useSuppressDevWarnings();
 
   const [did, setDid] = useState<DIDDocument | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [nostrPublicKey, setNostrPublicKey] = useState("");
-  const [relayUrl, setRelayUrl] = useState("");
+  const [nostrPublicKey, setNostrPublicKey] = useState("ce6232feaec4e6d01a4e00daa3648030c42017bdf589e34b53744fc49c5cba8a");
+  const [relayUrl, setRelayUrl] = useState("wss://relay.pingkey.xyz");
 
   useEffect(() => {
     if (signerInfo) {
@@ -58,6 +56,7 @@ export default function Web5ConnectPage() {
       
       console.log("DID created with transaction hash:", txHash);
     } catch (err) {
+      console.error(err);
       setError("Failed to create DID: " + (err as Error).message);
     } finally {
       setIsCreating(false);
@@ -66,11 +65,8 @@ export default function Web5ConnectPage() {
 
   return (
     <section className="max-w-2xl mx-auto p-6 space-y-6">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold mb-4">Web5 Connect</h1>
-        <p className="text-gray-600 dark:text-gray-300 mb-6">
-          Connect your wallet and manage your Decentralized Identity (DID)
-        </p>
+      <div className="text-center flex justify-center items-center gap-4">
+        <ConnectWallet className="px-4 py-2 text-sm text-white dark:text-black bg-blue-600 dark:bg-blue-400 hover:bg-blue-700 dark:hover:bg-blue-300 rounded transition-colors" />
       </div>
 
       {!signerInfo ? (
@@ -78,7 +74,6 @@ export default function Web5ConnectPage() {
           <p className="mb-4 text-gray-600 dark:text-gray-300">
             Please connect your wallet to continue
           </p>
-          <ConnectWallet className="px-4 py-2 text-sm text-white dark:text-black bg-blue-600 dark:bg-blue-400 hover:bg-blue-700 dark:hover:bg-blue-300 rounded transition-colors" />
         </div>
       ) : (
         <div className="space-y-6">

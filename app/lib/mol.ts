@@ -1,9 +1,4 @@
-import {
-  mol,
-  hexFrom,
-  numFrom,
-  ccc,
-} from "@ckb-ccc/core";
+import { mol, hexFrom, numFrom, ccc } from "@ckb-ccc/core";
 import type {
   HexLike,
   Hex,
@@ -38,11 +33,18 @@ export class DidWeb5DataV1 extends mol.Entity.Base<
   DidWeb5DataV1Like,
   DidWeb5DataV1
 >() {
-  constructor(document: Hex, localId?: Hex) {
+  constructor(document: BytesLike, localId?: BytesLike) {
     super();
 
     this.document = ccc.bytesFrom(document);
     this.localId = localId ? ccc.bytesFrom(localId) : undefined;
+  }
+
+  static from(data: DidWeb5DataV1Like): DidWeb5DataV1 {
+    if (data instanceof DidWeb5DataV1) {
+      return data;
+    }
+    return new DidWeb5DataV1(data.document, data.localId ?? undefined);
   }
 }
 
@@ -50,11 +52,18 @@ export class DidWeb5DataV1 extends mol.Entity.Base<
 //   DidWeb5DataV1,
 // }
 
-export type DidWeb5DataLike = {
-  value: DidWeb5DataV1Like;
-};
+export interface DidWeb5Data {
+  type: "DidWeb5DataV1";
+  value: DidWeb5DataV1;
+}
 
-@mol.codec(mol.union({ DidWeb5DataV1 }))
+export interface DidWeb5DataLike {
+  value: DidWeb5DataV1Like;
+}
+
+export const DidWeb5DataCodec = mol.union({ DidWeb5DataV1: DidWeb5DataV1Codec });
+
+@mol.codec(DidWeb5DataCodec)
 export class DidWeb5Data extends mol.Entity.Base<
   DidWeb5DataLike,
   DidWeb5Data
