@@ -1,4 +1,3 @@
-import { CellDep, OutPoint } from "@ckb-ccc/connector-react";
 import { Profile } from "./type";
 
 export const metaData = {
