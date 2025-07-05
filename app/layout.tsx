@@ -12,6 +12,7 @@ import { NotificationProvider } from "./contexts/notification";
 import { NotificationContainer } from "./components/notification";
 import { metaData } from "./lib/config";
 import { CCCProvider } from "./contexts/ccc";
+import { Web5DIDProvider } from "./contexts/web5-did";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -89,14 +90,16 @@ export default function RootLayout({
             <NostrProvider>
               <AuthProvider>
                 <CCCProvider>
-                  <main className="flex-auto min-w-0 mt-2 md:mt-6 flex flex-col px-6 sm:px-4 md:px-0 max-w-[624px] w-full">
-                    <Navbar />
-                    {children}
-                    <Footer />
-                    <Analytics />
-                    <SpeedInsights />
-                  </main>
-                  <NotificationContainer />
+                  <Web5DIDProvider>
+                    <main className="flex-auto min-w-0 mt-2 md:mt-6 flex flex-col px-6 sm:px-4 md:px-0 max-w-[624px] w-full">
+                      <Navbar />
+                      {children}
+                      <Footer />
+                      <Analytics />
+                      <SpeedInsights />
+                    </main>
+                    <NotificationContainer />
+                  </Web5DIDProvider>
                 </CCCProvider>
               </AuthProvider>
             </NostrProvider>

@@ -1,64 +1,33 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { ccc, Signer } from "@ckb-ccc/connector-react";
+import React, { useState } from "react";
+import { ccc } from "@ckb-ccc/connector-react";
 import ConnectWallet from "../components/wallet/connect-wallet";
-import { DIDDocument, DIDSDK } from "app/lib/did-sdk";
+import { useWeb5DID } from "../contexts/web5-did";
 
 export default function Web5ConnectPage() {
-  const { wallet, open, signerInfo} = ccc.useCcc();
+  const { signerInfo } = ccc.useCcc();
+  const { 
+    didIdentifier, 
+    didDocument, 
+    isLoading, 
+    error, 
+    createDID 
+  } = useWeb5DID();
 
-  const [didIdentifier, setDidIdentifier] = useState<string | null>(null);
-  const [didDocument, setDidDocument] = useState<DIDDocument | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [nostrPublicKey, setNostrPublicKey] = useState("ce6232feaec4e6d01a4e00daa3648030c42017bdf589e34b53744fc49c5cba8a");
   const [relayUrl, setRelayUrl] = useState("wss://relay.pingkey.xyz");
-
-  useEffect(() => {
-    if (signerInfo) {
-      setIsLoading(true);
-      setError(null);
-      const sdk = new DIDSDK(signerInfo.signer as Signer);
-      sdk.findDIDCells().then((cells) => {
-        if (cells.length > 0) {
-          const did = sdk.parseDIDCell(cells[0]);
-          console.log(did);
-          setDidDocument(did.didWeb5Data);
-          setDidIdentifier(did.didIdentifier);
-        }
-        setIsLoading(false);
-      });
-    }
-  }, [signerInfo]);
 
   const handleCreateDID = async () => {
     if (!signerInfo || !nostrPublicKey || !relayUrl) return;
     
     setIsCreating(true);
-    setError(null);
     
     try {
-      const sdk = new DIDSDK(signerInfo.signer as Signer);
-      const txHash = await sdk.createDID(nostrPublicKey, relayUrl);
-      
-      // Wait a moment for the transaction to be processed
-      setTimeout(() => {
-        // Refresh the DID cells after creation
-        sdk.findDIDCells().then((cells) => {
-          if (cells.length > 0) {
-            const did = sdk.parseDIDCell(cells[0]);
-            setDidDocument(did.didWeb5Data);
-            setDidIdentifier(did.didIdentifier);
-          }
-        });
-      }, 3000);
-      
-      console.log("DID created with transaction hash:", txHash);
+      await createDID(nostrPublicKey, relayUrl);
     } catch (err) {
       console.error(err);
-      setError("Failed to create DID: " + (err as Error).message);
     } finally {
       setIsCreating(false);
     }
