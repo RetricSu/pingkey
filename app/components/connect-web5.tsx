@@ -130,8 +130,8 @@ export function ConnectWeb5() {
           </p>
           <ul className="space-y-1 ml-4 list-disc">
             <li>Decentralized Identity that you own and control</li>
+            <li>Allows you get rid of the big relays for other people to find you</li>
             <li>Enhanced cross-platform verification and authentication</li>
-            <li>Secure, private identity management without intermediaries</li>
             <li>Seamless integration with Web5 ecosystem applications</li>
           </ul>
         </div>
