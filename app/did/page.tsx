@@ -4,6 +4,81 @@ import React, { useState } from "react";
 import { ccc } from "@ckb-ccc/connector-react";
 import ConnectWallet from "../components/wallet/connect-wallet";
 import { useWeb5DID } from "../contexts/web5-did";
+import { custom, CustomDialogProps } from "../components/dialog";
+
+// Custom dialog component for updating DID
+interface UpdateDIDData {
+  nostrPublicKey: string;
+  relayUrl: string;
+}
+
+interface UpdateDIDDialogProps extends CustomDialogProps<UpdateDIDData> {
+  existingNostrKey?: string;
+  existingRelayUrl?: string;
+}
+
+function UpdateDIDDialog({ onResolve, onReject, existingNostrKey = "", existingRelayUrl = "" }: UpdateDIDDialogProps) {
+  const [nostrPublicKey, setNostrPublicKey] = useState(existingNostrKey);
+  const [relayUrl, setRelayUrl] = useState(existingRelayUrl);
+
+  const handleUpdate = () => {
+    if (!nostrPublicKey.trim() || !relayUrl.trim()) {
+      return;
+    }
+    onResolve({ nostrPublicKey: nostrPublicKey.trim(), relayUrl: relayUrl.trim() });
+  };
+
+  const handleCancel = () => {
+    onReject();
+  };
+
+  return (
+    <div className="p-6 space-y-4">
+      <div className="text-center">
+        <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-2">
+          Update DID
+        </h3>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          Update your Nostr public key and relay URL
+        </p>
+      </div>
+
+      <div className="space-y-4">
+        <input
+          type="text"
+          value={nostrPublicKey}
+          onChange={(e) => setNostrPublicKey(e.target.value)}
+          placeholder="Nostr public key"
+          className="w-full px-4 py-3 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 transition-colors"
+        />
+
+        <input
+          type="text"
+          value={relayUrl}
+          onChange={(e) => setRelayUrl(e.target.value)}
+          placeholder="Relay URL"
+          className="w-full px-4 py-3 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 transition-colors"
+        />
+      </div>
+
+      <div className="flex gap-3">
+        <button
+          onClick={handleCancel}
+          className="flex-1 px-4 py-2 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors duration-200 font-medium text-sm"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleUpdate}
+          disabled={!nostrPublicKey.trim() || !relayUrl.trim()}
+          className="flex-1 px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 font-medium text-sm"
+        >
+          Update
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function Web5ConnectPage() {
   const { signerInfo } = ccc.useCcc();
@@ -19,7 +94,6 @@ export default function Web5ConnectPage() {
 
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [showUpdateForm, setShowUpdateForm] = useState(false);
   const [nostrPublicKey, setNostrPublicKey] = useState(
     "ce6232feaec4e6d01a4e00daa3648030c42017bdf589e34b53744fc49c5cba8a"
   );
@@ -41,13 +115,25 @@ export default function Web5ConnectPage() {
   };
 
   const handleUpdateDID = async () => {
-    if (!signerInfo || !nostrPublicKey || !relayUrl) return;
-
-    setIsUpdating(true);
+    if (!signerInfo || !didDocument) return;
 
     try {
-      await updateDID(nostrPublicKey, relayUrl);
-      setShowUpdateForm(false);
+      // Show the update dialog and wait for user input
+      const result = await custom((props: CustomDialogProps<UpdateDIDData>) => (
+        <UpdateDIDDialog
+          {...props}
+          existingNostrKey={didDocument.verificationMethods?.nostr || ""}
+          existingRelayUrl={didDocument.services?.nostr_relays?.endpoints || ""}
+        />
+      ), {
+        maxWidth: "sm",
+        closeOnBackdrop: true,
+      });
+
+      if (result) {
+        setIsUpdating(true);
+        await updateDID(result.nostrPublicKey, result.relayUrl);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -69,15 +155,6 @@ export default function Web5ConnectPage() {
 
   const handleRefresh = async () => {
     await refreshDID();
-  };
-
-  const handleShowUpdateForm = () => {
-    if (!showUpdateForm && didDocument) {
-      // Pre-fill form with existing DID information
-      setNostrPublicKey(didDocument.verificationMethods.nostr || "");
-      setRelayUrl(didDocument.services.nostr_relays.endpoints || "");
-    }
-    setShowUpdateForm(!showUpdateForm);
   };
 
   return (
@@ -196,10 +273,11 @@ export default function Web5ConnectPage() {
 
               <div className="flex gap-3 justify-center">
                 <button
-                  onClick={handleShowUpdateForm}
-                  className="px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors duration-200 font-medium text-sm"
+                  onClick={handleUpdateDID}
+                  disabled={isUpdating}
+                  className="px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 font-medium text-sm"
                 >
-                  {showUpdateForm ? "Cancel Update" : "Update DID"}
+                  {isUpdating ? "Updating..." : "Update DID"}
                 </button>
                 <button
                   onClick={handleRefresh}
@@ -209,45 +287,6 @@ export default function Web5ConnectPage() {
                   Refresh
                 </button>
               </div>
-
-              {showUpdateForm && (
-                <div className="space-y-4 pt-4 border-t border-neutral-200 dark:border-neutral-800">
-                  <div className="text-center">
-                    <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-2">
-                      Update DID
-                    </h3>
-                    <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                      Update your Nostr public key and relay URL
-                    </p>
-                  </div>
-
-                  <div className="space-y-4">
-                    <input
-                      type="text"
-                      value={nostrPublicKey}
-                      onChange={(e) => setNostrPublicKey(e.target.value)}
-                      placeholder="Nostr public key"
-                      className="w-full px-4 py-3 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 transition-colors"
-                    />
-
-                    <input
-                      type="text"
-                      value={relayUrl}
-                      onChange={(e) => setRelayUrl(e.target.value)}
-                      placeholder="Relay URL"
-                      className="w-full px-4 py-3 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 transition-colors"
-                    />
-                  </div>
-
-                  <button
-                    onClick={handleUpdateDID}
-                    disabled={isUpdating || !nostrPublicKey || !relayUrl}
-                    className="w-full px-6 py-3 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 font-medium"
-                  >
-                    {isUpdating ? "Updating..." : "Update DID"}
-                  </button>
-                </div>
-              )}
             </div>
           ) : (
             <div className="space-y-6">
