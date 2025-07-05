@@ -16,6 +16,7 @@ interface Web5DIDContextType {
   isLoading: boolean;
   error: string | null;
   createDID: (nostrPublicKey: string, relayUrl: string) => Promise<void>;
+  updateDID: (nostrPublicKey: string, relayUrl: string) => Promise<void>;
   refreshDID: () => Promise<void>;
 }
 
@@ -95,6 +96,38 @@ export function Web5DIDProvider({ children }: Web5DIDProviderProps) {
     }
   };
 
+  const updateDID = async (nostrPublicKey: string, relayUrl: string) => {
+    if (!signerInfo) {
+      throw new Error("No signer available");
+    }
+    
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const sdk = new DIDSDK(signerInfo.signer as Signer);
+      // For updating, we essentially create a new DID with updated information
+      const txHash = await sdk.createDID(nostrPublicKey, relayUrl);
+      
+      // Wait a moment for the transaction to be processed
+      setTimeout(async () => {
+        try {
+          await searchForDID(sdk);
+        } catch (err) {
+          console.error("Failed to refresh DID after update:", err);
+        }
+      }, 3000);
+      
+      console.log("DID updated with transaction hash:", txHash);
+    } catch (err) {
+      console.error("Failed to update DID:", err);
+      setError("Failed to update DID: " + (err as Error).message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Search for DID when signerInfo becomes available
   useEffect(() => {
     if (signerInfo) {
@@ -113,6 +146,7 @@ export function Web5DIDProvider({ children }: Web5DIDProviderProps) {
     isLoading,
     error,
     createDID,
+    updateDID,
     refreshDID,
   };
 

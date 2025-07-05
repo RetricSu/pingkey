@@ -108,7 +108,7 @@ export function ConnectWeb5() {
             </div>
           </div>
           <Link
-            href="/web5-connect"
+            href="/did"
             className="px-4 py-2 text-sm text-white dark:text-black bg-blue-600 dark:bg-blue-400 hover:bg-blue-700 dark:hover:bg-blue-300 rounded transition-colors"
           >
             {didDocument ? "Manage DID" : "Connect Web5"}
