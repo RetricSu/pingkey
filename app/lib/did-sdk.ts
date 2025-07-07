@@ -21,6 +21,7 @@ export class DIDSDK {
   async getDIDLiveCell(web5DIDString: string) {
     const results: Cell[] = [];
     const args = this.decodeWeb5DIDString(web5DIDString);
+    console.log("args", args);
     const typeScript = {
       args: args,
       codeHash: this.script_info.code_hash,
@@ -61,6 +62,7 @@ export class DIDSDK {
         results.push(cell);
       }
     }
+    console.log("results", results);
     return results;
   }
 
@@ -140,17 +142,20 @@ export class DIDSDK {
     if (identifier.startsWith("0x")) {
       identifier = identifier.slice(2);
     }
-    // Convert hex string to bytes before base32 encoding
-    const bytes = Buffer.from(identifier, 'hex');
-    const id = base32.encode(bytes).toLowerCase();
+    // Convert hex to buffer, then to binary string for base32 encoding
+    const bytes = Buffer.from(identifier, "hex");
+    const binaryString = bytes.toString("binary");
+    const id = base32.encode(binaryString).toLowerCase();
     return `did:web5:${id}`;
   }
 
   decodeWeb5DIDString(did: string) {
     const id = did.split(":")[2];
-    // Decode base32 to bytes, then convert bytes to hex string
-    const bytes = base32.decode(id);
-    const args = Buffer.from(bytes).toString('hex');
+    // The base32 library returns a string, but we need to treat it as binary data
+    const decodedString = base32.decode(id.toUpperCase());
+    // Convert the string to bytes by treating each character as a byte
+    const bytes = Buffer.from(decodedString, "binary");
+    const args = bytes.toString("hex");
     return ("0x" + args) as Hex;
   }
 }
