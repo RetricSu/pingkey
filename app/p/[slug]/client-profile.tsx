@@ -208,6 +208,7 @@ export function ClientProfile({
 
       <ProfileActions
         slug={slug}
+        slugType={slugType}
         pubkey={middlewarePubkey}
         profile={profile}
         relayList={relayList}
