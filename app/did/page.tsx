@@ -5,6 +5,7 @@ import { ccc } from "@ckb-ccc/connector-react";
 import ConnectWallet from "../components/wallet/connect-wallet";
 import { useWeb5DID } from "../contexts/web5-did";
 import { custom, CustomDialogProps } from "../components/dialog";
+import { CopyButton } from "app/components/copy-button";
 
 // Custom dialog component for updating DID
 interface UpdateDIDData {
@@ -17,7 +18,12 @@ interface UpdateDIDDialogProps extends CustomDialogProps<UpdateDIDData> {
   existingRelayUrl?: string;
 }
 
-function UpdateDIDDialog({ onResolve, onReject, existingNostrKey = "", existingRelayUrl = "" }: UpdateDIDDialogProps) {
+function UpdateDIDDialog({
+  onResolve,
+  onReject,
+  existingNostrKey = "",
+  existingRelayUrl = "",
+}: UpdateDIDDialogProps) {
   const [nostrPublicKey, setNostrPublicKey] = useState(existingNostrKey);
   const [relayUrl, setRelayUrl] = useState(existingRelayUrl);
 
@@ -25,7 +31,10 @@ function UpdateDIDDialog({ onResolve, onReject, existingNostrKey = "", existingR
     if (!nostrPublicKey.trim() || !relayUrl.trim()) {
       return;
     }
-    onResolve({ nostrPublicKey: nostrPublicKey.trim(), relayUrl: relayUrl.trim() });
+    onResolve({
+      nostrPublicKey: nostrPublicKey.trim(),
+      relayUrl: relayUrl.trim(),
+    });
   };
 
   const handleCancel = () => {
@@ -98,7 +107,6 @@ export default function Web5ConnectPage() {
     "ce6232feaec4e6d01a4e00daa3648030c42017bdf589e34b53744fc49c5cba8a"
   );
   const [relayUrl, setRelayUrl] = useState("wss://relay.pingkey.xyz");
-  const [copySuccess, setCopySuccess] = useState(false);
 
   const handleCreateDID = async () => {
     if (!signerInfo || !nostrPublicKey || !relayUrl) return;
@@ -119,16 +127,21 @@ export default function Web5ConnectPage() {
 
     try {
       // Show the update dialog and wait for user input
-      const result = await custom((props: CustomDialogProps<UpdateDIDData>) => (
-        <UpdateDIDDialog
-          {...props}
-          existingNostrKey={didDocument.verificationMethods?.nostr || ""}
-          existingRelayUrl={didDocument.services?.nostr_relays?.endpoints || ""}
-        />
-      ), {
-        maxWidth: "sm",
-        closeOnBackdrop: true,
-      });
+      const result = await custom(
+        (props: CustomDialogProps<UpdateDIDData>) => (
+          <UpdateDIDDialog
+            {...props}
+            existingNostrKey={didDocument.verificationMethods?.nostr || ""}
+            existingRelayUrl={
+              didDocument.services?.nostr_relays?.endpoints || ""
+            }
+          />
+        ),
+        {
+          maxWidth: "sm",
+          closeOnBackdrop: true,
+        }
+      );
 
       if (result) {
         setIsUpdating(true);
@@ -138,18 +151,6 @@ export default function Web5ConnectPage() {
       console.error(err);
     } finally {
       setIsUpdating(false);
-    }
-  };
-
-  const handleCopyDID = async () => {
-    if (!didIdentifier) return;
-
-    try {
-      await navigator.clipboard.writeText(didIdentifier);
-      setCopySuccess(true);
-      setTimeout(() => setCopySuccess(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy DID:", err);
     }
   };
 
@@ -197,41 +198,34 @@ export default function Web5ConnectPage() {
                   <code className="text-xs text-neutral-600 dark:text-neutral-400 font-mono break-all flex-1">
                     {didIdentifier}
                   </code>
-                  <button
-                    onClick={handleCopyDID}
-                    className="p-1 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors"
-                    title="Copy DID"
-                  >
-                    {copySuccess ? (
-                      <svg
-                        className="w-4 h-4 text-green-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                    ) : (
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                        />
-                      </svg>
-                    )}
-                  </button>
+                  <CopyButton value={didIdentifier || ""} children={<></>} />
+                </div>
+              </div>
+
+              <div className="bg-neutral-50 dark:bg-neutral-900/20 border border-neutral-200 dark:border-neutral-800 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                    Share Web5 Profile
+                  </h3>
+                </div>
+                <p className="text-xs text-neutral-600 dark:text-neutral-400 mb-4">
+                  Web5 DID-based profile works better for connectivity and
+                  discovery. It doesn't rely on Nostr big relays and it has key
+                  rotation for multiple public keys.
+                </p>
+
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <code className="text-xs text-neutral-600 dark:text-neutral-400 font-mono break-all flex-1 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded px-2 py-1">
+                      {typeof window !== "undefined"
+                        ? `${window.location.origin}/p/${didIdentifier}`
+                        : `/p/${didIdentifier}`}
+                    </code>
+                    <CopyButton
+                      value={`${window.location.origin}/p/${didIdentifier}`}
+                      children={<></>}
+                    />
+                  </div>
                 </div>
               </div>
 
