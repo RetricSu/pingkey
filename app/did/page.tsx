@@ -103,10 +103,8 @@ export default function Web5ConnectPage() {
 
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [nostrPublicKey, setNostrPublicKey] = useState(
-    "ce6232feaec4e6d01a4e00daa3648030c42017bdf589e34b53744fc49c5cba8a"
-  );
-  const [relayUrl, setRelayUrl] = useState("wss://relay.pingkey.xyz");
+  const [nostrPublicKey, setNostrPublicKey] = useState("");
+  const [relayUrl, setRelayUrl] = useState("");
 
   const handleCreateDID = async () => {
     if (!signerInfo || !nostrPublicKey || !relayUrl) return;
