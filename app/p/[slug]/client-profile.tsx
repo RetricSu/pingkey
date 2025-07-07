@@ -38,7 +38,8 @@ export function ClientProfile({
     relayList: middlewareRelayList, 
     isLoading: middlewareLoading, 
     error: middlewareError, 
-    slugType, 
+    slugType,
+    pubkey: middlewarePubkey,
     refresh: middlewareRefresh 
   } = useSlugMiddleware(slug);
 
@@ -49,8 +50,8 @@ export function ClientProfile({
   const [isFetchingFresh, setIsFetchingFresh] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
 
-  // Check if this is the current user's own profile (only for pubkey type)
-  const isOwnProfile = isSignedIn && pubkey === slug && slugType === "pubkey";
+  // Check if this is the current user's own profile
+  const isOwnProfile = isSignedIn && pubkey === middlewarePubkey && middlewarePubkey !== null;
 
   // Update local state when middleware data changes
   useEffect(() => {
@@ -124,7 +125,7 @@ export function ClientProfile({
             {...props}
             profile={profile}
             relayList={relayList}
-            publicKey={slug}
+            publicKey={middlewarePubkey || slug}
             onSaveProfile={handleSaveProfile}
             onSaveRelays={handleSaveRelays}
           />
@@ -151,30 +152,6 @@ export function ClientProfile({
 
   return (
     <section>
-      {/* Profile type indicator */}
-      {slugType === "web5-did" && (
-        <div className="mb-4 p-3 bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800 rounded-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <svg className="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              <span className="text-sm font-medium text-purple-900 dark:text-purple-100">Web5 DID Profile</span>
-            </div>
-            <button
-              onClick={() => middlewareRefresh()}
-              disabled={middlewareLoading}
-              className="px-3 py-1 text-xs bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-md hover:bg-purple-200 dark:hover:bg-purple-800 disabled:opacity-50 transition-colors"
-            >
-              {middlewareLoading ? "Loading..." : "Refresh"}
-            </button>
-          </div>
-          <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">
-            This profile is stored on-chain using Web5 DID technology
-          </p>
-        </div>
-      )}
-
       {/* Show refresh indicator if data is being refreshed */}
       {isRefreshing && (
         <div className="mb-4 p-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
@@ -197,7 +174,7 @@ export function ClientProfile({
 
       <div className="mb-8">
         <Avatar
-          publicKey={slug}
+          publicKey={middlewarePubkey || slug}
           pictureUrl={profile.picture}
           alt={profile.name || "Profile photo"}
           size={160}
@@ -214,6 +191,7 @@ export function ClientProfile({
 
       <ProfileActions
         slug={slug}
+        pubkey={middlewarePubkey}
         profile={profile}
         relayList={relayList}
         isOwnProfile={isOwnProfile}
@@ -228,24 +206,10 @@ export function ClientProfile({
           checkOnMount={true}
         />
         <MessageSender
-          slug={slug}
+          slug={middlewarePubkey || slug}
           profileName={profile.name}
           relayList={relayList}
         />
-        
-        {slugType === "web5-did" && (
-          <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
-            <div className="flex items-center gap-2">
-              <svg className="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="text-sm font-medium text-amber-900 dark:text-amber-100">DID Profile Info</span>
-            </div>
-            <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-              This profile is linked to a Web5 DID. Messages will be sent to the associated Nostr public key if available.
-            </p>
-          </div>
-        )}
       </div>
     </section>
   );

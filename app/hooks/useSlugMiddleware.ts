@@ -11,6 +11,7 @@ export interface SlugMiddlewareData {
   isLoading: boolean;
   error: string | null;
   slugType: "pubkey" | "web5-did";
+  pubkey: string | null;
   refresh: () => Promise<void>;
 }
 
@@ -22,8 +23,8 @@ export function useSlugMiddleware(slug: string): SlugMiddlewareData {
   const [relayList, setRelayList] = useState<RelayListItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pubkey, setPubkey] = useState<string | null>(null);
 
-  console.log("slug", slug);
   // Determine slug type
   const slugType: "pubkey" | "web5-did" = slug.startsWith("did:web5:") || slug.startsWith("did%3Aweb5%3A")
     ? "web5-did"
@@ -39,10 +40,7 @@ export function useSlugMiddleware(slug: string): SlugMiddlewareData {
     try {
       const sdk = new DIDSDK(signerInfo.signer);
       const identifier = 'did:web5:' + slug.substring(slug.length - 32, slug.length);
-      console.log("identifier", identifier);
       const didCell = await sdk.getDIDLiveCell(identifier);
-
-      console.log("didCell", didCell);
 
       if (!didCell) {
         throw new Error("DID not found");
@@ -71,12 +69,14 @@ export function useSlugMiddleware(slug: string): SlugMiddlewareData {
         });
       }
 
+      // Set the pubkey from DID verification methods
+      const nostrPubkey = didWeb5Data.verificationMethods?.nostr || null;
+      setPubkey(nostrPubkey);
+
       // If we have a Nostr public key in the DID, fetch additional profile data
-      if (didWeb5Data.verificationMethods?.nostr && nostr) {
+      if (nostrPubkey && nostr) {
         try {
-          const nostrProfile = await nostr.fetchProfile(
-            didWeb5Data.verificationMethods.nostr
-          );
+          const nostrProfile = await nostr.fetchProfile(nostrPubkey);
           if (nostrProfile) {
             didProfile.name = nostrProfile.name || didProfile.name;
             didProfile.about = nostrProfile.about || didProfile.about;
@@ -107,6 +107,9 @@ export function useSlugMiddleware(slug: string): SlugMiddlewareData {
         nostr.fetchProfile(slug),
         nostr.fetchNip65RelayList([slug]),
       ]);
+
+      // For pubkey type, the slug IS the pubkey
+      setPubkey(slug);
 
       if (nostrProfile) {
         const freshProfile: Profile = {
@@ -175,6 +178,7 @@ export function useSlugMiddleware(slug: string): SlugMiddlewareData {
     isLoading,
     error,
     slugType,
+    pubkey,
     refresh,
   };
 }

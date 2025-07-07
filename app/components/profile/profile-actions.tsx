@@ -8,6 +8,7 @@ import { useNotification } from "../../contexts/notification";
 
 interface ProfileActionsProps {
   slug: string;
+  pubkey: string | null; // The actual Nostr public key
   profile: Profile;
   relayList: RelayListItem[];
   isOwnProfile?: boolean;
@@ -16,6 +17,7 @@ interface ProfileActionsProps {
 
 export function ProfileActions({
   slug,
+  pubkey,
   profile,
   relayList,
   isOwnProfile,
@@ -46,10 +48,14 @@ export function ProfileActions({
   };
 
   const handleCopyNprofile = async () => {
+    if (!pubkey) {
+      error("No Nostr public key available");
+      return;
+    }
     try {
       const relayUrls = relayList.map((r) => r.url);
       const nprofile = nip19.nprofileEncode({
-        pubkey: slug,
+        pubkey: pubkey,
         relays: relayUrls.slice(0, 5), // Limit to 5 relays to avoid overly long URLs
       });
       copyToClipboard(nprofile, "Nostr profile identifier copied!");
@@ -136,9 +142,9 @@ export function ProfileActions({
 
         {/* Copy Public Key Button */}
         <button
-          onClick={() => copyToClipboard(slug, "Public key copied!")}
+          onClick={() => pubkey ? copyToClipboard(pubkey, "Public key copied!") : copyToClipboard(slug, "Profile identifier copied!")}
           className="inline-flex items-center justify-center p-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-          title="Copy Public Key"
+          title={pubkey ? "Copy Public Key" : "Copy Profile Identifier"}
         >
           <svg
             className="w-5 h-5"
@@ -158,8 +164,9 @@ export function ProfileActions({
         {/* Copy Nprofile Button */}
         <button
           onClick={handleCopyNprofile}
-          className="inline-flex items-center justify-center p-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-          title="Copy Nostr Profile ID"
+          disabled={!pubkey}
+          className="inline-flex items-center justify-center p-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          title={pubkey ? "Copy Nostr Profile ID" : "No Nostr public key available"}
         >
           <svg
             className="w-5 h-5"
@@ -183,7 +190,7 @@ export function ProfileActions({
           <div className="flex flex-col items-center space-y-3 p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
             <div className="bg-white p-4 rounded-lg">
               <QRCode
-                value={`${slug}`}
+                value={`${pubkey || slug}`}
                 size={180}
                 style={{
                   height: "auto",
@@ -197,7 +204,7 @@ export function ProfileActions({
                 Scan to message {profile.name || slug}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-500">
-                Public Key: {slug}
+                {pubkey ? `Public Key: ${pubkey}` : `Profile: ${slug}`}
               </p>
             </div>
           </div>
