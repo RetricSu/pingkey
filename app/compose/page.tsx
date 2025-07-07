@@ -13,6 +13,10 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { prompt } from "app/components/dialog";
 import { buildGeneratedStampDialog } from "app/components/stamp/mint-stamp";
 import { PowAdjustment } from "app/components/pow-adjustment";
+import { getSlugType } from "app/lib/util";
+import { SlugType } from "app/lib/type";
+import { useSlugMiddleware } from "app/hooks/useSlugMiddleware";
+import { defaultProfile } from "app/lib/config";
 
 function ComposePage() {
   const { exportPrivateKey } = useAuth();
@@ -29,7 +33,7 @@ function ComposePage() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const [recipientPubkey, setRecipientPubkey] = useState("");
+  const [recipientSlug, setRecipientSlug] = useState("");
   const [subject, setSubject] = useState("");
   const [content, setContent] = useState("");
   const [isSending, setIsSending] = useState(false);
@@ -38,55 +42,76 @@ function ComposePage() {
   const [isFetchingRelays, setIsFetchingRelays] = useState(false);
   const [relayError, setRelayError] = useState<string | null>(null);
 
+  // Slug middleware for resolving recipient
+  const slugType = getSlugType(recipientSlug);
+  const {
+    profile: recipientProfile,
+    relayList: recipientRelayList,
+    isLoading: isLoadingRecipient,
+    error: recipientError,
+    pubkey: recipientPubkey,
+  } = useSlugMiddleware({
+    slug: recipientSlug,
+    initialProfile: defaultProfile,
+    initialRelayList: [],
+    hasServerData: false,
+  });
+
   // URL parameter handling
   useEffect(() => {
-    const replyToPubkey = searchParams.get("replyToPubkey");
+    const replyToSlug = searchParams.get("replyToSlug");
     const replyToEventId = searchParams.get("replyToEventId");
 
-    if (replyToPubkey) {
-      setRecipientPubkey(replyToPubkey);
+    if (replyToSlug) {
+      setRecipientSlug(replyToSlug);
     }
 
-    if (replyToEventId && replyToPubkey) {
+    if (replyToEventId && replyToSlug) {
       setSubject("Re: ");
       setContent("In reply to: " + replyToEventId + "\n\n");
     }
   }, [searchParams]);
 
-  // Fetch receiver's relay list when recipient changes
+  // Update receiver relays when middleware data changes
   useEffect(() => {
-    const fetchReceiverRelays = async () => {
-      if (!recipientPubkey.trim() || !nostr) {
-        setReceiverRelays([]);
-        setRelayError(null);
-        return;
-      }
+    console.log("Relay data update:", {
+      recipientError,
+      recipientRelayList,
+      recipientSlug: recipientSlug.trim(),
+      slugType,
+      isLoading: isLoadingRecipient
+    });
 
-      setIsFetchingRelays(true);
+    if (recipientError) {
+      setRelayError(recipientError);
+      setReceiverRelays([]);
+      return;
+    }
+
+    if (recipientRelayList && recipientRelayList.length > 0) {
+      const relayUrls = recipientRelayList.map((relay) => relay.url);
+      console.log("Setting receiver relays:", relayUrls);
+      setReceiverRelays(relayUrls);
       setRelayError(null);
+    } else if (recipientSlug.trim()) {
+      console.log("No relay list found for recipient");
+      setRelayError("No relay list found for this recipient");
+      setReceiverRelays([]);
+    }
+  }, [recipientRelayList, recipientError, recipientSlug, slugType, isLoadingRecipient]);
 
-      try {
-        const relayList = await nostr.fetchNip65RelayList([
-          recipientPubkey.trim(),
-        ]);
-        const relayUrls = relayList.map((relay) => relay.url);
-        setReceiverRelays(relayUrls);
-      } catch (err) {
-        console.error("Failed to fetch receiver relays:", err);
-        setRelayError("Failed to fetch receiver's relay list");
-        setReceiverRelays([]);
-      } finally {
-        setIsFetchingRelays(false);
-      }
-    };
-
-    const timeoutId = setTimeout(fetchReceiverRelays, 500); // Debounce
-    return () => clearTimeout(timeoutId);
-  }, [recipientPubkey, nostr]);
+  // Update fetching state
+  useEffect(() => {
+    setIsFetchingRelays(isLoadingRecipient && recipientSlug.trim().length > 0);
+  }, [isLoadingRecipient, recipientSlug]);
 
   const handleSendLetter = async () => {
-    if (!recipientPubkey.trim() || !content.trim()) {
+    if (!recipientSlug.trim() || !content.trim()) {
       return error("Please fill in recipient and content");
+    }
+
+    if (!recipientPubkey) {
+      return error("Unable to resolve recipient - please check the slug/pubkey");
     }
 
     setIsSending(true);
@@ -114,7 +139,7 @@ function ComposePage() {
       }
 
       const recipient = {
-        publicKey: recipientPubkey.trim(),
+        publicKey: recipientPubkey,
       };
 
       // Build the letter content with subject if provided
@@ -156,7 +181,7 @@ function ComposePage() {
       }
 
       // Clear form
-      setRecipientPubkey("");
+      setRecipientSlug("");
       setSubject("");
       setContent("");
 
@@ -214,13 +239,13 @@ function ComposePage() {
         {/* Recipient */}
         <div className="space-y-2">
           <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-            To (Public Key)
+            To (Public Key or Web5 DID)
           </label>
           <input
             type="text"
-            value={recipientPubkey}
-            onChange={(e) => setRecipientPubkey(e.target.value)}
-            placeholder="hex public key"
+            value={recipientSlug}
+            onChange={(e) => setRecipientSlug(e.target.value)}
+            placeholder="hex public key or did:web5:..."
             className="w-full px-3 py-2 text-sm bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-300 dark:focus:ring-neutral-600 transition-all font-mono"
             disabled={isReply}
           />
@@ -228,6 +253,30 @@ function ComposePage() {
             <p className="text-xs text-neutral-500 dark:text-neutral-400">
               Replying to this letter
             </p>
+          )}
+          {recipientSlug.trim() && (
+            <div className="text-xs text-neutral-600 dark:text-neutral-400">
+              <div className="flex items-center gap-2">
+                <span>Type:</span>
+                <span className={`px-2 py-1 rounded text-xs ${
+                  slugType === SlugType.Web5DID 
+                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                    : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                }`}>
+                  {slugType === SlugType.Web5DID ? 'Web5 DID' : 'Public Key'}
+                </span>
+              </div>
+              {recipientProfile && recipientProfile.name && (
+                <div className="mt-1">
+                  <span>Recipient: {recipientProfile.name}</span>
+                </div>
+              )}
+              {recipientPubkey && slugType === SlugType.Web5DID && (
+                <div className="mt-1">
+                  <span>Resolved to: {recipientPubkey.slice(0, 16)}...</span>
+                </div>
+              )}
+            </div>
           )}
         </div>
 
@@ -266,7 +315,7 @@ function ComposePage() {
         />
 
         {/* Receiver's Relay List */}
-        {recipientPubkey.trim() && (
+        {recipientSlug.trim() && (
           <div className="space-y-2">
             <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
               Receiver's Relay List
@@ -320,8 +369,9 @@ function ComposePage() {
             disabled={
               isSending ||
               isMining ||
-              !recipientPubkey.trim() ||
+              !recipientSlug.trim() ||
               !content.trim() ||
+              !recipientPubkey ||
               receiverRelays.length === 0
             }
             className="px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"

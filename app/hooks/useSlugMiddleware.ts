@@ -48,15 +48,20 @@ export function useSlugMiddleware({
 
     try {
       const sdk = new DIDSDK(signerInfo.signer);
-      const identifier =
-        "did:web5:" + slug.substring(slug.length - 32, slug.length);
+      // Use the slug as is if it's already a full Web5 DID, otherwise construct it
+      const identifier = slug.startsWith("did:web5:") ? slug : `did:web5:${slug}`;
+      console.log("Fetching Web5 DID data for identifier:", identifier);
+      
       const didCell = await sdk.getDIDLiveCell(identifier);
 
       if (!didCell) {
+        console.log("DID cell not found for identifier:", identifier);
         throw new Error("DID not found");
       }
 
+      console.log("Found DID cell, parsing data...");
       const { didWeb5Data } = sdk.parseDIDCell(didCell);
+      console.log("Parsed DID document:", didWeb5Data);
 
       // Extract profile data from DID document
       const didProfile: Profile = {
@@ -74,9 +79,12 @@ export function useSlugMiddleware({
       const didRelayList: RelayListItem[] = [];
       if (didWeb5Data.services?.nostr_relays?.endpoints) {
         const relayUrl = didWeb5Data.services.nostr_relays.endpoints;
+        console.log("Found relay URL in DID document:", relayUrl);
         didRelayList.push({
           url: relayUrl,
         });
+      } else {
+        console.log("No nostr_relays endpoints found in DID document:", didWeb5Data.services);
       }
 
       // Set the pubkey from DID verification methods
@@ -161,6 +169,16 @@ export function useSlugMiddleware({
   }, [fetchData]);
 
   useEffect(() => {
+    // Don't fetch data if slug is empty
+    if (!slug.trim()) {
+      setIsLoading(false);
+      setError(null);
+      setProfile(defaultProfile);
+      setRelayList([]);
+      setPubkey(null);
+      return;
+    }
+
     if (slugType === SlugType.Web5DID && !signerInfo) {
       setError("Wallet connection required to fetch Web5 DID data");
       return;
@@ -172,7 +190,7 @@ export function useSlugMiddleware({
     }
 
     fetchData();
-  }, [fetchData, slugType, signerInfo, nostr]);
+  }, [fetchData, slugType, signerInfo, nostr, slug]);
 
   return {
     profile,
