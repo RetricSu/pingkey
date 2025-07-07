@@ -7,7 +7,7 @@ import {
   Script,
   Signer,
 } from "@ckb-ccc/connector-react";
-import { DID_SCRIPT } from "./config";
+import { DID_SCRIPT } from "../config";
 import * as cbor from "@ipld/dag-cbor";
 import * as molecule from "./mol";
 import base32 from "base32";
@@ -66,18 +66,6 @@ export class DIDSDK {
     return results;
   }
 
-  parseDIDCell(cell: Cell) {
-    if (cell.cellOutput.type == null) {
-      throw new Error("cell output type is null");
-    }
-    const didWeb5Data = this.deserializeDIDDocument(cell.outputData);
-    const didIdentifier = this.encodeWeb5DIDString(cell.cellOutput.type!.args);
-    return {
-      didIdentifier,
-      didWeb5Data,
-    };
-  }
-
   async createDID(nostrPublicKey: string, relayUrl: string) {
     const addressObj = await this.signer.getRecommendedAddressObj();
     const argsPlaceholder = "0x" + "00".repeat(20);
@@ -104,6 +92,18 @@ export class DIDSDK {
     tx.outputs[0].type!.args = args;
     const txHash = await this.signer.sendTransaction(tx);
     return txHash;
+  }
+
+  parseDIDCell(cell: Cell) {
+    if (cell.cellOutput.type == null) {
+      throw new Error("cell output type is null");
+    }
+    const didWeb5Data = this.deserializeDIDDocument(cell.outputData);
+    const didIdentifier = this.encodeWeb5DIDString(cell.cellOutput.type!.args);
+    return {
+      didIdentifier,
+      didWeb5Data,
+    };
   }
 
   hashDIDCellArgs(cellInputLike: CellInputLike, outputIndex: number) {

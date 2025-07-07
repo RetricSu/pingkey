@@ -31,3 +31,8 @@ export interface ReplyTo {
   eventId: string;
   relayUrl?: string;
 }
+
+export enum SlugType {
+  Pubkey = "pubkey",
+  Web5DID = "web5-did",
+}

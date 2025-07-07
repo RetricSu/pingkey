@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useNostr } from "../../contexts/nostr";
 import { useAuth } from "../../contexts/auth";
-import { defaultProfile } from "app/lib/config";
 import { Profile, RelayListItem } from "app/lib/type";
 import { MessageSender } from "../../components/profile/message-sender";
 import { RichAbout } from "../../components/profile/rich-about";
@@ -22,28 +21,25 @@ interface ClientProfileProps {
   hasServerData: boolean;
 }
 
-export function ClientProfile({ 
-  slug, 
-  initialProfile, 
-  initialRelayList, 
-  hasServerData 
+export function ClientProfile({
+  slug,
+  initialProfile,
+  initialRelayList,
+  hasServerData,
 }: ClientProfileProps) {
   const { nostr } = useNostr();
   const { isSignedIn, pubkey } = useAuth();
   const { success } = useNotification();
-  
-  // Use the new slug middleware hook
-  const { 
-    profile: middlewareProfile, 
-    relayList: middlewareRelayList, 
-    isLoading: middlewareLoading, 
-    error: middlewareError, 
+
+  const {
+    profile: middlewareProfile,
+    relayList: middlewareRelayList,
+    isLoading: middlewareLoading,
+    error: middlewareError,
     slugType,
     pubkey: middlewarePubkey,
-    refresh: middlewareRefresh 
   } = useSlugMiddleware(slug);
 
-  // State management for client-side updates
   const [profile, setProfile] = useState<Profile>(initialProfile);
   const [relayList, setRelayList] = useState<RelayListItem[]>(initialRelayList);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -51,7 +47,8 @@ export function ClientProfile({
   const [profileError, setProfileError] = useState<string | null>(null);
 
   // Check if this is the current user's own profile
-  const isOwnProfile = isSignedIn && pubkey === middlewarePubkey && middlewarePubkey !== null;
+  const isOwnProfile =
+    isSignedIn && pubkey === middlewarePubkey && middlewarePubkey !== null;
 
   // Update local state when middleware data changes
   useEffect(() => {
@@ -71,19 +68,32 @@ export function ClientProfile({
     // For pubkey, prefer server data initially but update with fresh client data
     if (slugType === "pubkey") {
       // Only update if we have fresh data from middleware that's different
-      if (middlewareProfile && JSON.stringify(middlewareProfile) !== JSON.stringify(profile)) {
-        console.log('🔄 Updated profile with fresh data from middleware');
+      if (
+        middlewareProfile &&
+        JSON.stringify(middlewareProfile) !== JSON.stringify(profile)
+      ) {
+        console.log("🔄 Updated profile with fresh data from middleware");
         setProfile(middlewareProfile);
       }
-      
-      if (middlewareRelayList && JSON.stringify(middlewareRelayList) !== JSON.stringify(relayList)) {
-        console.log('🔄 Updated relay list with fresh data from middleware');
+
+      if (
+        middlewareRelayList &&
+        JSON.stringify(middlewareRelayList) !== JSON.stringify(relayList)
+      ) {
+        console.log("🔄 Updated relay list with fresh data from middleware");
         setRelayList(middlewareRelayList);
       }
-      
+
       setProfileError(null);
     }
-  }, [middlewareProfile, middlewareRelayList, middlewareError, slugType, profile, relayList]);
+  }, [
+    middlewareProfile,
+    middlewareRelayList,
+    middlewareError,
+    slugType,
+    profile,
+    relayList,
+  ]);
 
   // Handle loading states
   useEffect(() => {
@@ -157,7 +167,9 @@ export function ClientProfile({
         <div className="mb-4 p-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
           <div className="text-sm text-blue-600 dark:text-blue-400 flex items-center gap-2">
             <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 dark:border-blue-400" />
-            {slugType === "web5-did" ? "Loading DID data..." : "Refreshing profile data..."}
+            {slugType === "web5-did"
+              ? "Loading DID data..."
+              : "Refreshing profile data..."}
           </div>
         </div>
       )}
@@ -195,7 +207,9 @@ export function ClientProfile({
         profile={profile}
         relayList={relayList}
         isOwnProfile={isOwnProfile}
-        onEditProfile={slugType === "pubkey" ? handleOpenSettingsModal : undefined}
+        onEditProfile={
+          slugType === "pubkey" ? handleOpenSettingsModal : undefined
+        }
       />
 
       <div className="mt-16">
@@ -213,4 +227,4 @@ export function ClientProfile({
       </div>
     </section>
   );
-} 
+}

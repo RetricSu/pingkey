@@ -1,9 +1,13 @@
-import { getCachedNostrProfile, getCachedRelayList } from "../../lib/nostr-server";
+import {
+  getCachedNostrProfile,
+  getCachedRelayList,
+} from "../../lib/nostr-server";
 import { defaultProfile } from "app/lib/config";
-import { Profile, RelayListItem } from "app/lib/type";
+import { Profile, RelayListItem, SlugType } from "app/lib/type";
 import { ClientProfile } from "./client-profile";
 import { Suspense } from "react";
 import { Loader } from "../../components/loader";
+import { getSlugType } from "app/lib/util";
 
 interface PageProps {
   params: Promise<{
@@ -11,18 +15,33 @@ interface PageProps {
   }>;
 }
 
-// This is now a Server Component that pre-fetches data
+// Server Component that pre-fetches data
 export default async function ProfilePage({ params }: PageProps) {
   const { slug } = await params;
 
-  // Pre-fetch data server-side for better initial load
+  const slugType = getSlugType(slug);
+  if (slugType === SlugType.Web5DID) {
+    return (
+      <div>
+        <Suspense fallback={<Loader message="Loading profile..." />}>
+          <ClientProfile
+            slug={slug}
+            initialProfile={defaultProfile}
+            initialRelayList={[]}
+            hasServerData={false}
+          />
+        </Suspense>
+      </div>
+    );
+  }
+
   const [initialProfile, initialRelayList] = await Promise.allSettled([
     getCachedNostrProfile(slug),
     getCachedRelayList([slug]),
   ]);
 
-  const serverProfile: Profile = 
-    initialProfile.status === "fulfilled" && initialProfile.value 
+  const serverProfile: Profile =
+    initialProfile.status === "fulfilled" && initialProfile.value
       ? {
           name: initialProfile.value.name || defaultProfile.name,
           picture: initialProfile.value.picture || null,
@@ -33,17 +52,16 @@ export default async function ProfilePage({ params }: PageProps) {
         }
       : defaultProfile;
 
-  const serverRelayList: RelayListItem[] = 
-    initialRelayList.status === "fulfilled" 
-      ? initialRelayList.value 
-      : [];
+  const serverRelayList: RelayListItem[] =
+    initialRelayList.status === "fulfilled" ? initialRelayList.value : [];
 
-  const hasServerData = initialProfile.status === "fulfilled" && initialProfile.value !== null;
+  const hasServerData =
+    initialProfile.status === "fulfilled" && initialProfile.value !== null;
 
   return (
     <div>
       <Suspense fallback={<Loader message="Loading profile..." />}>
-        <ClientProfile 
+        <ClientProfile
           slug={slug}
           initialProfile={serverProfile}
           initialRelayList={serverRelayList}
@@ -54,12 +72,9 @@ export default async function ProfilePage({ params }: PageProps) {
   );
 }
 
-// Generate static params for known profiles if needed
+// Generate static params for known popular profiles if needed
 export async function generateStaticParams() {
-  // You could pre-generate for known popular profiles
-  // For now, we'll let them be generated on-demand
   return [];
 }
 
-// Enable ISR (Incremental Static Regeneration)
-export const revalidate = 300; // Revalidate every 5 minutes
+export const revalidate = 300; // Enable ISR (Incremental Static Regeneration), Revalidate every 5 minutes

@@ -8,7 +8,7 @@ import React, {
   ReactNode,
 } from "react";
 import { ccc, Signer } from "@ckb-ccc/connector-react";
-import { DIDDocument, DIDSDK } from "app/lib/did-sdk";
+import { DIDDocument, DIDSDK } from "app/lib/web5/did";
 
 interface Web5DIDContextType {
   didIdentifier: string | null;

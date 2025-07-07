@@ -1,17 +1,18 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNostr } from "../contexts/nostr";
-import { DIDSDK } from "../lib/did-sdk";
-import { Profile, RelayListItem } from "../lib/type";
+import { DIDSDK } from "../lib/web5/did";
+import { Profile, RelayListItem, SlugType } from "../lib/type";
 import { defaultProfile } from "../lib/config";
 import { ccc } from "@ckb-ccc/connector-react";
+import { getSlugType } from "app/lib/util";
 
 export interface SlugMiddlewareData {
+  pubkey: string | null;
   profile: Profile;
   relayList: RelayListItem[];
   isLoading: boolean;
   error: string | null;
-  slugType: "pubkey" | "web5-did";
-  pubkey: string | null;
+  slugType: SlugType;
   refresh: () => Promise<void>;
 }
 
@@ -25,21 +26,18 @@ export function useSlugMiddleware(slug: string): SlugMiddlewareData {
   const [error, setError] = useState<string | null>(null);
   const [pubkey, setPubkey] = useState<string | null>(null);
 
-  // Determine slug type
-  const slugType: "pubkey" | "web5-did" = slug.startsWith("did:web5:") || slug.startsWith("did%3Aweb5%3A")
-    ? "web5-did"
-    : "pubkey";
+  const slugType: SlugType = useMemo(() => getSlugType(slug), [slug]);
 
-  // Fetch data for Web5 DID
   const fetchWeb5DIDData = useCallback(async () => {
     if (!signerInfo || slugType !== "web5-did") {
-	console.log("no signerInfo or slugType is not web5-did");
-	return;
+      console.log("no signerInfo or slugType is not web5-did");
+      return;
     }
 
     try {
       const sdk = new DIDSDK(signerInfo.signer);
-      const identifier = 'did:web5:' + slug.substring(slug.length - 32, slug.length);
+      const identifier =
+        "did:web5:" + slug.substring(slug.length - 32, slug.length);
       const didCell = await sdk.getDIDLiveCell(identifier);
 
       if (!didCell) {
@@ -98,7 +96,6 @@ export function useSlugMiddleware(slug: string): SlugMiddlewareData {
     }
   }, [slug, slugType, signerInfo, nostr]);
 
-  // Fetch data for Nostr public key
   const fetchNostrData = useCallback(async () => {
     if (!nostr || slugType !== "pubkey") return;
 
@@ -130,17 +127,14 @@ export function useSlugMiddleware(slug: string): SlugMiddlewareData {
     }
   }, [slug, slugType, nostr]);
 
-  // Main fetch function
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-    console.log("fetchData", slugType);
     try {
       if (slugType === "web5-did") {
-	await fetchWeb5DIDData();
-      }
-      else{
-	await fetchNostrData();
+        await fetchWeb5DIDData();
+      } else {
+        await fetchNostrData();
       }
     } catch (err) {
       console.error("Error in fetchData:", err);
@@ -150,21 +144,17 @@ export function useSlugMiddleware(slug: string): SlugMiddlewareData {
     }
   }, [slugType, fetchWeb5DIDData, fetchNostrData]);
 
-  // Refresh function
   const refresh = useCallback(async () => {
     await fetchData();
   }, [fetchData]);
 
-  // Auto-fetch on mount and when dependencies change
   useEffect(() => {
-    if (slugType === "web5-did" && !signerInfo) {
-      // For Web5 DID, we need a signer to interact with the blockchain
+    if (slugType === SlugType.Web5DID && !signerInfo) {
       setError("Wallet connection required to fetch Web5 DID data");
       return;
     }
 
-    if (slugType === "pubkey" && !nostr) {
-      // For Nostr pubkey, we need the nostr client
+    if (slugType === SlugType.Pubkey && !nostr) {
       setError("Nostr client not available");
       return;
     }
