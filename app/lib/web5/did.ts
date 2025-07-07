@@ -21,7 +21,6 @@ export class DIDSDK {
   async getDIDLiveCell(web5DIDString: string) {
     const results: Cell[] = [];
     const args = this.decodeWeb5DIDString(web5DIDString);
-    console.log("args", args);
     const typeScript = {
       args: args,
       codeHash: this.script_info.code_hash,
@@ -62,7 +61,6 @@ export class DIDSDK {
         results.push(cell);
       }
     }
-    console.log("results", results);
     return results;
   }
 

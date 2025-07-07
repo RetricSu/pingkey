@@ -38,7 +38,12 @@ export function ClientProfile({
     error: middlewareError,
     slugType,
     pubkey: middlewarePubkey,
-  } = useSlugMiddleware(slug);
+  } = useSlugMiddleware({
+    slug,
+    initialProfile,
+    initialRelayList,
+    hasServerData,
+  });
 
   const [profile, setProfile] = useState<Profile>(initialProfile);
   const [relayList, setRelayList] = useState<RelayListItem[]>(initialRelayList);

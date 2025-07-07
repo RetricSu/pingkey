@@ -6,6 +6,13 @@ import { defaultProfile } from "../lib/config";
 import { ccc } from "@ckb-ccc/connector-react";
 import { getSlugType } from "app/lib/util";
 
+export interface SlugMiddlewareProps {
+  slug: string;
+  initialProfile: Profile;
+  initialRelayList: RelayListItem[];
+  hasServerData: boolean;
+}
+
 export interface SlugMiddlewareData {
   pubkey: string | null;
   profile: Profile;
@@ -16,12 +23,17 @@ export interface SlugMiddlewareData {
   refresh: () => Promise<void>;
 }
 
-export function useSlugMiddleware(slug: string): SlugMiddlewareData {
+export function useSlugMiddleware({
+  slug,
+  initialProfile,
+  initialRelayList,
+  hasServerData,
+}: SlugMiddlewareProps): SlugMiddlewareData {
   const { nostr } = useNostr();
   const { signerInfo } = ccc.useCcc();
 
-  const [profile, setProfile] = useState<Profile>(defaultProfile);
-  const [relayList, setRelayList] = useState<RelayListItem[]>([]);
+  const [profile, setProfile] = useState<Profile>(initialProfile);
+  const [relayList, setRelayList] = useState<RelayListItem[]>(initialRelayList);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pubkey, setPubkey] = useState<string | null>(null);
