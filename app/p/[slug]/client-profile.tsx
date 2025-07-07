@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useNostr } from "../../contexts/nostr";
 import { useAuth } from "../../contexts/auth";
-import { defaultProfile } from "app/lib/config";
 import { Profile, RelayListItem } from "app/lib/type";
 import { MessageSender } from "../../components/profile/message-sender";
 import { RichAbout } from "../../components/profile/rich-about";
@@ -13,6 +12,7 @@ import { custom } from "../../components/dialog";
 import { SettingsModal } from "../../components/profile/settings-modal";
 import { useNotification } from "app/contexts/notification";
 import { Avatar } from "../../components/avatar";
+import { useSlugMiddleware } from "../../hooks/useSlugMiddleware";
 
 interface ClientProfileProps {
   slug: string;
@@ -21,92 +21,99 @@ interface ClientProfileProps {
   hasServerData: boolean;
 }
 
-export function ClientProfile({ 
-  slug, 
-  initialProfile, 
-  initialRelayList, 
-  hasServerData 
+export function ClientProfile({
+  slug,
+  initialProfile,
+  initialRelayList,
+  hasServerData,
 }: ClientProfileProps) {
   const { nostr } = useNostr();
   const { isSignedIn, pubkey } = useAuth();
+  const { success } = useNotification();
+
+  const {
+    profile: middlewareProfile,
+    relayList: middlewareRelayList,
+    isLoading: middlewareLoading,
+    error: middlewareError,
+    slugType,
+    pubkey: middlewarePubkey,
+  } = useSlugMiddleware({
+    slug,
+    initialProfile,
+    initialRelayList,
+    hasServerData,
+  });
+
   const [profile, setProfile] = useState<Profile>(initialProfile);
   const [relayList, setRelayList] = useState<RelayListItem[]>(initialRelayList);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isFetchingFresh, setIsFetchingFresh] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
-  const { success } = useNotification();
 
   // Check if this is the current user's own profile
-  const isOwnProfile = isSignedIn && pubkey === slug;
+  const isOwnProfile =
+    isSignedIn && pubkey === middlewarePubkey && middlewarePubkey !== null;
 
-  // Always check for fresh data from client, but don't show loading if we have server data
+  // Update local state when middleware data changes
   useEffect(() => {
-    if (!nostr) return;
-
-    async function refreshData() {
-      // Only show loading spinner if we don't have server data
-      if (!hasServerData) {
-        setIsRefreshing(true);
-      } else {
-        // Show subtle indicator when fetching fresh data in background
-        setIsFetchingFresh(true);
-      }
-
-      try {
-        const [nostrProfile, relays] = await Promise.all([
-          nostr?.fetchProfile(slug),
-          nostr?.fetchNip65RelayList([slug])
-        ]);
-
-        if (nostrProfile) {
-          const freshProfile = {
-            name: nostrProfile.name || defaultProfile.name,
-            picture: nostrProfile.picture || null,
-            about: nostrProfile.about || defaultProfile.about,
-            nip05: nostrProfile.nip05,
-            lud16: nostrProfile.lud16,
-            website: nostrProfile.website,
-          };
-
-          // Only update if data actually changed (to avoid unnecessary re-renders)
-          setProfile(prev => {
-            if (JSON.stringify(prev) !== JSON.stringify(freshProfile)) {
-              console.log('🔄 Updated profile with fresh data from client');
-              return freshProfile;
-            }
-            return prev;
-          });
-        }
-        
-        // Update relay list if different
-        setRelayList(prev => {
-          const freshRelays = relays || [];
-          if (JSON.stringify(prev) !== JSON.stringify(freshRelays)) {
-            console.log('🔄 Updated relay list with fresh data from client');
-            return freshRelays;
-          }
-          return prev;
-        });
-
-      } catch (err) {
-        // Only set error if we don't have server data to fall back to
-        if (!hasServerData) {
-          setProfileError("Failed to fetch profile");
-        }
-        console.error("Error fetching fresh profile data:", err);
-      } finally {
-        setIsRefreshing(false);
-        setIsFetchingFresh(false);
-      }
+    if (middlewareError) {
+      setProfileError(middlewareError);
+      return;
     }
 
-    // Small delay to let server data render first, then fetch fresh data
-    const timeoutId = setTimeout(refreshData, hasServerData ? 100 : 0);
-    return () => clearTimeout(timeoutId);
-  }, [nostr, slug, hasServerData]);
+    // For Web5 DID, use middleware data directly
+    if (slugType === "web5-did") {
+      setProfile(middlewareProfile);
+      setRelayList(middlewareRelayList);
+      setProfileError(null);
+      return;
+    }
+
+    // For pubkey, prefer server data initially but update with fresh client data
+    if (slugType === "pubkey") {
+      // Only update if we have fresh data from middleware that's different
+      if (
+        middlewareProfile &&
+        JSON.stringify(middlewareProfile) !== JSON.stringify(profile)
+      ) {
+        console.log("🔄 Updated profile with fresh data from middleware");
+        setProfile(middlewareProfile);
+      }
+
+      if (
+        middlewareRelayList &&
+        JSON.stringify(middlewareRelayList) !== JSON.stringify(relayList)
+      ) {
+        console.log("🔄 Updated relay list with fresh data from middleware");
+        setRelayList(middlewareRelayList);
+      }
+
+      setProfileError(null);
+    }
+  }, [
+    middlewareProfile,
+    middlewareRelayList,
+    middlewareError,
+    slugType,
+    profile,
+    relayList,
+  ]);
+
+  // Handle loading states
+  useEffect(() => {
+    if (slugType === "web5-did") {
+      setIsRefreshing(middlewareLoading);
+    } else {
+      // For pubkey, show subtle loading indicator when fetching fresh data
+      setIsFetchingFresh(middlewareLoading && hasServerData);
+      setIsRefreshing(middlewareLoading && !hasServerData);
+    }
+  }, [middlewareLoading, slugType, hasServerData]);
 
   const handleOpenSettingsModal = async () => {
-    if (!nostr || !pubkey) return;
+    // Only allow profile editing for pubkey type profiles
+    if (slugType !== "pubkey" || !nostr || !pubkey) return;
 
     const handleSaveProfile = async (updatedProfile: Profile) => {
       const result = await nostr.publishProfile(updatedProfile);
@@ -133,7 +140,7 @@ export function ClientProfile({
             {...props}
             profile={profile}
             relayList={relayList}
-            publicKey={slug}
+            publicKey={middlewarePubkey || slug}
             onSaveProfile={handleSaveProfile}
             onSaveRelays={handleSaveRelays}
           />
@@ -165,7 +172,9 @@ export function ClientProfile({
         <div className="mb-4 p-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
           <div className="text-sm text-blue-600 dark:text-blue-400 flex items-center gap-2">
             <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 dark:border-blue-400" />
-            Refreshing profile data...
+            {slugType === "web5-did"
+              ? "Loading DID data..."
+              : "Refreshing profile data..."}
           </div>
         </div>
       )}
@@ -182,7 +191,7 @@ export function ClientProfile({
 
       <div className="mb-8">
         <Avatar
-          publicKey={slug}
+          publicKey={middlewarePubkey || slug}
           pictureUrl={profile.picture}
           alt={profile.name || "Profile photo"}
           size={160}
@@ -199,10 +208,14 @@ export function ClientProfile({
 
       <ProfileActions
         slug={slug}
+        slugType={slugType}
+        pubkey={middlewarePubkey}
         profile={profile}
         relayList={relayList}
         isOwnProfile={isOwnProfile}
-        onEditProfile={handleOpenSettingsModal}
+        onEditProfile={
+          slugType === "pubkey" ? handleOpenSettingsModal : undefined
+        }
       />
 
       <div className="mt-16">
@@ -213,11 +226,11 @@ export function ClientProfile({
           checkOnMount={true}
         />
         <MessageSender
-          slug={slug}
+          slug={middlewarePubkey || slug}
           profileName={profile.name}
           relayList={relayList}
         />
       </div>
     </section>
   );
-} 
+}

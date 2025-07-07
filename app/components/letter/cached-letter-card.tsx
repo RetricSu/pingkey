@@ -117,7 +117,7 @@ export function CachedLetterCard({
           <div className="flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400">
             <button
               onClick={() => {
-                const replyUrl = `/compose?replyToPubkey=${cachedContent.from}&replyToEventId=${cachedContent.replyToEventId}`;
+                const replyUrl = `/compose?replyToSlug=${cachedContent.from}&replyToEventId=${cachedContent.replyToEventId}`;
                 window.location.href = replyUrl;
               }}
               className="cursor-pointer flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800/50 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors font-medium"

@@ -4,14 +4,22 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "node tests/did-sdk.test.js",
+    "test:did": "node tests/did-sdk.test.js",
+    "test:did-interactive": "node tests/did-sdk.test.js --interactive",
+    "test:did-help": "node tests/did-sdk.test.js --help"
   },
   "dependencies": {
+    "@ckb-ccc/connector-react": "^1.0.18",
+    "@ckb-ccc/core": "1.8.1",
+    "@ipld/dag-cbor": "^9.2.4",
     "@noble/hashes": "^1.8.0",
     "@types/p5": "^1.7.6",
     "@vercel/analytics": "^1.5.0",
     "@vercel/speed-insights": "^1.2.0",
     "@yudiel/react-qr-scanner": "^2.3.1",
+    "base32": "^0.0.7",
     "feed": "^5.1.0",
     "identicon.js": "^2.3.3",
     "katex": "^0.16.22",

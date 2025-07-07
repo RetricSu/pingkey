@@ -37,19 +37,20 @@ export function QRScanner({ onClose }: QRScannerProps) {
     if (detectedCodes && detectedCodes.length > 0) {
       const scannedValue = detectedCodes[0].rawValue;
       
-      // Validate if it looks like a public key (64 character hex string)
+      // Validate if it looks like a public key (64 character hex string) or Web5 DID
       if (scannedValue && typeof scannedValue === 'string') {
         const pubkeyPattern = /^[a-fA-F0-9]{64}$/;
+        const web5DIDPattern = /^did:web5:/;
         
-        if (pubkeyPattern.test(scannedValue)) {
+        if (pubkeyPattern.test(scannedValue) || web5DIDPattern.test(scannedValue)) {
           setIsScanning(false);
           success("QR Code scanned successfully!");
           onClose();
-          // Navigate to compose page with the scanned pubkey
-          router.push(`/compose?replyToPubkey=${scannedValue}`);
+          // Navigate to compose page with the scanned slug (pubkey or Web5 DID)
+          router.push(`/compose?replyToSlug=${scannedValue}`);
         } else {
-          showError("Invalid QR code", "This doesn't appear to be a valid public key");
-          setError("Invalid public key format");
+          showError("Invalid QR code", "This doesn't appear to be a valid public key or Web5 DID");
+          setError("Invalid public key or Web5 DID format");
         }
       }
     }

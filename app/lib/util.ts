@@ -1,3 +1,5 @@
+import { SlugType } from "./type";
+
 export function formatDate(date: number | string, includeRelative = false) {
   let currentDate = new Date();
   if (typeof date === "string" && !date.includes("T")) {
@@ -66,4 +68,10 @@ export function generateIdenticon(publicKey: string, size: number = 64): string 
     console.error('Error generating identicon:', error);
     return '';
   }
+}
+
+export function getSlugType(slug: string) {
+  return slug.startsWith("did:web5:") || slug.startsWith("did%3Aweb5%3A")
+    ? SlugType.Web5DID
+    : SlugType.Pubkey;
 }

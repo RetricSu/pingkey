@@ -6,6 +6,7 @@ import { useNostr } from "../contexts/nostr";
 import { useLocalStorage } from "./useLocalStorage";
 import { UserInfoCache, RelayListItem } from "../lib/type";
 import { LocalStorageKeys, USER_INFO_CACHE_EXPIRED_MS } from "../lib/config";
+import { useWeb5DID } from "app/contexts/web5-did";
 
 interface UseUserRelayListReturn {
   relayList: RelayListItem[];
@@ -19,6 +20,9 @@ export function useUserRelayList(
 ): UseUserRelayListReturn {
   const { pubkey: currentUserPubkey } = useAuth();
   const { nostr } = useNostr();
+
+  const { didDocument } = useWeb5DID();
+
   const [userInfoCache, setUserInfoCache] =
     useLocalStorage<UserInfoCache | null>(
       LocalStorageKeys.userInfoCacheKey,
@@ -30,7 +34,8 @@ export function useUserRelayList(
   const [error, setError] = useState<string | null>(null);
 
   // Use targetPubkey if provided, otherwise use current user's pubkey
-  const pubkeyToFetch = targetPubkey || currentUserPubkey;
+  const pubkeyToFetch =
+    targetPubkey || didDocument?.verificationMethods.nostr || currentUserPubkey;
 
   const isCacheValid = useCallback(
     (cache: UserInfoCache | null): boolean => {
@@ -53,6 +58,25 @@ export function useUserRelayList(
   );
 
   const fetchRelayList = useCallback(async (): Promise<void> => {
+    if (didDocument?.services.nostr_relays) {
+      const relay = didDocument.services.nostr_relays.endpoints;
+      const relays = [
+        {
+          url: relay,
+        },
+      ];
+      setRelayList(relays);
+      if (pubkeyToFetch === currentUserPubkey && userInfoCache) {
+        console.debug("useUserRelayList: update cache.");
+        setUserInfoCache({
+          ...userInfoCache,
+          relayList: relays,
+          updatedAt: Date.now(),
+        });
+      }
+      return;
+    }
+
     if (!nostr || !pubkeyToFetch) {
       setIsLoading(false);
       return;
@@ -86,6 +110,7 @@ export function useUserRelayList(
     nostr,
     pubkeyToFetch,
     currentUserPubkey,
+    didDocument,
     userInfoCache,
     setUserInfoCache,
   ]);
@@ -103,6 +128,7 @@ export function useUserRelayList(
 
     // Check if we should use cache (only for current user)
     if (pubkeyToFetch === currentUserPubkey && isCacheValid(userInfoCache)) {
+      console.debug("useRelayList: use cache.");
       setRelayList(userInfoCache!.relayList!);
       setIsLoading(false);
       return;
