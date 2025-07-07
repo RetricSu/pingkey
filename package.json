@@ -4,7 +4,11 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "node tests/did-sdk.test.js",
+    "test:did": "node tests/did-sdk.test.js",
+    "test:did-interactive": "node tests/did-sdk.test.js --interactive",
+    "test:did-help": "node tests/did-sdk.test.js --help"
   },
   "dependencies": {
     "@ckb-ccc/connector-react": "^1.0.18",
