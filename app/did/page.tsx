@@ -162,14 +162,13 @@ export default function Web5ConnectPage() {
         <h1 className="text-3xl font-light tracking-tight text-neutral-900 dark:text-neutral-100 mb-4">
           Web5 DID
         </h1>
-        <p className="text-neutral-600 dark:text-neutral-400">
-          Your decentralized identity
-        </p>
+        <div className="flex justify-center mb-12">
+          <ConnectWallet className="px-6 py-3 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors duration-200 font-medium text-center justify-center" />
+        </div>
       </div>
 
       {!signerInfo ? (
         <div className="text-center">
-          <ConnectWallet className="px-6 py-3 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors duration-200 font-medium" />
           <p className="mt-4 text-sm text-neutral-600 dark:text-neutral-400">
             Connect wallet to continue
           </p>
