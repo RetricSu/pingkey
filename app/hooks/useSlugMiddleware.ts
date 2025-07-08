@@ -49,9 +49,10 @@ export function useSlugMiddleware({
     try {
       const sdk = new DIDSDK(signerInfo.signer);
       // Use the slug as is if it's already a full Web5 DID, otherwise construct it
-      const identifier = slug.startsWith("did:web5:") ? slug : `did:web5:${slug}`;
+      const identifier = decodeURIComponent(slug);
+      console.log("identifier", identifier);
       console.log("Fetching Web5 DID data for identifier:", identifier);
-      
+
       const didCell = await sdk.getDIDLiveCell(identifier);
 
       if (!didCell) {
@@ -84,7 +85,10 @@ export function useSlugMiddleware({
           url: relayUrl,
         });
       } else {
-        console.log("No nostr_relays endpoints found in DID document:", didWeb5Data.services);
+        console.log(
+          "No nostr_relays endpoints found in DID document:",
+          didWeb5Data.services
+        );
       }
 
       // Set the pubkey from DID verification methods
