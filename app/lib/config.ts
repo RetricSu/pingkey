@@ -53,10 +53,11 @@ export const DID_SCRIPT = {
     hash_type: "type",
     cellDeps: [
       {
+        // https://github.com/XuJiandong/ckb-did-plc-utils/blob/main/deployment/testnet/migrations/2025-07-08-053404.json
         cellDep: {
           outPoint: {
             txHash:
-              "0x1ecbf88d692a14d7cbc0bfd1a3d5019e4b613247ae438bad52f94148c6009559",
+              "0x9a1f8ac876408b4c735fb083a3da575b1dc8494b8a422e11ba2561d563d7a84a",
             index: 0,
           },
           depType: "code",
