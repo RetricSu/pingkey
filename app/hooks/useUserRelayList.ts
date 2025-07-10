@@ -10,6 +10,8 @@ import { useWeb5DID } from "app/contexts/web5-did";
 
 interface UseUserRelayListReturn {
   relayList: RelayListItem[];
+  relayListFromDid: RelayListItem[];
+  relayListFromNip65: RelayListItem[];
   isLoading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
@@ -30,6 +32,10 @@ export function useUserRelayList(
     );
 
   const [relayList, setRelayList] = useState<RelayListItem[]>([]);
+  const [relayListFromDid, setRelayListFromDid] = useState<RelayListItem[]>([]);
+  const [relayListFromNip65, setRelayListFromNip65] = useState<RelayListItem[]>(
+    []
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,6 +64,12 @@ export function useUserRelayList(
   );
 
   const fetchRelayList = useCallback(async (): Promise<void> => {
+    console.log("fetchRelayList, document: ", didDocument);
+
+    // Reset states
+    setRelayListFromDid([]);
+    setRelayListFromNip65([]);
+
     if (didDocument?.services.nostr_relays) {
       const relay = didDocument.services.nostr_relays.endpoints;
       const relays = [
@@ -65,7 +77,7 @@ export function useUserRelayList(
           url: relay,
         },
       ];
-      setRelayList(relays);
+      setRelayListFromDid(relays);
       if (pubkeyToFetch === currentUserPubkey && userInfoCache) {
         console.debug("useUserRelayList: update cache.");
         setUserInfoCache({
@@ -74,6 +86,7 @@ export function useUserRelayList(
           updatedAt: Date.now(),
         });
       }
+      console.debug("useUserRelayList: fetched from did document.");
       return;
     }
 
@@ -88,7 +101,7 @@ export function useUserRelayList(
 
       const relays = await nostr.fetchNip65RelayList([pubkeyToFetch]);
 
-      setRelayList(relays);
+      setRelayListFromNip65(relays);
 
       // Update cache only if this is for the current user
       if (pubkeyToFetch === currentUserPubkey && userInfoCache) {
@@ -99,10 +112,11 @@ export function useUserRelayList(
           updatedAt: Date.now(),
         });
       }
+      console.debug("useUserRelayList: fetched from nostr network.");
     } catch (err) {
       setError("Failed to fetch relay list");
       console.error("Error fetching relay list:", err);
-      setRelayList([]);
+      setRelayListFromNip65([]);
     } finally {
       setIsLoading(false);
     }
@@ -119,13 +133,16 @@ export function useUserRelayList(
     await fetchRelayList();
   }, [fetchRelayList]);
 
+  // Determine final relay list based on priority: DID first, then NIP-65
   useEffect(() => {
-    if (!pubkeyToFetch) {
-      setIsLoading(false);
-      setRelayList([]);
-      return;
+    if (relayListFromDid.length > 0) {
+      setRelayList(relayListFromDid);
+    } else {
+      setRelayList(relayListFromNip65);
     }
+  }, [relayListFromDid, relayListFromNip65]);
 
+  useEffect(() => {
     // Check if we should use cache (only for current user)
     if (pubkeyToFetch === currentUserPubkey && isCacheValid(userInfoCache)) {
       console.debug("useRelayList: use cache.");
@@ -146,6 +163,8 @@ export function useUserRelayList(
 
   return {
     relayList,
+    relayListFromDid,
+    relayListFromNip65,
     isLoading,
     error,
     refetch,
