@@ -1,6 +1,7 @@
 import { RelayListItem } from "app/lib/type";
 import { useRelayConnectivity } from "app/hooks/useRelayConnectivity";
 import { alert } from "app/components/dialog";
+import { Tooltip } from "app/components/tooltip";
 
 interface RelayListProps {
   relayList: RelayListItem[];
@@ -59,33 +60,32 @@ export function RelayList({
   const displayRelays = enableConnectivityCheck ? relaysWithStatus : relayList;
 
   const titleSection = (
-    <h3 className="text-sm font-medium mb-3 text-gray-700 dark:text-gray-300 flex items-center gap-2">
+    <h3 className="text-sm font-medium mb-3 text-gray-700 dark:text-gray-300 flex items-center gap-2 relative">
       {title}
-      <button
-        onClick={() =>
-          alert(
-            "What are Relays?",
-            "Relays are servers that receive and store messages. They act as a bridge between users, allowing them to send and receive messages across the decentralized Nostr network. Users can configure multiple relays for better redundancy and reach."
-          )
-        }
-        className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
-        title="More information about relays"
+      <Tooltip
+        content="Relays are servers that receive and store messages. They act as a bridge between users, allowing them to send and receive messages across the decentralized Nostr network. Users can configure multiple relays for better redundancy and reach."
+        position="top"
       >
-        <svg
-          width="10"
-          height="10"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+        <button
+          className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+          aria-label="More information about relays"
         >
-          <circle cx="12" cy="12" r="10" />
-          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-          <path d="M12 17h.01" />
-        </svg>
-      </button>
+          <svg
+            width="10"
+            height="10"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+            <path d="M12 17h.01" />
+          </svg>
+        </button>
+      </Tooltip>
     </h3>
   );
 

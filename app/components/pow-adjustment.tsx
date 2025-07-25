@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { POW_CONFIG } from "app/lib/config";
+import { Tooltip } from "app/components/tooltip";
 
 interface PowAdjustmentProps {
   powDifficulty: number;
@@ -16,8 +16,6 @@ export function PowAdjustment({
 }: PowAdjustmentProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [tempValue, setTempValue] = useState(powDifficulty.toString());
-  const [showTooltip, setShowTooltip] = useState(false);
-  const tooltipTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Sync tempValue when powDifficulty changes externally
   useEffect(() => {
@@ -25,14 +23,6 @@ export function PowAdjustment({
       setTempValue(powDifficulty.toString());
     }
   }, [powDifficulty, isEditing]);
-
-  // Debug tooltip state changes
-  useEffect(() => {
-    console.log("Tooltip state changed:", showTooltip);
-    if (showTooltip) {
-      console.log("Tooltip should be visible now!");
-    }
-  }, [showTooltip]);
 
   const handleDecrease = () => {
     const newValue = Math.max(1, powDifficulty - 1);
@@ -66,35 +56,6 @@ export function PowAdjustment({
       setIsEditing(false);
     }
   };
-
-  const handleTooltipShow = () => {
-    console.log("Tooltip show triggered");
-    setShowTooltip(true);
-    if (tooltipTimeoutRef.current) {
-      clearTimeout(tooltipTimeoutRef.current);
-    }
-    tooltipTimeoutRef.current = setTimeout(() => {
-      console.log("Tooltip auto-hide triggered");
-      setShowTooltip(false);
-    }, 3000); // Hide after 3 seconds
-  };
-
-  const handleTooltipHide = () => {
-    console.log("Tooltip hide triggered");
-    if (tooltipTimeoutRef.current) {
-      clearTimeout(tooltipTimeoutRef.current);
-    }
-    setShowTooltip(false);
-  };
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (tooltipTimeoutRef.current) {
-        clearTimeout(tooltipTimeoutRef.current);
-      }
-    };
-  }, []);
 
   return (
     <div className="flex items-center bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-visible relative">
@@ -177,12 +138,12 @@ export function PowAdjustment({
       </button>
 
       {/* Difficulty Info */}
-      <div className="relative">
+      <Tooltip
+        content="POW is the difficulty of the proof of work required for your browser to send a message. It is used as a spam protection mechanism for relaying messages. Higher POW means more spam-proof, but consumes more CPU power."
+        position="top"
+      >
         <button
           className="flex items-center justify-center w-8 h-10 sm:h-8 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-          onClick={handleTooltipShow}
-          onMouseEnter={handleTooltipShow}
-          onMouseLeave={handleTooltipHide}
           aria-label="POW difficulty info"
         >
           <svg
@@ -200,14 +161,7 @@ export function PowAdjustment({
             <path d="M12 17h.01" />
           </svg>
         </button>
-        
-        {/* Custom Tooltip */}
-        {showTooltip && (
-          <div className="absolute bottom-full right-0 mb-2 w-48 p-2 bg-black dark:bg-white text-white dark:text-black text-xs rounded shadow-lg" style={{ zIndex: 9999 }}>
-            <div>POW is the difficulty of the proof of work required for your browser to send a message. It is used as a spam protection mechanism for relaying messages. Higher POW means more spam-proof, but consumes more CPU power.</div>
-          </div>
-        )}
-      </div>
+      </Tooltip>
     </div>
   );
 } 
