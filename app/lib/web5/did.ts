@@ -6,15 +6,17 @@ import {
   hexFrom,
   Script,
   Signer,
+  Client,
 } from "@ckb-ccc/connector-react";
 import { DID_SCRIPT } from "../config";
 import * as cbor from "@ipld/dag-cbor";
 import * as molecule from "./mol";
 import base32 from "base32";
+import { DIDDocument } from "./type";
 
 export class DIDSDK {
   constructor(
-    private readonly signer: Signer,
+    private readonly client: Client,
     public readonly script_info = DID_SCRIPT.testnet
   ) {}
 
@@ -26,7 +28,7 @@ export class DIDSDK {
       codeHash: this.script_info.code_hash,
       hashType: this.script_info.hash_type,
     } as Script;
-    const cells = await this.signer.client.findCells({
+    const cells = await this.client.findCells({
       script: typeScript,
       scriptType: "type",
       scriptSearchMode: "exact",
@@ -40,10 +42,10 @@ export class DIDSDK {
     return results[0];
   }
 
-  async findDIDCells() {
-    const addressObj = await this.signer.getRecommendedAddressObj();
+  async findDIDCells(signer: Signer) {
+    const addressObj = await signer.getRecommendedAddressObj();
     const results: Cell[] = [];
-    const cells = await this.signer.client.findCells({
+    const cells = await this.client.findCells({
       script: addressObj.script,
       scriptType: "lock",
       scriptSearchMode: "exact",
@@ -64,8 +66,8 @@ export class DIDSDK {
     return results;
   }
 
-  async createDID(nostrPublicKey: string, relayUrl: string) {
-    const addressObj = await this.signer.getRecommendedAddressObj();
+  async createDID(nostrPublicKey: string, relayUrl: string, signer: Signer) {
+    const addressObj = await signer.getRecommendedAddressObj();
     const argsPlaceholder = "0x" + "00".repeat(20);
     const outputData = this.serializeDIDDocument(nostrPublicKey, relayUrl);
     const tx = ccc.Transaction.from({
@@ -82,13 +84,13 @@ export class DIDSDK {
       outputsData: [outputData],
     });
     tx.addCellDeps(...this.script_info.cellDeps.map((dep) => dep.cellDep));
-    await tx.completeInputsByCapacity(this.signer);
-    await tx.completeFeeBy(this.signer);
+    await tx.completeInputsByCapacity(signer);
+    await tx.completeFeeBy(signer);
 
     const cellInput = tx.getInput(0)!;
     const args = this.hashDIDCellArgs(cellInput, 0);
     tx.outputs[0].type!.args = args;
-    const txHash = await this.signer.sendTransaction(tx);
+    const txHash = await signer.sendTransaction(tx);
     return txHash;
   }
 
@@ -156,17 +158,4 @@ export class DIDSDK {
     const args = bytes.toString("hex");
     return ("0x" + args) as Hex;
   }
-}
-
-export interface DIDDocument {
-  verificationMethods: {
-    nostr: string;
-  };
-  alsoKnownAs: string[];
-  services: {
-    nostr_relays: {
-      type: "NostrRelays";
-      endpoints: string;
-    };
-  };
 }

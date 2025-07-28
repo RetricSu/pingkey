@@ -8,7 +8,8 @@ import React, {
   ReactNode,
 } from "react";
 import { ccc, Signer } from "@ckb-ccc/connector-react";
-import { DIDDocument, DIDSDK } from "app/lib/web5/did";
+import { DIDSDK } from "app/lib/web5/did";
+import { DIDDocument } from "app/lib/web5/type";
 
 interface Web5DIDContextType {
   didIdentifier: string | null;
@@ -27,7 +28,7 @@ interface Web5DIDProviderProps {
 }
 
 export function Web5DIDProvider({ children }: Web5DIDProviderProps) {
-  const { signerInfo } = ccc.useCcc();
+  const { client,signerInfo } = ccc.useCcc();
   
   const [didIdentifier, setDidIdentifier] = useState<string | null>(null);
   const [didDocument, setDidDocument] = useState<DIDDocument | null>(null);
@@ -36,7 +37,7 @@ export function Web5DIDProvider({ children }: Web5DIDProviderProps) {
 
   const searchForDID = async (sdk: DIDSDK) => {
     try {
-      const cells = await sdk.findDIDCells();
+      const cells = await sdk.findDIDCells(signerInfo?.signer as Signer);
       if (cells.length > 0) {
         const did = sdk.parseDIDCell(cells[0]);
         setDidDocument(did.didWeb5Data);
@@ -58,7 +59,7 @@ export function Web5DIDProvider({ children }: Web5DIDProviderProps) {
     setError(null);
     
     try {
-      const sdk = new DIDSDK(signerInfo.signer as Signer);
+      const sdk = new DIDSDK(client);
       await searchForDID(sdk);
     } finally {
       setIsLoading(false);
@@ -74,8 +75,8 @@ export function Web5DIDProvider({ children }: Web5DIDProviderProps) {
     setError(null);
     
     try {
-      const sdk = new DIDSDK(signerInfo.signer as Signer);
-      const txHash = await sdk.createDID(nostrPublicKey, relayUrl);
+      const sdk = new DIDSDK(client);
+      const txHash = await sdk.createDID(nostrPublicKey, relayUrl, signerInfo.signer as Signer);
       
       // Wait a moment for the transaction to be processed
       setTimeout(async () => {
@@ -105,9 +106,9 @@ export function Web5DIDProvider({ children }: Web5DIDProviderProps) {
     setError(null);
     
     try {
-      const sdk = new DIDSDK(signerInfo.signer as Signer);
+      const sdk = new DIDSDK(client);
       // For updating, we essentially create a new DID with updated information
-      const txHash = await sdk.createDID(nostrPublicKey, relayUrl);
+      const txHash = await sdk.createDID(nostrPublicKey, relayUrl, signerInfo.signer as Signer);
       
       // Wait a moment for the transaction to be processed
       setTimeout(async () => {

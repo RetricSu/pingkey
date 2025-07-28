@@ -30,7 +30,7 @@ export function useSlugMiddleware({
   hasServerData,
 }: SlugMiddlewareProps): SlugMiddlewareData {
   const { nostr } = useNostr();
-  const { signerInfo } = ccc.useCcc();
+  const { client, signerInfo } = ccc.useCcc();
 
   const [profile, setProfile] = useState<Profile>(initialProfile);
   const [relayList, setRelayList] = useState<RelayListItem[]>(initialRelayList);
@@ -41,13 +41,13 @@ export function useSlugMiddleware({
   const slugType: SlugType = useMemo(() => getSlugType(slug), [slug]);
 
   const fetchWeb5DIDData = useCallback(async () => {
-    if (!signerInfo || slugType !== "web5-did") {
+    if (!client || slugType !== "web5-did") {
       console.log("no signerInfo or slugType is not web5-did");
       return;
     }
 
     try {
-      const sdk = new DIDSDK(signerInfo.signer);
+      const sdk = new DIDSDK(client);
       // Use the slug as is if it's already a full Web5 DID, otherwise construct it
       const identifier = decodeURIComponent(slug);
       console.log("identifier", identifier);
@@ -118,7 +118,7 @@ export function useSlugMiddleware({
       console.error("Error fetching Web5 DID data:", err);
       setError(`Failed to fetch DID data: ${(err as Error).message}`);
     }
-  }, [slug, slugType, signerInfo, nostr]);
+  }, [slug, slugType, client, nostr]);
 
   const fetchNostrData = useCallback(async () => {
     if (!nostr || slugType !== "pubkey") return;
@@ -183,7 +183,7 @@ export function useSlugMiddleware({
       return;
     }
 
-    if (slugType === SlugType.Web5DID && !signerInfo) {
+    if (slugType === SlugType.Web5DID && !client) {
       setError("Wallet connection required to fetch Web5 DID data");
       return;
     }
