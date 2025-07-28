@@ -13,8 +13,10 @@
   "dependencies": {
     "@ckb-ccc/connector-react": "^1.0.18",
     "@ckb-ccc/core": "1.8.1",
+    "@ckb-ccc/spore": "^1.5.2",
     "@ipld/dag-cbor": "^9.2.4",
     "@noble/hashes": "^1.8.0",
+    "@nostr-binding/sdk": "0.1.0-rc9",
     "@types/p5": "^1.7.6",
     "@vercel/analytics": "^1.5.0",
     "@vercel/speed-insights": "^1.2.0",

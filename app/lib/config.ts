@@ -66,3 +66,43 @@ export const DID_SCRIPT = {
     ],
   },
 };
+
+export const NOSTR_BINDING_SCRIPT = {
+  testnet: { // https://github.com/cryptape/nostr-binding/blob/main/deployment/testnet/nostr-binding-type-script/migrations/2024-07-03-014444.json
+    code_hash:
+      "0x4105801324b70b3a1508ded8958aba66a6faf68cab26f863b4902b50dfb8b9ab",
+    hash_type: "type",
+    cellDeps: [
+      {
+        cellDep: {
+          outPoint: {
+            txHash:
+              "0x0e3949fa8afbbdf6d4abdda0d12ac1206c8d05dd51ec490b7341586291db85a6",
+            index: 0,
+          },
+          depType: "code",
+        },
+      },
+    ],
+  },
+};
+
+export const INPUT_TYPE_PROXY_LOCK = {
+  testnet: { // https://github.com/ckb-devrel/ckb-proxy-locks/blob/main/migrations/testnet/2024-10-08-042300.json
+    code_hash:
+      "0x5123908965c711b0ffd8aec642f1ede329649bda1ebdca6bd24124d3796f768a",
+    hash_type: "data1",
+    cellDeps: [
+      {
+        cellDep: {
+          outPoint: {
+            txHash:
+              "0xb4f171c9c9caf7401f54a8e56225ae21d95032150a87a4678eac3f66a3137b93",
+            index: 1,
+          },
+          depType: "code",
+        }
+      }
+    ]
+  },
+};
