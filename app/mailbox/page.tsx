@@ -2,7 +2,7 @@
 
 import { useAuth } from "app/contexts/auth";
 import { useNostr } from "app/contexts/nostr";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Event } from "nostr-tools/core";
 import { LetterCard } from "app/components/letter/letter-card";
 import { CachedLetterCard } from "app/components/letter/cached-letter-card";
@@ -15,12 +15,15 @@ import { useDecryptedLettersCache } from "app/hooks/useDecryptedLettersCache";
 import { RelayList } from "app/components/profile/relay-list";
 import { useLocalStorage } from "app/hooks/useLocalStorage";
 import { LocalStorageKeys, POW_CONFIG } from "app/lib/config";
+import { findDOBLetter, isDOBLetter } from "app/lib/dob";
+import { useCcc } from "@ckb-ccc/connector-react";
 
 type FilterType = "all" | "unread" | "read";
 
 function MailBox() {
   const { isSignedIn, pubkey } = useAuth();
   const { nostr } = useNostr();
+  const { client } = useCcc();
   const [giftWrappedNotes, setGiftWrappedNotes] = useState<Event[]>([]);
   const [currentFilter, setCurrentFilter] = useState<FilterType>("all");
   const [isLoading, setIsLoading] = useState(true);
@@ -70,6 +73,22 @@ function MailBox() {
   useEffect(() => {
     fetchGiftWrappedNotes();
   }, [fetchGiftWrappedNotes]);
+
+  const dobLetters = useMemo(() => {
+    return giftWrappedNotes.filter((note) => isDOBLetter(note));
+  }, [giftWrappedNotes]);
+
+  const printDOBLetter = useCallback(async (letter: Event) => {
+    const letterCell = await findDOBLetter(letter, client);
+    console.log("letterCell", letterCell);
+  }, [client]);
+  
+  useEffect(() => {
+    console.log("dobLetters", dobLetters);
+    for (const letter of dobLetters) {
+      printDOBLetter(letter);
+    }
+  }, [dobLetters]);
 
   const sampleLetters = giftWrappedNotes.map((note) => ({
     id: note.id,

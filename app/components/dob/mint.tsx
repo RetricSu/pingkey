@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useRef } from "react";
-import { ccc, Hex, useCcc } from "@ckb-ccc/connector-react";
+import { ccc, useCcc } from "@ckb-ccc/connector-react";
 import { createSpore } from "@ckb-ccc/spore";
 import { useNotification } from "../../contexts/notification";
 
