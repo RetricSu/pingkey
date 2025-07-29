@@ -4,6 +4,12 @@ import { NostrBindingSDK, TagName, TESTNET_CONFIGS } from "@nostr-binding/sdk";
 import { transferSpore } from "@ckb-ccc/spore";
 import { Event } from "nostr-tools";
 
+export function createLockScriptFrom(nostrPublicKey: Hex) {
+  const sdk = new NostrBindingSDK(TESTNET_CONFIGS);
+  const lockScript = sdk.lock.buildScript(nostrPublicKey);
+  return lockScript;
+}
+
 export async function createOnChainLetter(
   receiverLock: ScriptLike,
   cccSigner: Signer,
@@ -42,12 +48,10 @@ export async function createOnChainLetter(
   // ======
 
   tx.addCellDeps(
-    await sdk.binding.buildCellDeps(),
-    await sdk.lock.buildCellDeps()
+    await sdk.binding.buildCellDeps()
   );
 
   await tx.completeFeeBy(cccSigner, 1000);
-
   const letterTypeHash = tx.outputs[0].type!.hash();
   return { tx, signedEvent, letterTypeHash };
 }

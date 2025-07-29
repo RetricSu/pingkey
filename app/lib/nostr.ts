@@ -254,9 +254,15 @@ export class Nostr {
   private async createNip59POWWrapEvent(
     seal: NostrEvent,
     recipientPublicKey: string,
-    difficulty: number = 8
+    difficulty: number = 8,
+    extraTags?: string[][]
   ): Promise<NostrEvent> {
     const randomKey = generateSecretKey();
+
+    const tags = [["p", recipientPublicKey]];
+    if (extraTags && extraTags.length > 0) {
+      tags.push(...extraTags);
+    }
 
     const unsignedEvent: UnsignedEvent = {
       kind: GiftWrap,
@@ -266,7 +272,7 @@ export class Nostr {
         JSON.stringify(seal)
       ),
       created_at: Math.floor(Date.now() / 1000),
-      tags: [["p", recipientPublicKey]],
+      tags,
       pubkey: getPublicKey(randomKey),
     };
 
@@ -312,7 +318,8 @@ export class Nostr {
     },
     message: string,
     difficulty: number = POW_CONFIG.default_difficulty,
-    extraTags?: string[][]
+    extraTags?: string[][],
+    powWrapEventExtraTags?: string[][],
   ): Promise<Event> {
     const event = this.createNip17BaseEvent(recipient, message, extraTags);
     const rumor = createRumor(event, senderPrivkey);
@@ -320,7 +327,8 @@ export class Nostr {
     const wrappedEvent = await this.createNip59POWWrapEvent(
       seal,
       recipient.publicKey,
-      difficulty
+      difficulty,
+      powWrapEventExtraTags
     );
     return wrappedEvent;
   }

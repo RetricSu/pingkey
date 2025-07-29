@@ -17,9 +17,11 @@ import { getSlugType } from "app/lib/util";
 import { SlugType } from "app/lib/type";
 import { useSlugMiddleware } from "app/hooks/useSlugMiddleware";
 import { defaultProfile } from "app/lib/config";
-import { useCcc } from "@ckb-ccc/connector-react";
+import { Hex, useCcc } from "@ckb-ccc/connector-react";
 import { DOBSelector } from "app/components/dob/selector";
 import { ReceiverRelayList } from "app/components/compose/receiver-relay-list";
+import { createLockScriptFrom, createOnChainLetter, sealLetterWithDOBStamp } from "app/lib/dob/seal";
+import { Event } from "nostr-tools";
 
 function ComposePage() {
   const { exportPrivateKey } = useAuth();
@@ -45,6 +47,7 @@ function ComposePage() {
   const [subject, setSubject] = useState("");
   const [content, setContent] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [selectedDOBId, setSelectedDOBId] = useState<Hex | undefined>();
 
   // Slug middleware for resolving recipient
   const slugType = getSlugType(recipientSlug);
@@ -72,7 +75,9 @@ function ComposePage() {
       return error("Please fill in recipient and content");
     }
     if (!recipientPubkey) {
-      return error("Unable to resolve recipient - please check the slug/pubkey");
+      return error(
+        "Unable to resolve recipient - please check the slug/pubkey"
+      );
     }
     if (!nostr) {
       return error("Nostr not initialized");
@@ -106,6 +111,81 @@ function ComposePage() {
       const extraTags = replyToEventId ? [["e", replyToEventId]] : [];
       if (subject && subject.trim() !== "") {
         extraTags.push(["subject", subject]);
+      }
+
+      // if selectedDOBId is provided
+      if (selectedDOBId) {
+        if(!signerInfo?.signer) {
+          return error("No ckb signer found");
+        };
+
+        const receiverLock = createLockScriptFrom(`0x${recipientPubkey}`);
+        // Create a mock letter event function
+        const createLetterEvent = (powWrapEventExtraTags: string[][]): Promise<Event> => {
+          return createPowNote({
+            senderPrivkey,
+            recipient,
+            message: letterContent,
+            difficulty: powDifficulty,
+            extraTags,
+            powWrapEventExtraTags,
+          });
+        };
+
+        const {signedEvent, tx: onChainLetterTx, letterTypeHash} = await createOnChainLetter(
+          receiverLock,
+          signerInfo.signer,
+          createLetterEvent
+        );
+        console.log("onChainLetterTx", onChainLetterTx, signedEvent);
+
+        // TODO: send the letter tx and the DOB stamp tx in one transaction
+        // Send the on-chain letter tx
+        const onChainLetterTxHash = await signerInfo.signer.sendTransaction(onChainLetterTx);
+
+        // seal the letter with the DOB stamp
+        const sealedLetterTx = await sealLetterWithDOBStamp(
+          letterTypeHash,
+          selectedDOBId,
+          signerInfo.signer
+        );
+        const sealedLetterTxHash = await signerInfo.signer.sendTransaction(sealedLetterTx);
+
+        success(`
+          on-chain letter tx hash: ${onChainLetterTxHash}
+          sealed letter tx hash: ${sealedLetterTxHash}
+          Sealed letter successfully! The receiver will receive two on-chain assets, first is the letter, second is the DOB stamp.
+          `);
+
+         // Show stamp dialog with the event ID
+         const StampDialog = buildGeneratedStampDialog(
+          powDifficulty,
+          signedEvent
+        );
+        const shouldSend = await custom(StampDialog, { maxWidth: "md" });
+        if (!shouldSend) {
+          return error("Cancelled");
+        }
+
+        // Send to relays
+        if (recipientRelayList.length > 0) {
+          const res = await nostr.publishEventToRelays(
+            signedEvent,
+            recipientRelayList.map((relay) => relay.url)
+          );
+          info("Result", res.map((r) => `${r.relay}: ${r.result}`).join("\n"));
+        } else {
+          return error("No receiver's relay list found, can not send letter.");
+        }
+
+        // Clear form
+        setRecipientSlug("");
+        setSubject("");
+        setContent("");
+
+        success("Letter sent successfully!");
+
+        return;
       }
 
       // Create the POW note with reply information
@@ -198,12 +278,14 @@ function ComposePage() {
             <div className="flex gap-2 text-xs text-neutral-600 dark:text-neutral-400">
               <div className="flex items-center gap-2">
                 <span>Type:</span>
-                <span className={`px-2 py-1 rounded text-xs ${
-                  slugType === SlugType.Web5DID 
-                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                    : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-                }`}>
-                  {slugType === SlugType.Web5DID ? 'Web5 DID' : 'Public Key'}
+                <span
+                  className={`px-2 py-1 rounded text-xs ${
+                    slugType === SlugType.Web5DID
+                      ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                      : "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
+                  }`}
+                >
+                  {slugType === SlugType.Web5DID ? "Web5 DID" : "Public Key"}
                 </span>
               </div>
               {recipientProfile && recipientProfile.name && (
@@ -239,7 +321,10 @@ function ComposePage() {
             <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
               On-chain Stamp
             </label>
-            <DOBSelector />
+            <DOBSelector
+              onSelect={setSelectedDOBId}
+              selectedId={selectedDOBId}
+            />
           </div>
         )}
 
@@ -288,11 +373,7 @@ function ComposePage() {
             }
             className="px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isMining
-              ? "Creating Stamp..."
-              : isSending
-              ? "Sending..."
-              : "Send"}
+            {isMining ? "Creating Stamp..." : isSending ? "Sending..." : "Send"}
           </button>
         </div>
       </div>

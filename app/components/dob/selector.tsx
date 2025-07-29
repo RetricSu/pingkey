@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { ccc, useCcc } from "@ckb-ccc/connector-react";
+import { ccc, Hex, useCcc } from "@ckb-ccc/connector-react";
 import { findSporesBySigner } from "@ckb-ccc/spore";
 import { useNotification } from "../../contexts/notification";
 
 export interface DOBItem {
-  id: string;
+  id: Hex;
   contentType: string;
   content: string;
   clusterId?: string;
@@ -16,8 +16,8 @@ export interface DOBItem {
 }
 
 interface DOBSelectorProps {
-  onSelect?: (dobId: string) => void;
-  selectedId?: string;
+  onSelect?: (dobId: Hex) => void;
+  selectedId?: Hex;
   className?: string;
 }
 
@@ -27,16 +27,13 @@ export function DOBSelector({ onSelect, selectedId, className = "" }: DOBSelecto
   
   const [dobItems, setDobItems] = useState<DOBItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const fetchDOBItems = useCallback(async () => {
     if (!signerInfo?.signer) {
-      setErrorMessage("No signer available. Please connect your wallet first.");
-      return;
+      return error("No signer available. Please connect your wallet first.");
     }
 
     setIsLoading(true);
-    setErrorMessage(null);
 
     try {
       const items: DOBItem[] = [];
@@ -48,7 +45,7 @@ export function DOBSelector({ onSelect, selectedId, className = "" }: DOBSelecto
         limit: 100, // Limit to 100 items
       })) {
         items.push({
-          id: result.cell.cellOutput.type?.args || "",
+          id: result.cell.cellOutput.type?.args as Hex,
           contentType: result.sporeData.contentType,
           content: typeof result.sporeData.content === 'string' ? result.sporeData.content : ccc.hexFrom(result.sporeData.content),
           clusterId: result.sporeData.clusterId ? (typeof result.sporeData.clusterId === 'string' ? result.sporeData.clusterId : ccc.hexFrom(result.sporeData.clusterId)) : undefined,
@@ -61,7 +58,6 @@ export function DOBSelector({ onSelect, selectedId, className = "" }: DOBSelecto
       setDobItems(items);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Failed to fetch DOB items";
-      setErrorMessage(errorMsg);
       error("Failed to fetch DOB items", errorMsg);
     } finally {
       setIsLoading(false);
@@ -72,7 +68,7 @@ export function DOBSelector({ onSelect, selectedId, className = "" }: DOBSelecto
     fetchDOBItems();
   }, [fetchDOBItems]);
 
-  const handleItemClick = (dobId: string) => {
+  const handleItemClick = (dobId: Hex) => {
     onSelect?.(dobId);
   };
 
@@ -123,22 +119,6 @@ export function DOBSelector({ onSelect, selectedId, className = "" }: DOBSelecto
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 dark:border-blue-400" />
           Loading your DOB items...
         </div>
-      </div>
-    );
-  }
-
-  if (errorMessage) {
-    return (
-      <div className={`p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg ${className}`}>
-        <div className="text-sm text-red-800 dark:text-red-200">
-          Error: {errorMessage}
-        </div>
-        <button
-          onClick={fetchDOBItems}
-          className="mt-2 px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-        >
-          Retry
-        </button>
       </div>
     );
   }
