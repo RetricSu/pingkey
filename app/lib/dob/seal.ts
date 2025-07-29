@@ -7,7 +7,7 @@ import { Event } from "nostr-tools";
 export async function createOnChainLetter(
   receiverLock: ScriptLike,
   cccSigner: Signer,
-  createLetterEvent: (extraTags: string[][]) => Event
+  createLetterEvent: (extraTags: string[][]) => Promise<Event>
 ) {
   const sdk = new NostrBindingSDK(TESTNET_CONFIGS);
 
@@ -24,7 +24,7 @@ export async function createOnChainLetter(
 
   // === Prepare output type ===
   const globalUniqueId = ccc.hashTypeId(tx.inputs[0], 0).slice(2);
-  const signedEvent = createLetterEvent([
+  const signedEvent = await createLetterEvent([
     [TagName.ckbGlobalUniqueId, globalUniqueId],
   ]);
 
