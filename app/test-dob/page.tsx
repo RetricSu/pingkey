@@ -10,6 +10,7 @@ import { ccc, useCcc } from "@ckb-ccc/connector-react";
 import { Event } from "nostr-tools";
 import { usePowCreation } from "app/hooks/usePowCreation";
 import { Hex } from "@ckb-ccc/connector-react";
+import { createSpore } from "@ckb-ccc/spore";
 
 export default function TestDOBPage() {
   const { isSignedIn, exportPrivateKey } = useAuth();
@@ -20,11 +21,46 @@ export default function TestDOBPage() {
 
   const [isCreatingLetter, setIsCreatingLetter] = useState(false);
   const [isSealingStamp, setIsSealingStamp] = useState(false);
+  const [isCreatingDOB, setIsCreatingDOB] = useState(false);
   const [letterTypeHash, setLetterTypeHash] = useState<string>("");
   const [sporeId, setSporeId] = useState<string>("");
   const [receiverLock, setReceiverLock] = useState<string>("");
   const [message, setMessage] = useState("");
+  const [dobContentType, setDobContentType] = useState<string>("text/plain");
+  const [dobContent, setDobContent] = useState<string>("");
 
+  const handleCreateDOBStamp = async () => {
+    if (!signerInfo?.signer) {
+      return error("Please connect wallet first");
+    }
+
+    if (!dobContent.trim()) {
+      return error("Please enter DOB content");
+    }
+
+    setIsCreatingDOB(true);
+
+    try {
+      const spore = await createSpore({
+        signer: signerInfo.signer,
+        data: {
+          contentType: dobContentType,
+          content: ccc.Bytes.from(dobContent) 
+        },
+      });
+
+      await spore.tx.completeFeeBy(signerInfo.signer, 1000);
+      await signerInfo.signer.sendTransaction(spore.tx);
+      setSporeId(spore.id);
+      success("DOB Stamp created successfully!", `Spore ID: ${spore.id}`);
+    } catch (err: any) {
+      console.error("Failed to create DOB stamp:", err);
+      error("Failed to create DOB stamp", err.message);
+    } finally {
+      setIsCreatingDOB(false);
+    }
+  };
+  
   const handleCreateOnChainLetter = async () => {
     if (!isSignedIn) {
       return error("Please sign in first");
@@ -109,8 +145,8 @@ export default function TestDOBPage() {
     }
 
     if (!signerInfo?.signer) {
-        return error("Please connect wallet first");
-      }
+      return error("Please connect wallet first");
+    }
 
     setIsSealingStamp(true);
 
@@ -156,10 +192,68 @@ export default function TestDOBPage() {
         </p>
       </div>
 
+      {/* Create DOB Stamp Section */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+          1. Create DOB Stamp
+        </h2>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+              Content Type (e.g., "text/plain", "application/json")
+            </label>
+            <input
+              type="text"
+              value={dobContentType}
+              onChange={(e) => setDobContentType(e.target.value)}
+              placeholder="text/plain"
+              className="w-full px-3 py-2 text-sm bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-300 dark:focus:ring-neutral-600 transition-all font-mono"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+              Content
+            </label>
+            <textarea
+              value={dobContent}
+              onChange={(e) => setDobContent(e.target.value)}
+              placeholder="Enter your DOB content..."
+              className="w-full h-32 px-3 py-2 text-sm bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-300 dark:focus:ring-neutral-600 transition-all resize-none"
+            />
+          </div>
+
+          <button
+            onClick={handleCreateDOBStamp}
+            disabled={
+              !isSignedIn ||
+              isCreatingDOB ||
+              !dobContentType.trim() ||
+              !dobContent.trim()
+            }
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isCreatingDOB ? "Creating..." : "Create DOB Stamp"}
+          </button>
+        </div>
+
+        {sporeId && (
+          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+            <h3 className="text-sm font-medium text-green-800 dark:text-green-200 mb-2">
+              DOB Stamp Created
+            </h3>
+            <p className="text-xs font-mono text-green-700 dark:text-green-300 break-all">
+              Spore ID: {sporeId}
+            </p>
+          </div>
+        )}
+      </div>
+
       {/* Create On-Chain Letter Section */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
-          1. Create On-Chain Letter
+          2. Create On-Chain Letter
         </h2>
 
         <div className="space-y-4">
@@ -217,7 +311,7 @@ export default function TestDOBPage() {
       {/* Seal Letter with DOB Stamp Section */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
-          2. Seal Letter with DOB Stamp
+          3. Seal Letter with DOB Stamp
         </h2>
 
         <div className="space-y-4">
@@ -268,16 +362,16 @@ export default function TestDOBPage() {
           How to Test
         </h3>
         <div className="text-xs text-blue-700 dark:text-blue-300 space-y-2">
-          <p>1. Make sure you are signed in to the application</p>
-          <p>2. Enter a receiver lock (hex format) and message content</p>
+          <p>1. Make sure you are signed in to the application and connect your wallet</p>
+          <p>2. Create a DOB stamp by entering content type and content, then click "Create DOB Stamp"</p>
+          <p>3. Enter a receiver lock (hex format) and message content</p>
           <p>
-            3. Click "Create On-Chain Letter" to generate a letter type hash
+            4. Click "Create On-Chain Letter" to generate a letter type hash
           </p>
           <p>
-            4. Enter a spore ID (hex format) and use the generated letter type
-            hash
+            5. Use the generated letter type hash and spore ID to seal the letter
           </p>
-          <p>5. Click "Seal Letter with DOB Stamp" to complete the process</p>
+          <p>6. Click "Seal Letter with DOB Stamp" to complete the process</p>
           <p className="text-yellow-600 dark:text-yellow-400">
             Note: This is a test page with mock transaction signing. In a real
             environment, you would need proper CKB wallet integration.
