@@ -128,6 +128,12 @@ function DOBAssetDetailsModal({
               {assetDetails.sporeCells.map((sporeCell, index) => (
                 <div key={index} className="border border-neutral-200 dark:border-neutral-700 rounded p-3">
                   <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                      <span className="text-neutral-600 dark:text-neutral-400">Capacity:</span>
+                      <span className="font-mono text-neutral-900 dark:text-neutral-100">
+                        {ccc.fixedPointToString(sporeCell.cellOutput.capacity)} CKB
+                      </span>
+                    </div>
                     <div className="flex justify-between">
                       <span className="text-neutral-600 dark:text-neutral-400">Spore ID:</span>
                       <span className="font-mono text-neutral-900 dark:text-neutral-100">
@@ -185,12 +191,6 @@ function DOBAssetDetailsModal({
                           }
                         })()}
                       </div>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-neutral-600 dark:text-neutral-400">Capacity:</span>
-                      <span className="font-mono text-neutral-900 dark:text-neutral-100">
-                        {ccc.fixedPointToString(sporeCell.cellOutput.capacity)} CKB
-                      </span>
                     </div>
                   </div>
                 </div>
