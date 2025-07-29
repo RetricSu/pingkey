@@ -147,10 +147,13 @@ export async function findDOBLetter(powWrappedEvent: Event, client: Client) {
     args: letterCell.cellOutput.type?.hash().slice(0, 66) as Hex,
   };
 
-  const sporeCells = await findDOBAssetsFrom(
+  const rawSporeCells = await findDOBAssetsFrom(
     proxyLock,
     client
   );
+
+  // Return raw spore cells - parsing will be handled in the component
+  const sporeCells = rawSporeCells;
 
   return {
     letterCell,

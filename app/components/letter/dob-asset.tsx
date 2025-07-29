@@ -6,6 +6,7 @@ import { ccc, useCcc } from "@ckb-ccc/connector-react";
 import { findDOBLetter, isDOBLetter } from "app/lib/dob";
 import { custom, CustomDialogProps } from "app/components/gadget/dialog";
 import { useNotification } from "app/contexts/notification";
+import { unpackToRawSporeData } from "@ckb-ccc/spore/advanced";
 
 interface DOBLetterIndicatorProps {
   powWrappedEvent: Event;
@@ -31,7 +32,7 @@ function DOBAssetDetailsModal({
     return hex;
   };
 
-  const getContentPreview = (content: string, contentType: string) => {
+  const getContentPreview = (content: string, contentType: string): string | { type: 'image'; url: string; contentType: string } => {
     if (contentType.startsWith("text/")) {
       try {
         const decoded = new TextDecoder().decode(new Uint8Array(Buffer.from(content, 'hex')));
@@ -40,7 +41,14 @@ function DOBAssetDetailsModal({
         return "Text content";
       }
     } else if (contentType.startsWith("image/")) {
-      return "Image content";
+      try {
+        const decoded = ccc.bytesFrom(content);
+        const blob = new Blob([decoded], { type: contentType });
+        const imageUrl = URL.createObjectURL(blob);
+        return { type: 'image', url: imageUrl, contentType };
+      } catch {
+        return "Image content";
+      }
     } else if (contentType.startsWith("application/json")) {
       try {
         const decoded = new TextDecoder().decode(new Uint8Array(Buffer.from(content, 'hex')));
@@ -58,7 +66,7 @@ function DOBAssetDetailsModal({
     <div className="p-6 max-w-2xl">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
-          DOB Letter Assets
+          DOB Assets of the Letter
         </h2>
         <button
           onClick={onReject}
@@ -84,25 +92,27 @@ function DOBAssetDetailsModal({
         {/* Letter Cell Details */}
         <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4">
           <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-3">
-            On-Chain Letter
+            This Letter is on-chain. 
           </h3>
           <div className="space-y-2 text-sm">
+          <div className="flex justify-between">
+              <span className="text-neutral-600 dark:text-neutral-400">Capacity:</span>
+              <span className="font-mono text-neutral-900 dark:text-neutral-100">
+                {ccc.fixedPointToString(assetDetails.letterCell.cellOutput.capacity)} CKB
+              </span>
+            </div>
+
             <div className="flex justify-between">
               <span className="text-neutral-600 dark:text-neutral-400">Type Hash:</span>
               <span className="font-mono text-neutral-900 dark:text-neutral-100">
                 {formatHex(assetDetails.letterCell.cellOutput.type?.hash() || "N/A")}
               </span>
             </div>
+            
             <div className="flex justify-between">
-              <span className="text-neutral-600 dark:text-neutral-400">Capacity:</span>
+              <span className="text-neutral-600 dark:text-neutral-400">LockScript Hash:</span>
               <span className="font-mono text-neutral-900 dark:text-neutral-100">
-                {ccc.fixedPointToString(assetDetails.letterCell.cellOutput.capacity)} CKB
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-neutral-600 dark:text-neutral-400">Lock Script:</span>
-              <span className="font-mono text-neutral-900 dark:text-neutral-100">
-                {formatHex(assetDetails.letterCell.cellOutput.lock?.codeHash || "N/A")}
+                {formatHex(assetDetails.letterCell.cellOutput.lock.hash()) || "N/A"}
               </span>
             </div>
           </div>
@@ -127,21 +137,54 @@ function DOBAssetDetailsModal({
                     <div className="flex justify-between">
                       <span className="text-neutral-600 dark:text-neutral-400">Content Type:</span>
                       <span className="font-mono text-neutral-900 dark:text-neutral-100">
-                        {sporeCell.sporeData?.contentType || "N/A"}
+                        {(() => {
+                          try {
+                              // Try to parse the spore data from the cell output
+                              const sporeData = unpackToRawSporeData(sporeCell.outputData);
+                            return sporeData.contentType || "N/A";
+                          } catch {
+                            return "N/A";
+                          }
+                        })()}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-neutral-600 dark:text-neutral-400">Content Preview:</span>
-                      <span className="font-mono text-neutral-900 dark:text-neutral-100 text-xs">
-                        {sporeCell.sporeData?.content ? 
-                          getContentPreview(
-                            typeof sporeCell.sporeData.content === 'string' ? 
-                              sporeCell.sporeData.content : 
-                              sporeCell.sporeData.content.toString(),
-                            sporeCell.sporeData.contentType || "text/plain"
-                          ) : "N/A"
-                        }
-                      </span>
+                      <div className="font-mono text-neutral-900 dark:text-neutral-100 text-xs">
+                                                 {(() => {
+                           try {
+                             // Try to parse the spore data from the cell output
+                             const sporeData = unpackToRawSporeData(sporeCell.outputData);
+                             const contentType = sporeData.contentType || "text/plain";
+                             const content = sporeData.content || "";
+                            
+                            if (content) {
+                              const preview = getContentPreview(ccc.hexFrom(content), contentType);
+                              
+                              if (typeof preview === 'object' && 'type' in preview && preview.type === 'image') {
+                                return (
+                                  <div className="mt-2">
+                                    <img 
+                                      src={preview.url} 
+                                      alt="DOB Stamp" 
+                                      className="max-w-full h-auto max-h-32 rounded border border-neutral-200 dark:border-neutral-700"
+                                      onLoad={() => {
+                                        // Clean up the object URL after the image loads
+                                        setTimeout(() => URL.revokeObjectURL(preview.url), 1000);
+                                      }}
+                                    />
+                                  </div>
+                                );
+                              }
+                              
+                              return <span>{String(preview)}</span>;
+                            }
+                            return "N/A";
+                          } catch {
+                            return "N/A";
+                          }
+                        })()}
+                      </div>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-neutral-600 dark:text-neutral-400">Capacity:</span>
