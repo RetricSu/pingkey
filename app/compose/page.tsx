@@ -6,13 +6,13 @@ import { useNotification } from "app/contexts/notification";
 import { usePowCreation } from "app/hooks/usePowCreation";
 import { withAuth } from "app/components/auth/with-auth";
 import { PowMiningIndicator } from "app/components/stamp/pow-mining-indicator";
-import { custom } from "app/components/dialog";
+import { custom } from "app/components/gadget/dialog";
 import { hexToBytes } from "@noble/hashes/utils";
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { prompt } from "app/components/dialog";
+import { prompt } from "app/components/gadget/dialog";
 import { buildGeneratedStampDialog } from "app/components/stamp/mint-stamp";
-import { PowAdjustment } from "app/components/pow-adjustment";
+import { PowAdjustment } from "app/components/stamp/pow-adjustment";
 import { getSlugType } from "app/lib/util";
 import { SlugType } from "app/lib/type";
 import { useSlugMiddleware } from "app/hooks/useSlugMiddleware";
@@ -20,7 +20,7 @@ import { defaultProfile } from "app/lib/config";
 import { Hex, useCcc } from "@ckb-ccc/connector-react";
 import { DOBSelector } from "app/components/dob/selector";
 import { ReceiverRelayList } from "app/components/compose/receiver-relay-list";
-import { createLockScriptFrom, createOnChainLetter, sealLetterWithDOBStamp } from "app/lib/dob/seal";
+import { createLockScriptFrom, createOnChainLetter, sealLetterWithDOBStamp } from "app/lib/dob";
 import { Event } from "nostr-tools";
 
 function ComposePage() {

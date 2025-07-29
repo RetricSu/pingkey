@@ -10,8 +10,8 @@ import { hexToBytes } from "@noble/hashes/utils";
 import { Stamp } from "../stamp/stamp";
 import { ReadingLetterModal } from "./reading-letter";
 import { getPow } from "nostr-tools/nip13";
-import { prompt } from "../dialog";
-import { getSubjectTitleFromEvent } from "app/lib/nostr";
+import { prompt } from "../gadget/dialog";
+import { getSubjectTitleFromEvent } from "app/lib/nostr/nostr";
 import {
   useDecryptedLettersCache,
   DecryptedLetter,

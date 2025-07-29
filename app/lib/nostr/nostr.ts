@@ -12,8 +12,8 @@ import type {
   UnsignedEvent,
 } from "nostr-tools/core";
 import { Filter, nip44 } from "nostr-tools";
-import { Profile, RelayListItem, Recipient } from "./type";
-import { DEFAULT_BIG_RELAY_URLS, LocalStorageKeys, POW_CONFIG } from "./config";
+import { Profile, RelayListItem, Recipient } from "../type";
+import { DEFAULT_BIG_RELAY_URLS, LocalStorageKeys, POW_CONFIG } from "../config";
 import { minePow } from "nostr-tools/nip13";
 import { GiftWrap, PrivateDirectMessage } from "nostr-tools/kinds";
 import { createRumor, createSeal } from "nostr-tools/nip59";

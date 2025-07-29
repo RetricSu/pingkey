@@ -4,14 +4,14 @@ import { useState, useEffect } from "react";
 import { useNostr } from "../../contexts/nostr";
 import { useAuth } from "../../contexts/auth";
 import { Profile, RelayListItem } from "app/lib/type";
-import { MessageSender } from "../../components/profile/message-sender";
-import { RichAbout } from "../../components/profile/rich-about";
-import { ProfileActions } from "../../components/profile/profile-actions";
-import { RelayList } from "../../components/profile/relay-list";
-import { custom } from "../../components/dialog";
-import { SettingsModal } from "../../components/profile/settings-modal";
+import { MessageSender } from "./message-sender";
+import { RichAbout } from "./rich-about";
+import { ProfileActions } from "./profile-actions";
+import { RelayList } from "./relay-list";
+import { custom } from "../gadget/dialog";
+import { SettingsModal } from "./settings-modal";
 import { useNotification } from "app/contexts/notification";
-import { Avatar } from "../../components/avatar";
+import { Avatar } from "./avatar";
 import { useSlugMiddleware } from "../../hooks/useSlugMiddleware";
 
 interface ClientProfileProps {

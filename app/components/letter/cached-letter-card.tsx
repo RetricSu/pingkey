@@ -6,7 +6,7 @@ import { Stamp } from "../stamp/stamp";
 import { DecryptedLetter } from "app/hooks/useDecryptedLettersCache";
 import { Event } from "nostr-tools/core";
 import { useState, useRef, useEffect } from "react";
-import { CopyButton } from "../copy-button";
+import { CopyButton } from "../gadget/copy-button";
 
 interface CachedLetterCardProps {
   letter: {

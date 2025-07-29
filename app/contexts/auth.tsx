@@ -11,7 +11,7 @@ import { CryptoUtils } from "app/lib/crypto";
 import {
   generateNewKey as generateNewKeyNostr,
   getPublicKeyFromPrivateKey,
-} from "../lib/nostr";
+} from "../lib/nostr/nostr";
 import { useLocalStorage } from "app/hooks/useLocalStorage";
 import { UserInfoCache } from "app/lib/type";
 import { LocalStorageKeys } from "app/lib/config";
