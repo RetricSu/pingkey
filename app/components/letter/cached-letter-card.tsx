@@ -7,6 +7,7 @@ import { DecryptedLetter } from "app/hooks/useDecryptedLettersCache";
 import { Event } from "nostr-tools/core";
 import { useState, useRef, useEffect } from "react";
 import { CopyButton } from "../gadget/copy-button";
+import { DOBLetterIndicator } from "./dob";
 
 interface CachedLetterCardProps {
   letter: {
@@ -62,6 +63,7 @@ export function CachedLetterCard({
           <div className="flex items-center gap-2 sm:gap-3 text-xs text-neutral-500 dark:text-neutral-400">
             <span>POW: {getPow(letter.fullNote.id)}</span>
           </div>
+          <DOBLetterIndicator powWrappedEvent={letter.fullNote} />
         </div>
         <time className="text-xs text-neutral-500 dark:text-neutral-400 font-mono tracking-wide whitespace-nowrap">
           {formatDate(letter.receivedAt, false)}
