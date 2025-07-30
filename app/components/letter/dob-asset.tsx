@@ -32,10 +32,15 @@ function DOBAssetDetailsModal({
     return hex;
   };
 
-  const getContentPreview = (content: string, contentType: string): string | { type: 'image'; url: string; contentType: string } => {
+  const getContentPreview = (
+    content: string,
+    contentType: string
+  ): string | { type: "image"; url: string; contentType: string } => {
     if (contentType.startsWith("text/")) {
       try {
-        const decoded = new TextDecoder().decode(new Uint8Array(Buffer.from(content, 'hex')));
+        const decoded = new TextDecoder().decode(
+          new Uint8Array(Buffer.from(content, "hex"))
+        );
         return decoded.length > 50 ? decoded.substring(0, 50) + "..." : decoded;
       } catch {
         return "Text content";
@@ -45,13 +50,15 @@ function DOBAssetDetailsModal({
         const decoded = ccc.bytesFrom(content);
         const blob = new Blob([decoded], { type: contentType });
         const imageUrl = URL.createObjectURL(blob);
-        return { type: 'image', url: imageUrl, contentType };
+        return { type: "image", url: imageUrl, contentType };
       } catch {
         return "Image content";
       }
     } else if (contentType.startsWith("application/json")) {
       try {
-        const decoded = new TextDecoder().decode(new Uint8Array(Buffer.from(content, 'hex')));
+        const decoded = new TextDecoder().decode(
+          new Uint8Array(Buffer.from(content, "hex"))
+        );
         const parsed = JSON.parse(decoded);
         return "JSON: " + (parsed.name || parsed.title || "Data");
       } catch {
@@ -92,27 +99,39 @@ function DOBAssetDetailsModal({
         {/* Letter Cell Details */}
         <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4">
           <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-3">
-            This Letter is on-chain. 
+            This Letter is on-chain.
           </h3>
           <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-              <span className="text-neutral-600 dark:text-neutral-400">Capacity:</span>
+            <div className="flex justify-between">
+              <span className="text-neutral-600 dark:text-neutral-400">
+                Capacity:
+              </span>
               <span className="font-mono text-neutral-900 dark:text-neutral-100">
-                {ccc.fixedPointToString(assetDetails.letterCell.cellOutput.capacity)} CKB
+                {ccc.fixedPointToString(
+                  assetDetails.letterCell.cellOutput.capacity
+                )}{" "}
+                CKB
               </span>
             </div>
 
             <div className="flex justify-between">
-              <span className="text-neutral-600 dark:text-neutral-400">Type Hash:</span>
+              <span className="text-neutral-600 dark:text-neutral-400">
+                Type Hash:
+              </span>
               <span className="font-mono text-neutral-900 dark:text-neutral-100">
-                {formatHex(assetDetails.letterCell.cellOutput.type?.hash() || "N/A")}
+                {formatHex(
+                  assetDetails.letterCell.cellOutput.type?.hash() || "N/A"
+                )}
               </span>
             </div>
-            
+
             <div className="flex justify-between">
-              <span className="text-neutral-600 dark:text-neutral-400">LockScript Hash:</span>
+              <span className="text-neutral-600 dark:text-neutral-400">
+                LockScript Hash:
+              </span>
               <span className="font-mono text-neutral-900 dark:text-neutral-100">
-                {formatHex(assetDetails.letterCell.cellOutput.lock.hash()) || "N/A"}
+                {formatHex(assetDetails.letterCell.cellOutput.lock.hash()) ||
+                  "N/A"}
               </span>
             </div>
           </div>
@@ -126,27 +145,39 @@ function DOBAssetDetailsModal({
           {assetDetails.sporeCells.length > 0 ? (
             <div className="space-y-3">
               {assetDetails.sporeCells.map((sporeCell, index) => (
-                <div key={index} className="border border-neutral-200 dark:border-neutral-700 rounded p-3">
+                <div
+                  key={index}
+                  className="border border-neutral-200 dark:border-neutral-700 rounded p-3"
+                >
                   <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                      <span className="text-neutral-600 dark:text-neutral-400">Capacity:</span>
+                    <div className="flex justify-between">
+                      <span className="text-neutral-600 dark:text-neutral-400">
+                        Capacity:
+                      </span>
                       <span className="font-mono text-neutral-900 dark:text-neutral-100">
-                        {ccc.fixedPointToString(sporeCell.cellOutput.capacity)} CKB
+                        {ccc.fixedPointToString(sporeCell.cellOutput.capacity)}{" "}
+                        CKB
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-neutral-600 dark:text-neutral-400">Spore ID:</span>
+                      <span className="text-neutral-600 dark:text-neutral-400">
+                        Spore ID:
+                      </span>
                       <span className="font-mono text-neutral-900 dark:text-neutral-100">
                         {formatHex(sporeCell.cellOutput.type?.args || "N/A")}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-neutral-600 dark:text-neutral-400">Content Type:</span>
+                      <span className="text-neutral-600 dark:text-neutral-400">
+                        Content Type:
+                      </span>
                       <span className="font-mono text-neutral-900 dark:text-neutral-100">
                         {(() => {
                           try {
-                              // Try to parse the spore data from the cell output
-                              const sporeData = unpackToRawSporeData(sporeCell.outputData);
+                            // Try to parse the spore data from the cell output
+                            const sporeData = unpackToRawSporeData(
+                              sporeCell.outputData
+                            );
                             return sporeData.contentType || "N/A";
                           } catch {
                             return "N/A";
@@ -155,34 +186,50 @@ function DOBAssetDetailsModal({
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-neutral-600 dark:text-neutral-400">Content Preview:</span>
+                      <span className="text-neutral-600 dark:text-neutral-400">
+                        Content Preview:
+                      </span>
                       <div className="font-mono text-neutral-900 dark:text-neutral-100 text-xs">
-                                                 {(() => {
-                           try {
-                             // Try to parse the spore data from the cell output
-                             const sporeData = unpackToRawSporeData(sporeCell.outputData);
-                             const contentType = sporeData.contentType || "text/plain";
-                             const content = sporeData.content || "";
-                            
+                        {(() => {
+                          try {
+                            // Try to parse the spore data from the cell output
+                            const sporeData = unpackToRawSporeData(
+                              sporeCell.outputData
+                            );
+                            const contentType =
+                              sporeData.contentType || "text/plain";
+                            const content = sporeData.content || "";
+
                             if (content) {
-                              const preview = getContentPreview(ccc.hexFrom(content), contentType);
-                              
-                              if (typeof preview === 'object' && 'type' in preview && preview.type === 'image') {
+                              const preview = getContentPreview(
+                                ccc.hexFrom(content),
+                                contentType
+                              );
+
+                              if (
+                                typeof preview === "object" &&
+                                "type" in preview &&
+                                preview.type === "image"
+                              ) {
                                 return (
                                   <div className="mt-2">
-                                    <img 
-                                      src={preview.url} 
-                                      alt="DOB Stamp" 
+                                    <img
+                                      src={preview.url}
+                                      alt="DOB Stamp"
                                       className="max-w-full h-auto max-h-32 rounded border border-neutral-200 dark:border-neutral-700"
                                       onLoad={() => {
                                         // Clean up the object URL after the image loads
-                                        setTimeout(() => URL.revokeObjectURL(preview.url), 1000);
+                                        setTimeout(
+                                          () =>
+                                            URL.revokeObjectURL(preview.url),
+                                          1000
+                                        );
                                       }}
                                     />
                                   </div>
                                 );
                               }
-                              
+
                               return <span>{String(preview)}</span>;
                             }
                             return "N/A";
@@ -216,13 +263,18 @@ function DOBAssetDetailsModal({
   );
 }
 
-export function DOBLetterIndicator({ powWrappedEvent, className = "" }: DOBLetterIndicatorProps) {
+export function DOBLetterIndicator({
+  powWrappedEvent,
+  className = "",
+}: DOBLetterIndicatorProps) {
   const { signerInfo, client } = useCcc();
   const { error } = useNotification();
-  
+
   const [isDOB, setIsDOB] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [assetDetails, setAssetDetails] = useState<DOBAssetDetails | null>(null);
+  const [assetDetails, setAssetDetails] = useState<DOBAssetDetails | null>(
+    null
+  );
 
   // Check if this is a DOB letter
   useEffect(() => {
@@ -263,10 +315,7 @@ export function DOBLetterIndicator({ powWrappedEvent, className = "" }: DOBLette
     try {
       await custom(
         (props) => (
-          <DOBAssetDetailsModal
-            assetDetails={assetDetails}
-            {...props}
-          />
+          <DOBAssetDetailsModal assetDetails={assetDetails} {...props} />
         ),
         {
           maxWidth: "2xl",
@@ -302,11 +351,7 @@ export function DOBLetterIndicator({ powWrappedEvent, className = "" }: DOBLette
         </>
       ) : assetDetails ? (
         <>
-          <svg
-            className="w-3 h-3"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
+          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
             <path
               fillRule="evenodd"
               d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
@@ -317,11 +362,7 @@ export function DOBLetterIndicator({ powWrappedEvent, className = "" }: DOBLette
         </>
       ) : (
         <>
-          <svg
-            className="w-3 h-3"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
+          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
             <path
               fillRule="evenodd"
               d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"

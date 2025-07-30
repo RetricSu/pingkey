@@ -143,7 +143,7 @@ export function DOBSelector({ onSelect, selectedId, className = "" }: DOBSelecto
   return (
     <div className={`space-y-2 ${className}`}>
       <div className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
-        Your DOB Items ({dobItems.length})
+       DOB items ({dobItems.length})
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-y-auto">
