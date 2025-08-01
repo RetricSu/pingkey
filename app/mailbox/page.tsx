@@ -15,14 +15,12 @@ import { useDecryptedLettersCache } from "app/hooks/useDecryptedLettersCache";
 import { RelayList } from "app/components/profile/relay-list";
 import { useLocalStorage } from "app/hooks/useLocalStorage";
 import { LocalStorageKeys, POW_CONFIG } from "app/lib/config";
-import { useCcc } from "@ckb-ccc/connector-react";
 
 type FilterType = "all" | "unread" | "read";
 
 function MailBox() {
   const { isSignedIn, pubkey } = useAuth();
   const { nostr } = useNostr();
-  const { client } = useCcc();
   const [giftWrappedNotes, setGiftWrappedNotes] = useState<Event[]>([]);
   const [currentFilter, setCurrentFilter] = useState<FilterType>("all");
   const [isLoading, setIsLoading] = useState(true);

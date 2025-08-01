@@ -7,7 +7,7 @@ import { DecryptedLetter } from "app/hooks/useDecryptedLettersCache";
 import { Event } from "nostr-tools/core";
 import { useState, useRef, useEffect } from "react";
 import { CopyButton } from "../gadget/copy-button";
-import { DOBLetterIndicator } from "./dob-asset";
+import { DOBLetterIndicator } from "../dob/dob-asset";
 
 interface CachedLetterCardProps {
   letter: {

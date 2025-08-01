@@ -16,7 +16,7 @@ import {
   useDecryptedLettersCache,
   DecryptedLetter,
 } from "app/hooks/useDecryptedLettersCache";
-import { DOBLetterIndicator } from "./dob-asset";
+import { DOBLetterIndicator } from "../dob/dob-asset";
 
 export function LetterCard({
   letter,
