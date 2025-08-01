@@ -10,6 +10,7 @@ import { INPUT_TYPE_PROXY_LOCK } from "../config";
 import { NostrBindingSDK, TagName, TESTNET_CONFIGS } from "@nostr-binding/sdk";
 import { getSporeScriptInfos, transferSpore } from "@ckb-ccc/spore";
 import { Event } from "nostr-tools";
+import { ParsedOnChainLetter } from "./type";
 
 export function createLockScriptFrom(nostrPublicKey: Hex) {
   const sdk = new NostrBindingSDK(TESTNET_CONFIGS);
@@ -61,7 +62,7 @@ export async function createOnChainLetter(
   return { tx, signedEvent, letterTypeHash };
 }
 
-export async function sealLetterWithDOBStamp(
+export async function attachLetterWithDOBAssets(
   letterCellTypeHash: Hex,
   sporeId: Hex,
   cccSigner: Signer
@@ -82,7 +83,7 @@ export async function sealLetterWithDOBStamp(
   return tx;
 }
 
-export function isDOBLetter(powEvent: Event) {
+export function isOnChainLetter(powEvent: Event) {
   const tags = powEvent.tags;
   const ckbGlobalUniqueId = tags.find(
     (tag) => tag[0] === TagName.ckbGlobalUniqueId
@@ -93,7 +94,7 @@ export function isDOBLetter(powEvent: Event) {
   return true;
 }
 
-export async function findOnChainLetterFrom(
+export async function findOnChainLetterCellFrom(
   powWrappedEvent: Event,
   client: Client
 ) {
@@ -131,15 +132,17 @@ export async function findDOBAssetsFrom(
   return result;
 }
 
-export async function findDOBLetter(powWrappedEvent: Event, client: Client) {
-  if (!isDOBLetter(powWrappedEvent)) {
+export async function findOnChainLetter(powWrappedEvent: Event, client: Client): Promise<ParsedOnChainLetter | null> {
+  if (!isOnChainLetter(powWrappedEvent)) {
     return null;
   }
 
-  const letterCell = await findOnChainLetterFrom(powWrappedEvent, client);
+  const letterCell = await findOnChainLetterCellFrom(powWrappedEvent, client);
   if (!letterCell) {
     return null;
   }
+
+  const ownerAddress = await ccc.Address.fromScript(letterCell.cellOutput.lock, client);
 
   const proxyLock = {
     codeHash: INPUT_TYPE_PROXY_LOCK.testnet.code_hash,
@@ -153,10 +156,15 @@ export async function findDOBLetter(powWrappedEvent: Event, client: Client) {
   );
 
   // Return raw spore cells - parsing will be handled in the component
-  const sporeCells = rawSporeCells;
+  const dobCells = rawSporeCells;
 
-  return {
-    letterCell,
-    sporeCells,
+  const result: ParsedOnChainLetter = {
+    letter: {
+      cell: letterCell,
+      ownerAddress,
+      powWrappedEvent,
+    },
+    dobCells,
   };
+  return result;
 }

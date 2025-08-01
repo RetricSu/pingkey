@@ -3,27 +3,23 @@
 import { useState, useEffect, useCallback } from "react";
 import { Event } from "nostr-tools";
 import { ccc, useCcc } from "@ckb-ccc/connector-react";
-import { findDOBLetter, isDOBLetter } from "app/lib/dob";
+import { findOnChainLetter, isOnChainLetter } from "app/lib/dob";
 import { custom, CustomDialogProps } from "app/components/gadget/dialog";
 import { useNotification } from "app/contexts/notification";
 import { unpackToRawSporeData } from "@ckb-ccc/spore/advanced";
+import { ParsedOnChainLetter } from "../../lib/dob/type";
 
 interface DOBLetterIndicatorProps {
   powWrappedEvent: Event;
   className?: string;
 }
 
-interface DOBAssetDetails {
-  letterCell: any;
-  sporeCells: any[];
-}
-
 function DOBAssetDetailsModal({
-  assetDetails,
+  parsedOnChainLetter,
   onResolve,
   onReject,
 }: CustomDialogProps<void> & {
-  assetDetails: DOBAssetDetails;
+  parsedOnChainLetter;
 }) {
   const formatHex = (hex: string) => {
     if (hex.length > 20) {
@@ -172,7 +168,7 @@ function DOBAssetDetailsModal({
                   <div className="font-bold text-center">CAPACITY</div>
                   <div className="text-center font-mono">
                     {ccc.fixedPointToString(
-                      assetDetails.letterCell.cellOutput.capacity
+                      parsedOnChainLetter.letter.cell.cellOutput.capacity
                     )}{" "}
                     CKB
                   </div>
@@ -187,12 +183,12 @@ function DOBAssetDetailsModal({
                 <div className="text-sm text-neutral-600 dark:text-neutral-400">
                   Type Hash:{" "}
                   {formatHex(
-                    assetDetails.letterCell.cellOutput.type?.hash() || "N/A"
+                    parsedOnChainLetter.letter.cell.cellOutput.type?.hash() || "N/A"
                   )}
                 </div>
                 <div className="text-sm text-neutral-600 dark:text-neutral-400">
                   Lock Script:{" "}
-                  {formatHex(assetDetails.letterCell.cellOutput.lock.hash()) ||
+                  {formatHex(parsedOnChainLetter.letter.cell.cellOutput.lock.hash()) ||
                     "N/A"}
                 </div>
               </div>
@@ -203,11 +199,11 @@ function DOBAssetDetailsModal({
         {/* Spore Assets Details */}
         <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4">
           <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-3">
-            DOB Assets Attached ({assetDetails.sporeCells.length})
+            DOB Assets Attached ({parsedOnChainLetter.dobCells.length})
           </h3>
-          {assetDetails.sporeCells.length > 0 ? (
+          {parsedOnChainLetter.dobCells.length > 0 ? (
             <div className="space-y-3">
-              {assetDetails.sporeCells.map((sporeCell, index) => (
+              {parsedOnChainLetter.dobCells.map((sporeCell, index) => (
                 <div
                   key={index}
                   className="border border-neutral-200 dark:border-neutral-700 rounded p-3"
@@ -343,18 +339,18 @@ export function DOBLetterIndicator({
   powWrappedEvent,
   className = "",
 }: DOBLetterIndicatorProps) {
-  const { signerInfo, client } = useCcc();
+  const { client } = useCcc();
   const { error } = useNotification();
 
   const [isDOB, setIsDOB] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [assetDetails, setAssetDetails] = useState<DOBAssetDetails | null>(
+  const [assetDetails, setAssetDetails] = useState<ParsedOnChainLetter | null>(
     null
   );
 
   // Check if this is a DOB letter
   useEffect(() => {
-    const checkIsDOB = isDOBLetter(powWrappedEvent);
+    const checkIsDOB = isOnChainLetter(powWrappedEvent);
     setIsDOB(checkIsDOB);
   }, [powWrappedEvent]);
 
@@ -366,7 +362,7 @@ export function DOBLetterIndicator({
 
     setIsLoading(true);
     try {
-      const dobAssets = await findDOBLetter(powWrappedEvent, client);
+      const dobAssets = await findOnChainLetter(powWrappedEvent, client);
       if (dobAssets) {
         setAssetDetails(dobAssets);
       }
@@ -391,7 +387,7 @@ export function DOBLetterIndicator({
     try {
       await custom(
         (props) => (
-          <DOBAssetDetailsModal assetDetails={assetDetails} {...props} />
+          <DOBAssetDetailsModal parsedOnChainLetter={assetDetails} {...props} />
         ),
         {
           maxWidth: "2xl",
@@ -434,7 +430,7 @@ export function DOBLetterIndicator({
               clipRule="evenodd"
             />
           </svg>
-          <span>Assets ({assetDetails.sporeCells.length + 1})</span>
+          <span>Assets ({assetDetails.dobCells.length + 1})</span>
         </>
       ) : (
         <>

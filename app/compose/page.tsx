@@ -20,7 +20,7 @@ import { defaultProfile } from "app/lib/config";
 import { Hex, useCcc } from "@ckb-ccc/connector-react";
 import { DOBSelector } from "app/components/dob/selector";
 import { ReceiverRelayList } from "app/components/compose/receiver-relay-list";
-import { createLockScriptFrom, createOnChainLetter, sealLetterWithDOBStamp } from "app/lib/dob";
+import { createLockScriptFrom, createOnChainLetter, attachLetterWithDOBAssets } from "app/lib/dob";
 import { Event } from "nostr-tools";
 
 function ComposePage() {
@@ -144,7 +144,7 @@ function ComposePage() {
         const onChainLetterTxHash = await signerInfo.signer.sendTransaction(onChainLetterTx);
 
         // seal the letter with the DOB stamp
-        const sealedLetterTx = await sealLetterWithDOBStamp(
+        const sealedLetterTx = await attachLetterWithDOBAssets(
           letterTypeHash,
           selectedDOBId,
           signerInfo.signer
