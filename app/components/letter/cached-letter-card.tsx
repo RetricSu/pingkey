@@ -60,7 +60,7 @@ export function CachedLetterCard({
       {/* Header with timestamp and POW info */}
       <div className="flex items-start justify-between mb-4 sm:mb-6 ml-6 sm:ml-8">
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="flex items-center gap-2 sm:gap-3 text-xs text-neutral-500 dark:text-neutral-400">
+          <div className="flex items-center gap-2 sm:gap-3 text-xs text-neutral-500 dark:text-neutral-400 border border-gray-200 dark:border-neutral-800 rounded-2xl px-3 py-1.5">
             <span>POW: {getPow(letter.fullNote.id)}</span>
           </div>
           <DOBLetterIndicator powWrappedEvent={letter.fullNote} />

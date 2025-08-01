@@ -96,43 +96,106 @@ function DOBAssetDetailsModal({
       </div>
 
       <div className="space-y-6">
-        {/* Letter Cell Details */}
-        <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4">
-          <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-3">
-            This Letter is on-chain.
-          </h3>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-neutral-600 dark:text-neutral-400">
-                Capacity:
-              </span>
-              <span className="font-mono text-neutral-900 dark:text-neutral-100">
-                {ccc.fixedPointToString(
-                  assetDetails.letterCell.cellOutput.capacity
-                )}{" "}
-                CKB
-              </span>
+        {/* Letter Cell Details - Envelope Style */}
+        <div className="relative bg-white dark:bg-neutral-900 border-2 border-neutral-300 dark:border-neutral-600 rounded-lg overflow-hidden shadow-lg">
+          {/* Airmail Border Pattern */}
+          <div className="absolute inset-0 pointer-events-none">
+            {/* Top border */}
+            <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-red-500 via-blue-500 to-red-500">
+              <div className="flex justify-between px-1">
+                {Array.from({ length: 20 }, (_, i) => (
+                  <div
+                    key={i}
+                    className="w-1 h-1 bg-white rounded-full opacity-80"
+                  ></div>
+                ))}
+              </div>
+            </div>
+            {/* Bottom border */}
+            <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-red-500 via-blue-500 to-red-500">
+              <div className="flex justify-between px-1">
+                {Array.from({ length: 20 }, (_, i) => (
+                  <div
+                    key={i}
+                    className="w-1 h-1 bg-white rounded-full opacity-80"
+                  ></div>
+                ))}
+              </div>
+            </div>
+            {/* Left border */}
+            <div className="absolute left-0 top-0 bottom-0 w-2 bg-gradient-to-b from-red-500 via-blue-500 to-red-500">
+              <div className="flex flex-col justify-between h-full py-1">
+                {Array.from({ length: 15 }, (_, i) => (
+                  <div
+                    key={i}
+                    className="w-1 h-1 bg-white rounded-full opacity-80"
+                  ></div>
+                ))}
+              </div>
+            </div>
+            {/* Right border */}
+            <div className="absolute right-0 top-0 bottom-0 w-2 bg-gradient-to-b from-red-500 via-blue-500 to-red-500">
+              <div className="flex flex-col justify-between h-full py-1">
+                {Array.from({ length: 15 }, (_, i) => (
+                  <div
+                    key={i}
+                    className="w-1 h-1 bg-white rounded-full opacity-80"
+                  ></div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Envelope Content */}
+          <div className="relative p-6 pt-8 pb-8 pl-8 pr-8">
+            {/* Sender Information (Top Left) */}
+            <div className="absolute top-8 left-8 text-xs text-neutral-600 dark:text-neutral-400 font-serif">
+              <div className="italic">(Date)</div>
+              <div className="italic">(Sender's Full Name)</div>
+              <div className="italic">(Sender's City, State, and Zip Code)</div>
             </div>
 
-            <div className="flex justify-between">
-              <span className="text-neutral-600 dark:text-neutral-400">
-                Type Hash:
-              </span>
-              <span className="font-mono text-neutral-900 dark:text-neutral-100">
-                {formatHex(
-                  assetDetails.letterCell.cellOutput.type?.hash() || "N/A"
-                )}
-              </span>
+            {/* Recipient Information (Bottom Right) */}
+            <div className="absolute bottom-8 right-8 text-xs text-neutral-600 dark:text-neutral-400 font-serif">
+              <div className="italic">(Recipient's Full Name)</div>
+              <div className="italic">(Recipient's Street Name and Number)</div>
+              <div className="italic">
+                (Recipient's City, State, and Zip Code)
+              </div>
             </div>
 
-            <div className="flex justify-between">
-              <span className="text-neutral-600 dark:text-neutral-400">
-                LockScript Hash:
-              </span>
-              <span className="font-mono text-neutral-900 dark:text-neutral-100">
-                {formatHex(assetDetails.letterCell.cellOutput.lock.hash()) ||
-                  "N/A"}
-              </span>
+            {/* Blockchain Information as Postmarks */}
+            <div className="space-y-4">
+              {/* Main Postmark - Capacity */}
+              <div className="absolute top-4 right-4">
+                <div className="bg-green-600 text-white text-xs px-2 py-1 rounded border-2 border-white shadow-md">
+                  <div className="font-bold text-center">CAPACITY</div>
+                  <div className="text-center font-mono">
+                    {ccc.fixedPointToString(
+                      assetDetails.letterCell.cellOutput.capacity
+                    )}{" "}
+                    CKB
+                  </div>
+                </div>
+              </div>
+
+              {/* Central Message */}
+              <div className="text-center pt-16 pb-16">
+                <div className="text-lg font-bold text-neutral-900 dark:text-neutral-100 mb-2">
+                  This Letter is on-chain
+                </div>
+                <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                  Type Hash:{" "}
+                  {formatHex(
+                    assetDetails.letterCell.cellOutput.type?.hash() || "N/A"
+                  )}
+                </div>
+                <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                  Lock Script:{" "}
+                  {formatHex(assetDetails.letterCell.cellOutput.lock.hash()) ||
+                    "N/A"}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -140,7 +203,7 @@ function DOBAssetDetailsModal({
         {/* Spore Assets Details */}
         <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4">
           <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-3">
-            DOB Stamps ({assetDetails.sporeCells.length})
+            DOB Assets Attached ({assetDetails.sporeCells.length})
           </h3>
           {assetDetails.sporeCells.length > 0 ? (
             <div className="space-y-3">
@@ -251,10 +314,23 @@ function DOBAssetDetailsModal({
         </div>
       </div>
 
-      <div className="flex justify-end pt-4">
+      <div className="flex justify-center pt-4 gap-2">
         <button
           onClick={() => onResolve()}
-          className="px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-black rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors text-sm font-medium"
+          className="cursor-pointer px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-black rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors text-sm font-medium"
+        >
+          Transfer On-chain Letter Cell
+        </button>
+
+        <button
+          onClick={() => onResolve()}
+          className="cursor-pointer px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-black rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors text-sm font-medium"
+        >
+          Extract DOB Assets
+        </button>
+        <button
+          onClick={() => onResolve()}
+          className="cursor-pointer px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-black rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors text-sm font-medium"
         >
           Close
         </button>
