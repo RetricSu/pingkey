@@ -360,7 +360,7 @@ export function DOBLetterIndicator({
 
   // Find DOB assets when user has wallet connected
   const findDOBAssets = useCallback(async () => {
-    if (!isDOB || !signerInfo?.signer || !client) {
+    if (!isDOB || !client) {
       return;
     }
 
@@ -376,7 +376,7 @@ export function DOBLetterIndicator({
     } finally {
       setIsLoading(false);
     }
-  }, [isDOB, signerInfo?.signer, client, powWrappedEvent, error]);
+  }, [isDOB, client, powWrappedEvent, error]);
 
   useEffect(() => {
     findDOBAssets();
@@ -403,8 +403,8 @@ export function DOBLetterIndicator({
     }
   };
 
-  // Only show indicator if it's a DOB letter and user has wallet connected
-  if (!isDOB || !signerInfo?.signer) {
+  // Only show indicator if it's a DOB letter
+  if (!isDOB) {
     return null;
   }
 
