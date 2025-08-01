@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { custom } from "../dialog";
+import { custom } from "../gadget/dialog";
 import { getPow } from "nostr-tools/nip13";
 import { hashArtProviderRegistry } from "./providers";
 import type { HashArtProvider } from "./providers";

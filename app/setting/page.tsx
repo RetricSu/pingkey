@@ -7,11 +7,11 @@ import {
   POW_CONFIG,
 } from "app/lib/config";
 import { useLocalStorage } from "app/hooks/useLocalStorage";
-import { alert, confirm } from "app/components/dialog";
+import { alert, confirm } from "app/components/gadget/dialog";
 import { useDecryptedLettersCache } from "app/hooks/useDecryptedLettersCache";
 import { useNotification } from "app/contexts/notification";
 import { withAuth } from "app/components/auth/with-auth";
-import { ConnectWeb5 } from "app/components/connect-web5";
+import { ConnectWeb5 } from "app/components/web5/connect-web5";
 
 function SettingPage() {
   const [

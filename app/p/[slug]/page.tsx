@@ -1,12 +1,12 @@
 import {
   getCachedNostrProfile,
   getCachedRelayList,
-} from "../../lib/nostr-server";
+} from "../../lib/nostr/nostr-server";
 import { defaultProfile } from "app/lib/config";
 import { Profile, RelayListItem, SlugType } from "app/lib/type";
-import { ClientProfile } from "./client-profile";
+import { ClientProfile } from "../../components/profile/client-profile";
 import { Suspense } from "react";
-import { Loader } from "../../components/loader";
+import { Loader } from "../../components/gadget/loader";
 import { getSlugType } from "app/lib/util";
 
 interface PageProps {

@@ -1,6 +1,6 @@
-import { alert } from "app/components/dialog";
+import { alert } from "app/components/gadget/dialog";
 import Link from "next/link";
-import { useWeb5DID } from "../contexts/web5-did";
+import { useWeb5DID } from "../../contexts/web5-did";
 
 export function ConnectWeb5() {
   const { didIdentifier, didDocument, isLoading, error } = useWeb5DID();

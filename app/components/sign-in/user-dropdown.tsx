@@ -2,8 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { useAuth } from "../../contexts/auth";
 import { useNotification } from "../../contexts/notification";
 import { createExportFile } from "../../lib/util";
-import { prompt } from "../dialog";
-import { QRScanner } from "../qr-scanner";
+import { prompt } from "../gadget/dialog";
+import { QRScanner } from "../qrcode/qr-scanner";
 
 interface UserDropdownProps {
   pubkey: string;

@@ -16,6 +16,7 @@ export interface PowWorkerData {
   recipient: { publicKey: string };
   message: string;
   extraTags?: string[][];
+  powWrapEventExtraTags?: string[][];
   difficulty: number;
   requestId: string;
 }
@@ -58,13 +59,18 @@ function createNip17BaseEvent(
 // Custom POW mining function with cancellation support
 async function minePowWithCancellation(
   unsigned: UnsignedEvent,
-  difficulty: number
+  difficulty: number,
+  powWrapEventExtraTags?: string[][],
 ): Promise<any> {
   return new Promise((resolve, reject) => {
     let count = 0;
     let event = unsigned as unknown as Omit<Event, "sig">;
+    if (powWrapEventExtraTags && powWrapEventExtraTags.length > 0) {
+      event.tags.push(...powWrapEventExtraTags);
+    }
     const tag = ["nonce", count.toString(), difficulty.toString()];
     event.tags.push(tag);
+    
 
     const startTime = Date.now();
 
@@ -122,7 +128,9 @@ async function minePowWithCancellation(
 async function createNip59POWWrapEvent(
   seal: any,
   recipientPublicKey: string,
-  difficulty: number
+  difficulty: number,
+  extraTags?: string[][],
+  powWrapEventExtraTags?: string[][]
 ): Promise<any> {
   const randomKey = generateSecretKey();
   const conversationKey = nip44.getConversationKey(
@@ -130,16 +138,20 @@ async function createNip59POWWrapEvent(
     recipientPublicKey
   );
   const encryptedContent = nip44.encrypt(JSON.stringify(seal), conversationKey);
+  const tags = [["p", recipientPublicKey]];
+  if (extraTags && extraTags.length > 0) {
+    tags.push(...extraTags);
+  };
 
   const unsignedEvent = {
     kind: 1059, // GiftWrap
     content: encryptedContent,
     created_at: Math.floor(Date.now() / 1000),
-    tags: [["p", recipientPublicKey]],
+    tags,
     pubkey: getPublicKey(randomKey),
   };
 
-  const powEvent = await minePowWithCancellation(unsignedEvent, difficulty);
+  const powEvent = await minePowWithCancellation(unsignedEvent, difficulty, powWrapEventExtraTags);
 
   if (shouldCancel) {
     throw new Error("Cancelled");
@@ -168,7 +180,7 @@ self.addEventListener(
 
     if (type === "CREATE_POW_NOTE") {
       try {
-        const { senderPrivkey, recipient, message, difficulty, extraTags, requestId } =
+        const { senderPrivkey, recipient, message, difficulty, extraTags, requestId, powWrapEventExtraTags } =
           data as PowWorkerData;
         currentRequestId = requestId;
         shouldCancel = false;
@@ -181,7 +193,9 @@ self.addEventListener(
         const wrappedEvent = await createNip59POWWrapEvent(
           seal,
           recipient.publicKey,
-          difficulty
+          difficulty,
+          extraTags,
+          powWrapEventExtraTags
         );
 
         currentRequestId = null;

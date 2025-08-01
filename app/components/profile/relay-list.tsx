@@ -1,7 +1,7 @@
 import { RelayListItem } from "app/lib/type";
 import { useRelayConnectivity } from "app/hooks/useRelayConnectivity";
-import { alert } from "app/components/dialog";
-import { Tooltip } from "app/components/tooltip";
+import { alert } from "app/components/gadget/dialog";
+import { Tooltip } from "app/components/gadget/tooltip";
 
 interface RelayListProps {
   relayList: RelayListItem[];

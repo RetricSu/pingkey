@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { Profile, RelayListItem } from "app/lib/type";
-import { CustomDialogProps } from "../dialog";
+import { CustomDialogProps } from "../gadget/dialog";
 import { DEFAULT_BIG_RELAY_URLS } from "app/lib/config";
-import { Avatar } from "../avatar";
+import { Avatar } from "./avatar";
 
 interface SettingsModalProps extends CustomDialogProps {
   profile: Profile;

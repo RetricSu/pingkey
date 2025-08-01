@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
-@import "./components/tweet.css";
+@import "./components/social/tweet.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 

@@ -1,9 +1,9 @@
 import { SimplePool } from "nostr-tools/pool";
 import type { Event } from "nostr-tools/core";
 import { Filter } from "nostr-tools";
-import { Profile, RelayListItem } from "./type";
-import { DEFAULT_BIG_RELAY_URLS } from "./config";
-import { createServerCache } from "./cache";
+import { Profile, RelayListItem } from "../type";
+import { DEFAULT_BIG_RELAY_URLS } from "../config";
+import { createServerCache } from "../cache";
 
 /**
  * Server-side Nostr utilities for data fetching

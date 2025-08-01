@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Tooltip } from "app/components/tooltip";
+import { Tooltip } from "app/components/gadget/tooltip";
 
 interface PowAdjustmentProps {
   powDifficulty: number;

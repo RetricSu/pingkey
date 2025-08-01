@@ -8,7 +8,7 @@ import { LetterCard } from "app/components/letter/letter-card";
 import { CachedLetterCard } from "app/components/letter/cached-letter-card";
 import { useUserRelayList } from "app/hooks/useUserRelayList";
 import { withAuth } from "app/components/auth/with-auth";
-import { Loader } from "app/components/loader";
+import { Loader } from "app/components/gadget/loader";
 import { getPow } from "nostr-tools/nip13";
 import { StampWall } from "app/components/stamp/stamp-wall";
 import { useDecryptedLettersCache } from "app/hooks/useDecryptedLettersCache";

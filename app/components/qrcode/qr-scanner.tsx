@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useNotification } from "../contexts/notification";
+import { useNotification } from "../../contexts/notification";
 import dynamic from "next/dynamic";
 
 // Dynamically import the Scanner component to avoid SSR issues

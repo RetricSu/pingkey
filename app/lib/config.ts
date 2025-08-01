@@ -66,3 +66,23 @@ export const DID_SCRIPT = {
     ],
   },
 };
+
+export const INPUT_TYPE_PROXY_LOCK = {
+  testnet: { // https://github.com/ckb-devrel/ckb-proxy-locks/blob/main/migrations/testnet/2024-10-08-042300.json
+    code_hash:
+      "0x5123908965c711b0ffd8aec642f1ede329649bda1ebdca6bd24124d3796f768a",
+    hash_type: "data1",
+    cellDeps: [
+      {
+        cellDep: {
+          outPoint: {
+            txHash:
+              "0xb4f171c9c9caf7401f54a8e56225ae21d95032150a87a4678eac3f66a3137b93",
+            index: 1,
+          },
+          depType: "code",
+        }
+      }
+    ]
+  },
+};

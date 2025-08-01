@@ -7,13 +7,13 @@ import React, {
   ReactNode,
   useEffect,
 } from "react";
-import { Nostr } from "../lib/nostr";
+import { Nostr } from "../lib/nostr/nostr";
 import { CryptoUtils } from "app/lib/crypto";
 import { finalizeEvent } from "nostr-tools/pure";
 import { UserInfoCache } from "app/lib/type";
 import { useLocalStorage } from "app/hooks/useLocalStorage";
 import { LocalStorageKeys } from "app/lib/config";
-import { prompt } from "app/components/dialog";
+import { prompt } from "app/components/gadget/dialog";
 
 interface NostrContextType {
   nostr: Nostr | null;

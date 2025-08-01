@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { custom } from "../dialog";
+import { custom } from "../gadget/dialog";
 import { getPow } from "nostr-tools/nip13";
 
 interface PowHashArtProps {
