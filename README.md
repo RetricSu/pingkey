@@ -18,6 +18,7 @@ todo:
 - [x] display rich info in user about section
 - [x] make read letter cache in client side
 - [x] support web5 did for better connection and remove the rely on the big relays
-- [ ] export key with encryption and tip user to saved the key after they sign-up
-- [ ] Allow to use custom generated/on-chain stamps
+- [x] Allow to attach custom on-chain collectibles to the letter
 - [ ] support embeddable one line script to integrate into html page
+- [ ] create a small tool to generate profile for github repo owners / blog writers / etc.
+- [ ] export key with encryption and tip user to saved the key after they sign-up
