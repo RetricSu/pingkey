@@ -104,6 +104,7 @@ export function MessageSender({
 
       // Show key information to anonymous users
       if (!isSignedIn && anonymousUserPrivateKey) {
+        // todo: maybe we should publish a default nip65 events so it can receive replies.
         const AnonymousKeyDialog = ({
           onResolve,
           onReject,
