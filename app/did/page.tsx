@@ -4,8 +4,8 @@ import React, { useState } from "react";
 import { ccc } from "@ckb-ccc/connector-react";
 import ConnectWallet from "../components/wallet/connect-wallet";
 import { useWeb5DID } from "../contexts/web5-did";
-import { custom, CustomDialogProps } from "../components/dialog";
-import { CopyButton } from "app/components/copy-button";
+import { custom, CustomDialogProps } from "../components/gadget/dialog";
+import { CopyButton } from "app/components/gadget/copy-button";
 
 // Custom dialog component for updating DID
 interface UpdateDIDData {

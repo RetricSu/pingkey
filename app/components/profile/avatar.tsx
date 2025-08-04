@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { generateIdenticon } from "../lib/util";
+import { generateIdenticon } from "../../lib/util";
 
 interface AvatarProps {
   publicKey: string;

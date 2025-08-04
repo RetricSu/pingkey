@@ -7,13 +7,13 @@ import { useNotification } from "../../contexts/notification";
 import { generateSecretKey } from "nostr-tools/pure";
 import { bytesToHex, hexToBytes } from "@noble/hashes/utils";
 import { RelayListItem } from "../../lib/type";
-import { custom, CustomDialogProps } from "../dialog";
+import { custom, CustomDialogProps } from "../gadget/dialog";
 import { usePowCreation } from "../../hooks/usePowCreation";
 import { PowMiningIndicator } from "../stamp/pow-mining-indicator";
 import { buildGeneratedStampDialog } from "../stamp/mint-stamp";
-import { prompt } from "../dialog";
+import { prompt } from "../gadget/dialog";
 import { useUserProfile } from "app/hooks/useUserProfile";
-import { PowAdjustment } from "../pow-adjustment";
+import { PowAdjustment } from "../stamp/pow-adjustment";
 
 interface MessageSenderProps {
   slug: string;

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useNotification, Notification } from "../contexts/notification";
+import { useNotification, Notification } from "../../contexts/notification";
 
 // Icon components for different notification types
 const CheckIcon = () => (

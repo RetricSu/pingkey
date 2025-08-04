@@ -6,6 +6,7 @@ interface PowWorkerData {
   message: string;
   difficulty: number;
   extraTags?: string[][];
+  powWrapEventExtraTags?: string[][];
 }
 
 interface PowWorkerResult {

@@ -10,12 +10,13 @@ import { hexToBytes } from "@noble/hashes/utils";
 import { Stamp } from "../stamp/stamp";
 import { ReadingLetterModal } from "./reading-letter";
 import { getPow } from "nostr-tools/nip13";
-import { prompt } from "../dialog";
-import { getSubjectTitleFromEvent } from "app/lib/nostr";
+import { prompt } from "../gadget/dialog";
+import { getSubjectTitleFromEvent } from "app/lib/nostr/nostr";
 import {
   useDecryptedLettersCache,
   DecryptedLetter,
 } from "app/hooks/useDecryptedLettersCache";
+import { CollectibleIndicator } from "../collectible/display";
 
 export function LetterCard({
   letter,
@@ -137,6 +138,7 @@ export function LetterCard({
                 </span>
               </div>
             )}
+            <CollectibleIndicator powWrappedEvent={letter.fullNote} />
           </div>
           <time className="text-xs text-neutral-500 dark:text-neutral-400 font-mono tracking-wide whitespace-nowrap">
             {formatDate(letter.receivedAt, false)}

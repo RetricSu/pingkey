@@ -6,7 +6,8 @@ import { Stamp } from "../stamp/stamp";
 import { DecryptedLetter } from "app/hooks/useDecryptedLettersCache";
 import { Event } from "nostr-tools/core";
 import { useState, useRef, useEffect } from "react";
-import { CopyButton } from "../copy-button";
+import { CopyButton } from "../gadget/copy-button";
+import { CollectibleIndicator } from "../collectible/display";
 
 interface CachedLetterCardProps {
   letter: {
@@ -59,9 +60,10 @@ export function CachedLetterCard({
       {/* Header with timestamp and POW info */}
       <div className="flex items-start justify-between mb-4 sm:mb-6 ml-6 sm:ml-8">
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="flex items-center gap-2 sm:gap-3 text-xs text-neutral-500 dark:text-neutral-400">
+          <div className="flex items-center gap-2 sm:gap-3 text-xs text-neutral-500 dark:text-neutral-400 border border-gray-200 dark:border-neutral-800 rounded-2xl px-3 py-1.5">
             <span>POW: {getPow(letter.fullNote.id)}</span>
           </div>
+          <CollectibleIndicator powWrappedEvent={letter.fullNote} />
         </div>
         <time className="text-xs text-neutral-500 dark:text-neutral-400 font-mono tracking-wide whitespace-nowrap">
           {formatDate(letter.receivedAt, false)}
