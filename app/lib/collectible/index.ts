@@ -1,3 +1,12 @@
+/**
+ * Collectible is a concept that combines a on-chain letter and a set of DOB assets.
+ * 
+ * The on-chain letter is a letter that is stored on the CKB chain.
+ * The DOB assets are the assets that are stored on the CKB chain.
+ * 
+ * This file contains the common library for collectible.
+ */
+
 import {
   ccc,
   Cell,

@@ -16,7 +16,7 @@ import {
   useDecryptedLettersCache,
   DecryptedLetter,
 } from "app/hooks/useDecryptedLettersCache";
-import { DOBLetterIndicator } from "../dob/dob-asset";
+import { CollectibleIndicator } from "../collectible/display";
 
 export function LetterCard({
   letter,
@@ -138,7 +138,7 @@ export function LetterCard({
                 </span>
               </div>
             )}
-            <DOBLetterIndicator powWrappedEvent={letter.fullNote} />
+            <CollectibleIndicator powWrappedEvent={letter.fullNote} />
           </div>
           <time className="text-xs text-neutral-500 dark:text-neutral-400 font-mono tracking-wide whitespace-nowrap">
             {formatDate(letter.receivedAt, false)}

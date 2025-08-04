@@ -1,6 +1,6 @@
 "use client";
 
-import { DOBMint } from "../components/dob/mint";
+import { DOBMint } from "../components/collectible/mint";
 
 function CreateStampPage() {
   return (

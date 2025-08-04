@@ -3,18 +3,131 @@
 import { useState, useEffect, useCallback } from "react";
 import { Event } from "nostr-tools";
 import { ccc, useCcc } from "@ckb-ccc/connector-react";
-import { findOnChainLetter, isOnChainLetter } from "app/lib/dob";
+import { findOnChainLetter, isOnChainLetter } from "app/lib/collectible";
 import { custom, CustomDialogProps } from "app/components/gadget/dialog";
 import { useNotification } from "app/contexts/notification";
 import { unpackToRawSporeData } from "@ckb-ccc/spore/advanced";
-import { ParsedOnChainLetter } from "../../lib/dob/type";
+import { ParsedOnChainLetter } from "../../lib/collectible/type";
 
-interface DOBLetterIndicatorProps {
+interface CollectibleIndicatorProps {
   powWrappedEvent: Event;
   className?: string;
 }
 
-function DOBAssetDetailsModal({
+export function CollectibleIndicator({
+  powWrappedEvent,
+  className = "",
+}: CollectibleIndicatorProps) {
+  const { client } = useCcc();
+  const { error } = useNotification();
+
+  const [isDOB, setIsDOB] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [assetDetails, setAssetDetails] = useState<ParsedOnChainLetter | null>(
+    null
+  );
+
+  // Check if this is a DOB letter
+  useEffect(() => {
+    const checkIsDOB = isOnChainLetter(powWrappedEvent);
+    setIsDOB(checkIsDOB);
+  }, [powWrappedEvent]);
+
+  // Find DOB assets when user has wallet connected
+  const findDOBAssets = useCallback(async () => {
+    if (!isDOB || !client) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const dobAssets = await findOnChainLetter(powWrappedEvent, client);
+      if (dobAssets) {
+        setAssetDetails(dobAssets);
+      }
+    } catch (err) {
+      console.error("Failed to find DOB assets:", err);
+      error("Failed to load DOB assets", "Please try again later.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isDOB, client, powWrappedEvent, error]);
+
+  useEffect(() => {
+    findDOBAssets();
+  }, [findDOBAssets]);
+
+  const handleClick = async () => {
+    if (!assetDetails) {
+      error("No assets found", "DOB assets could not be loaded.");
+      return;
+    }
+
+    try {
+      await custom(
+        (props) => (
+          <CollectibleDetailsModal parsedOnChainLetter={assetDetails} {...props} />
+        ),
+        {
+          maxWidth: "2xl",
+          closeOnBackdrop: true,
+        }
+      );
+    } catch (error) {
+      // User closed the dialog, no action needed
+    }
+  };
+
+  // Only show indicator if it's a DOB letter
+  if (!isDOB) {
+    return null;
+  }
+
+  return (
+    <button
+      onClick={handleClick}
+      disabled={isLoading || !assetDetails}
+      className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-200 ${
+        isLoading
+          ? "bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 cursor-not-allowed"
+          : assetDetails
+          ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50 cursor-pointer"
+          : "bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 cursor-not-allowed"
+      } ${className}`}
+    >
+      {isLoading ? (
+        <>
+          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current" />
+          <span>Loading DOB...</span>
+        </>
+      ) : assetDetails ? (
+        <>
+          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+            <path
+              fillRule="evenodd"
+              d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+              clipRule="evenodd"
+            />
+          </svg>
+          <span>Assets ({assetDetails.dobCells.length + 1})</span>
+        </>
+      ) : (
+        <>
+          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+            <path
+              fillRule="evenodd"
+              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+              clipRule="evenodd"
+            />
+          </svg>
+          <span>Assets</span>
+        </>
+      )}
+    </button>
+  );
+}
+
+export function CollectibleDetailsModal({
   parsedOnChainLetter,
   onResolve,
   onReject,
@@ -335,115 +448,4 @@ function DOBAssetDetailsModal({
   );
 }
 
-export function DOBLetterIndicator({
-  powWrappedEvent,
-  className = "",
-}: DOBLetterIndicatorProps) {
-  const { client } = useCcc();
-  const { error } = useNotification();
 
-  const [isDOB, setIsDOB] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [assetDetails, setAssetDetails] = useState<ParsedOnChainLetter | null>(
-    null
-  );
-
-  // Check if this is a DOB letter
-  useEffect(() => {
-    const checkIsDOB = isOnChainLetter(powWrappedEvent);
-    setIsDOB(checkIsDOB);
-  }, [powWrappedEvent]);
-
-  // Find DOB assets when user has wallet connected
-  const findDOBAssets = useCallback(async () => {
-    if (!isDOB || !client) {
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const dobAssets = await findOnChainLetter(powWrappedEvent, client);
-      if (dobAssets) {
-        setAssetDetails(dobAssets);
-      }
-    } catch (err) {
-      console.error("Failed to find DOB assets:", err);
-      error("Failed to load DOB assets", "Please try again later.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isDOB, client, powWrappedEvent, error]);
-
-  useEffect(() => {
-    findDOBAssets();
-  }, [findDOBAssets]);
-
-  const handleClick = async () => {
-    if (!assetDetails) {
-      error("No assets found", "DOB assets could not be loaded.");
-      return;
-    }
-
-    try {
-      await custom(
-        (props) => (
-          <DOBAssetDetailsModal parsedOnChainLetter={assetDetails} {...props} />
-        ),
-        {
-          maxWidth: "2xl",
-          closeOnBackdrop: true,
-        }
-      );
-    } catch (error) {
-      // User closed the dialog, no action needed
-    }
-  };
-
-  // Only show indicator if it's a DOB letter
-  if (!isDOB) {
-    return null;
-  }
-
-  return (
-    <button
-      onClick={handleClick}
-      disabled={isLoading || !assetDetails}
-      className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-200 ${
-        isLoading
-          ? "bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 cursor-not-allowed"
-          : assetDetails
-          ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50 cursor-pointer"
-          : "bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 cursor-not-allowed"
-      } ${className}`}
-    >
-      {isLoading ? (
-        <>
-          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current" />
-          <span>Loading DOB...</span>
-        </>
-      ) : assetDetails ? (
-        <>
-          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fillRule="evenodd"
-              d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <span>Assets ({assetDetails.dobCells.length + 1})</span>
-        </>
-      ) : (
-        <>
-          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fillRule="evenodd"
-              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <span>Assets</span>
-        </>
-      )}
-    </button>
-  );
-}

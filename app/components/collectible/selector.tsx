@@ -15,13 +15,13 @@ export interface DOBItem {
   scriptInfo: any;
 }
 
-interface DOBSelectorProps {
+interface CollectibleAttachmentSelectorProps {
   onSelect?: (dobId: Hex) => void;
   selectedId?: Hex;
   className?: string;
 }
 
-export function DOBSelector({ onSelect, selectedId, className = "" }: DOBSelectorProps) {
+export function CollectibleAttachmentSelector({ onSelect, selectedId, className = "" }: CollectibleAttachmentSelectorProps) {
   const { signerInfo } = useCcc();
   const { error } = useNotification();
   

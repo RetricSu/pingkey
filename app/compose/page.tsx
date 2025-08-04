@@ -18,9 +18,9 @@ import { SlugType } from "app/lib/type";
 import { useSlugMiddleware } from "app/hooks/useSlugMiddleware";
 import { defaultProfile } from "app/lib/config";
 import { Hex, useCcc } from "@ckb-ccc/connector-react";
-import { DOBSelector } from "app/components/dob/selector";
+import { CollectibleAttachmentSelector } from "app/components/collectible/selector";
 import { ReceiverRelayList } from "app/components/compose/receiver-relay-list";
-import { createLockScriptFrom, createOnChainLetter, attachLetterWithDOBAssets } from "app/lib/dob";
+import { createLockScriptFrom, createOnChainLetter, attachLetterWithDOBAssets } from "app/lib/collectible";
 import { Event } from "nostr-tools";
 
 function ComposePage() {
@@ -321,7 +321,7 @@ function ComposePage() {
             <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
               On-chain Stamp
             </label>
-            <DOBSelector
+            <CollectibleAttachmentSelector
               onSelect={setSelectedDOBId}
               selectedId={selectedDOBId}
             />
