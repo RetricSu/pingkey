@@ -3,12 +3,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { Event } from "nostr-tools";
 import { ccc, useCcc } from "@ckb-ccc/connector-react";
-import { findOnChainLetter, isOnChainLetter } from "app/lib/collectible";
-import { custom, CustomDialogProps } from "app/components/gadget/dialog";
+import { findOnChainLetter, isOnChainLetter, transferOnChainLetter, detachDOBAssetsFrom } from "app/lib/collectible";
+import { custom, CustomDialogProps, prompt } from "app/components/gadget/dialog";
 import { useNotification } from "app/contexts/notification";
 import { unpackToRawSporeData } from "@ckb-ccc/spore/advanced";
 import { ParsedOnChainLetter } from "../../lib/collectible/type";
-import { formatCKBAddress } from "app/lib/util";
+import { formatCKBAddress, formatHex } from "app/lib/util";
+import { hexToBytes } from "nostr-tools/utils";
+import { useAuth } from "app/contexts/auth";
 
 interface CollectibleIndicatorProps {
   powWrappedEvent: Event;
@@ -20,7 +22,8 @@ export function CollectibleIndicator({
   className = "",
 }: CollectibleIndicatorProps) {
   const { client } = useCcc();
-  const { error } = useNotification();
+  const { success, error } = useNotification();
+  const { exportPrivateKey } = useAuth();
 
   const [isDOB, setIsDOB] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -69,6 +72,10 @@ export function CollectibleIndicator({
         (props) => (
           <CollectibleDetailsModal
             parsedOnChainLetter={assetDetails}
+            client={client}
+            exportPrivateKey={exportPrivateKey}
+            errorNotify={error}
+            successNotify={success}
             {...props}
           />
         ),
@@ -133,18 +140,19 @@ export function CollectibleIndicator({
 
 export function CollectibleDetailsModal({
   parsedOnChainLetter,
+  client,
+  errorNotify: error,
+  successNotify: success,
+  exportPrivateKey,
   onResolve,
   onReject,
 }: CustomDialogProps<void> & {
   parsedOnChainLetter: ParsedOnChainLetter;
+  client?: ccc.Client;
+  exportPrivateKey: (password: string) => Promise<string>;
+  errorNotify: (title: string, message?: string, duration?: number) => string,
+  successNotify: (title: string, message?: string, duration?: number) => string
 }) {
-  const formatHex = (hex: string) => {
-    if (hex.length > 20) {
-      return hex.substring(0, 10) + "..." + hex.substring(hex.length - 10);
-    }
-    return hex;
-  };
-
   const getContentPreview = (
     content: string,
     contentType: string
@@ -183,11 +191,133 @@ export function CollectibleDetailsModal({
   };
 
   const handleTransfer = async () => {
-    console.log("Transfer");
+    if (!client) {
+      error("No client available", "Please connect your wallet first");
+      return;
+    }
+
+    try {
+      const toAddress = await prompt(
+        "Transfer On-chain Letter",
+        "Enter the recipient's CKB address:",
+        "",
+        {
+          placeholder: "ckt1...",
+          confirmLabel: "Transfer"
+        }
+      );
+
+      if (!toAddress) {
+        return; // User cancelled
+      }
+
+      // Validate address format (basic check)
+      if (!toAddress.startsWith("ckt1") && !toAddress.startsWith("ckb1")) {
+        error("Invalid Address", "Please enter a valid CKB address starting with 'ckt1' or 'ckb1'");
+        return;
+      }
+
+      // Create receiver lock script from the address
+      // For now, we'll use a simple approach - you may need to adjust this based on your address format
+      const receiverLock = (await ccc.Address.fromString(toAddress, client)).script;
+
+      const password = await prompt(
+        "Enter your password",
+        "Please enter your password to send the letter:",
+        "",
+        {
+          type: "password",
+          placeholder: "Enter password",
+          confirmLabel: "Send",
+        }
+      );
+      if (!password) {
+        return error("Password required to send letter");
+      }
+      const senderPrivkey = hexToBytes(await exportPrivateKey(password));
+      const signer = new ccc.SignerNostrPrivateKey(client, senderPrivkey);
+      
+      // Transfer the on-chain letter
+      const tx = await transferOnChainLetter(
+        parsedOnChainLetter.letter.cell,
+        signer,
+        receiverLock
+      );
+
+      // Sign and send the transaction
+      const hash = await signer.sendTransaction(tx);
+
+      success("Transfer Successful", `tx ${hash} has been submitted successfully.`);
+      onResolve();
+    } catch (err) {
+      console.error("Transfer failed:", err);
+      error("Transfer Failed", "Failed to transfer the on-chain letter. Please try again.");
+    }
   };
 
   const handleExtract = async () => {
-    console.log("Extract");
+    if (!client) {
+      error("No client available", "Please connect your wallet first");
+      return;
+    }
+
+    try {
+      const toAddress = await prompt(
+        "Extract DOB Assets",
+        "Enter the recipient's CKB address for the DOB assets:",
+        "",
+        {
+          placeholder: "ckt1...",
+          confirmLabel: "Extract"
+        }
+      );
+
+      if (!toAddress) {
+        return; // User cancelled
+      }
+
+      // Validate address format (basic check)
+      if (!toAddress.startsWith("ckt1") && !toAddress.startsWith("ckb1")) {
+        error("Invalid Address", "Please enter a valid CKB address starting with 'ckt1' or 'ckb1'");
+        return;
+      }
+
+      // Create receiver lock script from the address
+      // For now, we'll use a simple approach - you may need to adjust this based on your address format
+      const receiverLock = (await ccc.Address.fromString(toAddress, client)).script;
+
+      const password = await prompt(
+        "Enter your password",
+        "Please enter your password to send the letter:",
+        "",
+        {
+          type: "password",
+          placeholder: "Enter password",
+          confirmLabel: "Send",
+        }
+      );
+      if (!password) {
+        return error("Password required to send letter");
+      }
+      const senderPrivkey = hexToBytes(await exportPrivateKey(password));
+      const signer = new ccc.SignerNostrPrivateKey(client, senderPrivkey);
+      
+      // Detach DOB assets from the letter
+      const tx = await detachDOBAssetsFrom(
+        parsedOnChainLetter,
+        signer,
+        receiverLock
+      );
+
+      // Sign and send the transaction
+      const hash = await signer.sendTransaction(tx);
+
+      success("Extract Successful", `tx ${hash} has been submitted successfully.`);
+      onResolve();
+    } catch (err) {
+      console.error("Extract failed:", err);
+      error("Extract Failed", "Failed to extract DOB assets. Please try again.");
+    }
   };
 
   return (
@@ -471,14 +601,14 @@ export function CollectibleDetailsModal({
 
       <div className="flex justify-center pt-4 gap-2">
         <button
-          onClick={() => onResolve()}
+          onClick={handleTransfer}
           className="cursor-pointer px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-black rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors text-sm font-medium"
         >
           Transfer On-chain Letter Cell
         </button>
 
         <button
-          onClick={() => onResolve()}
+          onClick={handleExtract}
           className="cursor-pointer px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-black rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors text-sm font-medium"
         >
           Extract DOB Assets

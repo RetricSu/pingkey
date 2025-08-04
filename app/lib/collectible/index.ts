@@ -193,7 +193,7 @@ export async function transferOnChainLetter(letterCell: Cell, cccSigner: ccc.Sig
   const sdk = new NostrBindingSDK(TESTNET_CONFIGS);
   tx.addCellDeps(await sdk.binding.buildCellDeps());
 
-  await tx.completeFeeBy(cccSigner, 1000);
+  await tx.completeFeeChangeToOutput(cccSigner, 0 ,1000);
   return tx;
 }
 
@@ -203,6 +203,7 @@ export async function detachDOBAssetsFrom(parsedOnChainLetter: ParsedOnChainLett
   const tx = ccc.Transaction.from({
     inputs: [letterCell, ...dobCells],
     outputs: [{
+      capacity: letterCell.cellOutput.capacity,
       lock: receiverLock,
       type: letterCell.cellOutput.type,
     }, ...dobCells.map((cell) => {
@@ -213,9 +214,14 @@ export async function detachDOBAssetsFrom(parsedOnChainLetter: ParsedOnChainLett
     })],
     outputsData: [letterCell.outputData, ...dobCells.map((cell) => cell.outputData)],
   });
+  
   const sdk = new NostrBindingSDK(TESTNET_CONFIGS);
   tx.addCellDeps(await sdk.binding.buildCellDeps());
+  tx.addCellDeps(INPUT_TYPE_PROXY_LOCK.testnet.cellDeps.map(dep => dep.cellDep));
+  tx.addCellDeps(getSporeScriptInfos(cccSigner.client).V2!.cellDeps.map(dep => dep.cellDep));
+  // TODO: the v2 version requires cobuild layout in witness
 
-  await tx.completeFeeBy(cccSigner, 1000);
+  // let's use the built-in capacity for fee from dob
+  await tx.completeFeeChangeToOutput(cccSigner, 1 ,1000);
   return tx;
 }
