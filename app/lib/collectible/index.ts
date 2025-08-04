@@ -174,6 +174,7 @@ export async function findOnChainLetter(powWrappedEvent: Event, client: Client):
       powWrappedEvent,
     },
     dobCells,
+    proxyLock,
   };
   return result;
 }

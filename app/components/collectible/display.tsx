@@ -8,6 +8,7 @@ import { custom, CustomDialogProps } from "app/components/gadget/dialog";
 import { useNotification } from "app/contexts/notification";
 import { unpackToRawSporeData } from "@ckb-ccc/spore/advanced";
 import { ParsedOnChainLetter } from "../../lib/collectible/type";
+import { formatCKBAddress } from "app/lib/util";
 
 interface CollectibleIndicatorProps {
   powWrappedEvent: Event;
@@ -66,7 +67,10 @@ export function CollectibleIndicator({
     try {
       await custom(
         (props) => (
-          <CollectibleDetailsModal parsedOnChainLetter={assetDetails} {...props} />
+          <CollectibleDetailsModal
+            parsedOnChainLetter={assetDetails}
+            {...props}
+          />
         ),
         {
           maxWidth: "2xl",
@@ -132,7 +136,7 @@ export function CollectibleDetailsModal({
   onResolve,
   onReject,
 }: CustomDialogProps<void> & {
-  parsedOnChainLetter;
+  parsedOnChainLetter: ParsedOnChainLetter;
 }) {
   const formatHex = (hex: string) => {
     if (hex.length > 20) {
@@ -178,11 +182,20 @@ export function CollectibleDetailsModal({
     }
   };
 
+  const handleTransfer = async () => {
+    console.log("Transfer");
+  };
+
+  const handleExtract = async () => {
+    console.log("Extract");
+  };
+
   return (
     <div className="p-6 max-w-2xl">
+      {/* Modal Header */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
-          DOB Assets of the Letter
+          Letter Details
         </h2>
         <button
           onClick={onReject}
@@ -259,17 +272,31 @@ export function CollectibleDetailsModal({
           <div className="relative p-6 pt-8 pb-8 pl-8 pr-8">
             {/* Sender Information (Top Left) */}
             <div className="absolute top-8 left-8 text-xs text-neutral-600 dark:text-neutral-400 font-serif">
-              <div className="italic">(Date)</div>
-              <div className="italic">(Sender's Full Name)</div>
-              <div className="italic">(Sender's City, State, and Zip Code)</div>
+              <div className="italic">
+                (Delivery{" "}
+                {new Date(
+                  parsedOnChainLetter.letter.powWrappedEvent.created_at * 1000
+                ).toLocaleDateString()}
+                )
+              </div>
+              <div className="italic">
+                ({parsedOnChainLetter.letter.powWrappedEvent.id})
+              </div>
             </div>
 
             {/* Recipient Information (Bottom Right) */}
             <div className="absolute bottom-8 right-8 text-xs text-neutral-600 dark:text-neutral-400 font-serif">
-              <div className="italic">(Recipient's Full Name)</div>
-              <div className="italic">(Recipient's Street Name and Number)</div>
               <div className="italic">
-                (Recipient's City, State, and Zip Code)
+                The on-chain Letter cell is created via{" "}
+                <a
+                  href="https://github.com/cryptape/nostr-binding"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 hover:text-blue-600"
+                >
+                  Nostr-binding protocol
+                </a>
+                .
               </div>
             </div>
 
@@ -296,13 +323,15 @@ export function CollectibleDetailsModal({
                 <div className="text-sm text-neutral-600 dark:text-neutral-400">
                   Type Hash:{" "}
                   {formatHex(
-                    parsedOnChainLetter.letter.cell.cellOutput.type?.hash() || "N/A"
+                    parsedOnChainLetter.letter.cell.cellOutput.type?.hash() ||
+                      "N/A"
                   )}
                 </div>
                 <div className="text-sm text-neutral-600 dark:text-neutral-400">
-                  Lock Script:{" "}
-                  {formatHex(parsedOnChainLetter.letter.cell.cellOutput.lock.hash()) ||
-                    "N/A"}
+                  Owner:{" "}
+                  {formatCKBAddress(
+                    parsedOnChainLetter.letter.ownerAddress.toString()
+                  )}
                 </div>
               </div>
             </div>
@@ -312,8 +341,25 @@ export function CollectibleDetailsModal({
         {/* Spore Assets Details */}
         <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4">
           <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-3">
-            DOB Assets Attached ({parsedOnChainLetter.dobCells.length})
+            Collectibles Attached ({parsedOnChainLetter.dobCells.length})
           </h3>
+          <div className="text-sm border border-neutral-200 dark:border-neutral-700 rounded p-3">
+            <div className="flex justify-between">
+              <span className="text-neutral-600 dark:text-neutral-400">
+                Owned By The Letter{" via "} <a
+                  href="https://docs.nervos.org/docs/ecosystem-scripts/input-type-proxy-lock"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 hover:text-blue-600"
+                >
+                  Proxy Lock
+                </a>
+              </span>
+              <span className="font-mono text-neutral-900 dark:text-neutral-100">
+                Args: {formatHex(parsedOnChainLetter.proxyLock.args.toString())}
+              </span>
+            </div>
+          </div>
           {parsedOnChainLetter.dobCells.length > 0 ? (
             <div className="space-y-3">
               {parsedOnChainLetter.dobCells.map((sporeCell, index) => (
@@ -437,15 +483,7 @@ export function CollectibleDetailsModal({
         >
           Extract DOB Assets
         </button>
-        <button
-          onClick={() => onResolve()}
-          className="cursor-pointer px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-black rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors text-sm font-medium"
-        >
-          Close
-        </button>
       </div>
     </div>
   );
 }
-
-

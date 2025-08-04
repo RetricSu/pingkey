@@ -1,4 +1,4 @@
-import { Address, Cell } from "@ckb-ccc/connector-react";
+import { Address, Cell, ScriptLike } from "@ckb-ccc/connector-react";
 import { Event } from "nostr-tools";
 
 export interface ParsedOnChainLetter {
@@ -8,4 +8,5 @@ export interface ParsedOnChainLetter {
     powWrappedEvent: Event;
   };
   dobCells: Cell[];
+  proxyLock: ScriptLike;
 }

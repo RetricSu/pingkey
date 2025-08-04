@@ -36,6 +36,10 @@ export function formatDate(date: number | string, includeRelative = false) {
   return `${fullDate} (${formattedDate})`;
 }
 
+export function formatCKBAddress(address: string){
+  return address.slice(0, 12) + "..." + address.slice(-12);
+}
+
 export function createExportFile(pubkey: string, privateKey: string) {
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
   const fileContent = `Nostr Private Key Export

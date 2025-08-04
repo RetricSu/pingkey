@@ -15,7 +15,7 @@ export interface DOBItem {
   scriptInfo: any;
 }
 
-interface CollectibleAttachmentSelectorProps {
+export interface CollectibleAttachmentSelectorProps {
   onSelect?: (dobId: Hex) => void;
   selectedId?: Hex;
   className?: string;
