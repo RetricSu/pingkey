@@ -168,3 +168,44 @@ export async function findOnChainLetter(powWrappedEvent: Event, client: Client):
   };
   return result;
 }
+
+export async function transferOnChainLetter(letterCell: Cell, cccSigner: ccc.SignerNostrPrivateKey, receiverLock: ScriptLike){
+  const tx = ccc.Transaction.from({
+    inputs: [letterCell],
+    outputs: [
+      {
+        lock: receiverLock,
+        type: letterCell.cellOutput.type,
+      },
+    ],
+  });
+
+  const sdk = new NostrBindingSDK(TESTNET_CONFIGS);
+  tx.addCellDeps(await sdk.binding.buildCellDeps());
+
+  await tx.completeFeeBy(cccSigner, 1000);
+  return tx;
+}
+
+export async function detachDOBAssetsFrom(parsedOnChainLetter: ParsedOnChainLetter, cccSigner: ccc.SignerNostrPrivateKey, receiverLock: ScriptLike){
+  const dobCells = parsedOnChainLetter.dobCells;
+  const letterCell = parsedOnChainLetter.letter.cell;
+  const tx = ccc.Transaction.from({
+    inputs: [letterCell, ...dobCells],
+    outputs: [{
+      lock: receiverLock,
+      type: letterCell.cellOutput.type,
+    }, ...dobCells.map((cell) => {
+      return {
+        lock: receiverLock,
+        type: cell.cellOutput.type,
+      }
+    })],
+    outputsData: [letterCell.outputData, ...dobCells.map((cell) => cell.outputData)],
+  });
+  const sdk = new NostrBindingSDK(TESTNET_CONFIGS);
+  tx.addCellDeps(await sdk.binding.buildCellDeps());
+
+  await tx.completeFeeBy(cccSigner, 1000);
+  return tx;
+}
