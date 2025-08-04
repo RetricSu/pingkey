@@ -129,10 +129,10 @@ export function MessageSender({
                 <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
                   <p>• Copy and save this key somewhere safe</p>
                   <p>
-                    • Use this key to sign-in and check for replies at any time
+                    • Use this key to sign-in and setup account information and relays to receive replies.
                   </p>
                   <p>
-                    • If you don't care about the replies, you can just ignore
+                    • If you don't care about the replies(eg: maybe you told the recipient to reply to you via another channel), you can just ignore
                     this key
                   </p>
                 </div>
